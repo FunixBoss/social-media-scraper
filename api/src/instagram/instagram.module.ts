@@ -5,6 +5,9 @@ import { ChannelModule } from './channel/channel.module';
 import { ReelModule } from './reel/reel.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import { Hashtag } from './entity/hashtag.entity';
+import { Keyword } from './entity/keyword.entity';
+import { ScraperModule } from './scraper/scraper.module';
 
 // const envData = process.env;
 @Module({
@@ -26,6 +29,13 @@ import { ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature(
+      [Hashtag, Keyword]
+    ),
+    ScraperModule
   ],
+  exports: [
+    TypeOrmModule, // Export TypeOrmModule to make repositories available for injection in sub-modules
+  ]
 })
 export class InstagramModule { }

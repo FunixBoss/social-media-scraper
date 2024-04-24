@@ -1,15 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Inject } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { InsScraperService } from '../scraper';
 
-@Controller('channel')
+@Controller('ins/channel')
 export class ChannelController {
-  constructor(private readonly channelService: ChannelService) {}
+  constructor(
+    private readonly channelService: ChannelService,
+    @Inject() readonly scraperService: InsScraperService
+  ) {}
 
-  @Post()
-  create(@Body() createChannelDto: CreateChannelDto) {
-    return this.channelService.create(createChannelDto);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.channelService.findOne(+id);
   }
 
   @Get()
@@ -17,12 +21,12 @@ export class ChannelController {
     return this.channelService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.channelService.findOne(+id);
+  @Post()
+  create(@Body() createChannelDto: CreateChannelDto) {
+    return this.channelService.create(createChannelDto);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
     return this.channelService.update(+id, updateChannelDto);
   }

@@ -23,5 +23,7 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     'prettier/prettier': 0,
+    "prefer-const": "off"
+
   },
 };

@@ -3,6 +3,7 @@ import { KeywordService } from './keyword.service';
 import { KeywordController } from './keyword.controller';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Keyword } from "../entity/keyword.entity";
+import { Hashtag } from '../entity/hashtag.entity';
 
 @Module({
   controllers: [
@@ -10,7 +11,9 @@ import { Keyword } from "../entity/keyword.entity";
   ],
   providers: [KeywordService],
   imports: [
-    TypeOrmModule.forFeature([Keyword]),
+    TypeOrmModule.forFeature([
+      Keyword, Hashtag
+    ]),
   ]
 })
 export class KeywordModule { }
