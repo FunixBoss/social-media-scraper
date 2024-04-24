@@ -18,7 +18,6 @@ export const getCsrfToken = async (): Promise<csrfToken> => {
 }
 
 /**
- * 
  * @param {username} username 
  * @param {password} password 
  * @param withLoginData if true, it will return logindata

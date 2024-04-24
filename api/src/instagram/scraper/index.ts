@@ -16,7 +16,7 @@ import { PostStoryResult } from './types/PostStoryResult';
 import { MediaConfigureOptions } from './types/MediaConfigureOptions';
 import { UserGraphQlV2, Graphql } from './types/UserGraphQlV2';
 import { IPaginatedPosts } from './types/PaginatedPosts';
-import { Injectable } from '@nestjs/common';
+import { FactoryProvider, Injectable } from '@nestjs/common';
 
 export * from './utils'
 export * as InstagramMetadata from './types'
@@ -32,7 +32,7 @@ export class InsScraperService {
 	private accountUserId = this.IgCookie.match(/sessionid=(.*?);/)?.[1].split('%')[0] || ''
 
 	constructor(
-		private IgCookie: IgCookie = '',
+		private IgCookie: IgCookie,
 		public AxiosOpts: AxiosRequestConfig = {}) {
 
 		this.IgCookie = IgCookie;
@@ -58,7 +58,8 @@ export class InsScraperService {
 		};
 	}
 
-	private fetchApi = (baseURL: string,
+	private fetchApi = (
+		baseURL: string,
 		url: string = '',
 		agent: string = config.android,
 		AxiosOptions: AxiosRequestConfig = {}
@@ -560,3 +561,11 @@ export class InsScraperService {
 		return result?.data
 	}
 }
+
+export const insScraperServiceFactory: FactoryProvider<InsScraperService> = {
+	provide: InsScraperService,
+	useFactory: (IgCookie: string, AxiosOpts?: AxiosRequestConfig) => {
+		return new InsScraperService(IgCookie, AxiosOpts);
+	},
+	inject: ['IgCookie', 'AxiosOpts'], // Inject dependencies (IgCookie and AxiosOpts) here
+};
