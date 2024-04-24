@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, MaxLength } from "class-validator";
-import { IsValidPriority } from '../../../validation/is-valid-priority.validation';
+import { IsValidPriority } from '../../pipe/is-valid-priority.validation';
 
 export class CreateKeywordDto {
     @IsNotEmpty()

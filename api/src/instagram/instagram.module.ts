@@ -16,6 +16,7 @@ import { ScraperModule } from './scraper/scraper.module';
     HashtagModule,
     ChannelModule,
     ReelModule,
+    ScraperModule,
     TypeOrmModule.forRootAsync({ // Use forRootAsync to inject ConfigService
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
@@ -27,12 +28,8 @@ import { ScraperModule } from './scraper/scraper.module';
         entities: [__dirname + '/entity/*.entity{.ts,.js}'],
         synchronize: true,
       }),
-      inject: [ConfigService],
+      inject: [ConfigService], 
     }),
-    TypeOrmModule.forFeature(
-      [Hashtag, Keyword]
-    ),
-    ScraperModule
   ],
   exports: [
     TypeOrmModule, // Export TypeOrmModule to make repositories available for injection in sub-modules

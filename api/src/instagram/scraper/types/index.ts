@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 export * from './HighlightMediaMetadata'
 export * from './HighlightMetadata'
 export * from './MediaConfigureOptions'
