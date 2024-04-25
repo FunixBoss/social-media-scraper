@@ -1,7 +1,6 @@
 import { Readable } from 'stream';
 import { formattedShortcode, IGPostType, postType, ProductType } from '../types/index';
 import bigInt from 'big-integer';
-import { createHmac } from 'crypto';
 
 // https://stackoverflow.com/questions/16758316/where-do-i-find-the-instagram-media-id-of-a-image
 // https://gist.github.com/sclark39/9daf13eea9c0b381667b61e3d2e7bc11
@@ -17,15 +16,15 @@ const bigint_alphabet = numbers + lower
  */
 export const shortcodeToMediaID = (shortcode: string) => {
     const o = shortcode.replace(/\S/g, m => {
-        var c = ig_alphabet.indexOf(m)
-        var b = bigint_alphabet.charAt(c)
+        let c = ig_alphabet.indexOf(m)
+        let b = bigint_alphabet.charAt(c)
         return (b != "") ? b : `<${c}>`
     })
     return bigInt(o, 64).toString(10)
 }
 
 export const shortcodeFromMediaID = (media_id: string) => {
-    var o = bigInt(media_id).toString(64)
+    let o = bigInt(media_id).toString(64)
     return o.replace(/<(\d+)>|(\w)/g, (_m: any, m1: string, m2: string) => {
         return ig_alphabet.charAt((m1)
             ? parseInt(m1)
@@ -43,7 +42,7 @@ export const IGPostRegex = /(?:https?:\/\/)?(?:www\.)?(?:instagram\.com(?:\/.+?)
  */
 export const shortcodeFormatter = (url: string): formattedShortcode => {
     const splitted = /(?:https?:\/\/)?(?:www\.)?(?:instagram\.com(?:\/.+?)?\/(p|reel(?:s|)|tv)\/)([\w-]+)(?:\/)?(\?.*)?$/gim.exec(url) || '';
-    return {
+    return { 
         type: splitted[1],
         shortcode: splitted[2],
         url: 'https://www.instagram.com/' + splitted[1] + '/' + splitted[2],

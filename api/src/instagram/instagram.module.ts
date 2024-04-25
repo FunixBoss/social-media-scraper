@@ -5,8 +5,6 @@ import { ChannelModule } from './channel/channel.module';
 import { ReelModule } from './reel/reel.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { Hashtag } from './entity/hashtag.entity';
-import { Keyword } from './entity/keyword.entity';
 import { ScraperModule } from './scraper/scraper.module';
 
 // const envData = process.env;
@@ -17,7 +15,7 @@ import { ScraperModule } from './scraper/scraper.module';
     ChannelModule,
     ReelModule,
     ScraperModule,
-    TypeOrmModule.forRootAsync({ // Use forRootAsync to inject ConfigService
+    TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get<string>('INS_DB_HOST'),
@@ -28,11 +26,11 @@ import { ScraperModule } from './scraper/scraper.module';
         entities: [__dirname + '/entity/*.entity{.ts,.js}'],
         synchronize: true,
       }),
-      inject: [ConfigService], 
+      inject: [ConfigService],
     }),
   ],
   exports: [
-    TypeOrmModule, // Export TypeOrmModule to make repositories available for injection in sub-modules
+    TypeOrmModule
   ]
 })
 export class InstagramModule { }

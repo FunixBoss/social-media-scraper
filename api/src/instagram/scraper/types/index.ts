@@ -13,19 +13,6 @@ export * from './PaginatedPosts'
 export * from './LoginData'
 export * from './searchFollow'
 
-/** instagram username */
-export type username = string;
-/** instagram user pk */
-export type userId = string;
-/** term to search for a user, it can be their name or username */
-export type seachTerm = string;
-/** instagram password */
-export type password = string;
-/** Instagram Cookie */
-export type IgCookie = string;
-/** instagram post url can be post, reel, tv */
-export type url = string;
-/** Media Type */
 export enum MediaType {
 	IMAGE = 1,
 	VIDEO = 2,
