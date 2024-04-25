@@ -1,8 +1,6 @@
-import fs from 'fs'
-import FormData from 'form-data';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { bufferToStream, getPostType, parseCookie, randInt, shortcodeFormatter } from './utils/index';
-import { username, userId, seachTerm, url, IgCookie, ProductType, MediaType, IChangedProfilePicture, ISearchFollow, IGPostMetadata, PostGraphQL } from './types';
+import { ProductType, MediaType, IChangedProfilePicture, ISearchFollow, IGPostMetadata, PostGraphQL } from './types';
 import { IGUserMetadata, UserGraphQL } from './types/UserMetadata';
 import { IGStoriesMetadata, ItemStories, StoriesGraphQL } from './types/StoriesMetadata';
 import { highlight_ids_query, highlight_media_query, post_shortcode_query } from './helper/query';
@@ -10,12 +8,7 @@ import { HightlighGraphQL, ReelsIds } from './types/HighlightMetadata';
 import { HMedia, IHighlightsMetadata, IReelsMetadata, ReelsMediaData } from './types/HighlightMediaMetadata';
 import { IPostModels, IRawBody, MediaUrls } from './types/PostModels';
 import { config } from './config';
-import { getCsrfToken } from './helper/Session';
-import { PostFeedResult } from './types/PostFeedResult';
-import { PostStoryResult } from './types/PostStoryResult';
-import { MediaConfigureOptions } from './types/MediaConfigureOptions';
 import { UserGraphQlV2, Graphql } from './types/UserGraphQlV2';
-import { IPaginatedPosts } from './types/PaginatedPosts';
 import { FactoryProvider, Injectable } from '@nestjs/common';
 
 export * from './utils'
@@ -29,13 +22,12 @@ export class InsScraperService {
 	 * @param storeCookie
 	 * @param AxiosOpts
 	 */
-	private accountUserId = this.IgCookie.match(/sessionid=(.*?);/)?.[1].split('%')[0] || ''
+	private accountUserId: string;
 
 	constructor(
-		private IgCookie: IgCookie,
+		private IgCookie: string,
 		public AxiosOpts: AxiosRequestConfig = {}) {
-
-		this.IgCookie = IgCookie;
+		this.IgCookie = IgCookie; 
 		this.AxiosOpts = AxiosOpts;
 	}
 
@@ -80,21 +72,101 @@ export class InsScraperService {
 		}
 	}
 
-	public getIdByUsername = async (username: username): Promise<string> => {
-		const res = await this.fetchUserV2(username);
-		return res?.id as userId;
-	}
-
-	public searchFollower = async (userId: userId, seachTerm: seachTerm): Promise<ISearchFollow> => {
+	async fetchUser(username: string): Promise<UserGraphQlV2> {
 		const res = await this.fetchApi(
 			config.instagram_api_v1,
-			`/friendships/${userId}/followers/?count=12&query=${seachTerm}&search_surface=follow_list_page`,
+			`/users/web_profile_info/?username=${username}`,
+			config.iPhone,
+		);
+		const graphql: Graphql = res?.data;
+		return graphql.data?.user as UserGraphQlV2;
+	}
+
+	async fetchPost(url: string): Promise<IPostModels> {
+		const post = shortcodeFormatter(url);
+
+		const metadata = await this.fetchPostByMediaId(post.media_id)
+
+		const item = metadata.items[0]
+		return {
+			username: item.user.username,
+			name: item.user.full_name,
+			postType: getPostType(item.product_type),
+			media_id: item.id,
+			shortcode: item.code,
+			taken_at_timestamp: item.taken_at,
+			likes: item.like_count,
+			caption: item.caption?.text || null,
+			media_count: item.product_type == ProductType.CAROUSEL ? item.carousel_media_count : 1,
+			comment_count: item.comment_count,
+			video_duration: item?.video_duration || null,
+			music: item?.clips_metadata || null,
+			links: this._formatSidecar(metadata),
+		}
+	}
+
+	async fetchUserPosts(username: string, end_cursor = ''): Promise<any> {
+		const userId = await this.getIdByUsername(username);
+		const params = {
+			'query_hash': '69cba40317214236af40e7efa697781d',
+			'variables': {
+				"id": userId,
+				"first": 12,
+				"after": end_cursor
+			}
+		}
+		const res = await this.fetchApi(config.instagram_base_url, '/graphql/query/', config.android, { params })
+		return res.data
+	}
+
+	/**
+	 * fetches highlight metadata
+	 * @param {string} username username target to fetch the highlights, also work with private profile if you use cookie \w your account that follows target account
+	 * @returns
+	 */
+	async fetchHighlights (username: string): Promise<IHighlightsMetadata> {
+		try {
+			const ids = await this._getReelsIds(username);
+			const reels = await Promise.all(
+				ids.map(async x => this.formatHighlight(await this._getReels(x.highlight_id))))
+
+			let data: IReelsMetadata[] = [];
+			for (let i = 0; i < reels.length; i++) {
+				data.push({
+					title: ids[i].title,
+					cover: ids[i].cover,
+					media_count: reels[i].length,
+					highlights_id: ids[i].highlight_id,
+					highlights: reels[i]
+				})
+			}
+			let json: IHighlightsMetadata = {
+				username,
+				highlights_count: ids.length,
+				data: data
+			}
+
+			return json;
+		} catch (error) {
+			throw error
+		}
+	}
+
+	public getIdByUsername = async (username: string): Promise<string> => {
+		const res = await this.fetchUser(username);
+		return res?.id;
+	}
+
+	async searchFollower (userId: string, searchTerm: string): Promise<ISearchFollow> {
+		const res = await this.fetchApi(
+			config.instagram_api_v1,
+			`/friendships/${userId}/followers/?count=12&query=${searchTerm}&search_surface=follow_list_page`,
 			config.iPhone,
 		);
 		return res?.data || res
 	}
 
-	public searchFollowing = async (userId: userId, seachTerm: seachTerm): Promise<ISearchFollow> => {
+	public searchFollowing = async (userId: string, seachTerm: string): Promise<ISearchFollow> => {
 		const res = await this.fetchApi(
 			config.instagram_api_v1,
 			`/friendships/${userId}/following/?query=${seachTerm}`,
@@ -152,29 +224,6 @@ export class InsScraperService {
 		return urls
 	}
 
-	public fetchPost = async (url: url): Promise<IPostModels> => {
-		const post = shortcodeFormatter(url);
-
-		const metadata = await this.fetchPostByMediaId(post.media_id)
-
-		const item = metadata.items[0]
-		return {
-			username: item.user.username,
-			name: item.user.full_name,
-			postType: getPostType(item.product_type),
-			media_id: item.id,
-			shortcode: item.code,
-			taken_at_timestamp: item.taken_at,
-			likes: item.like_count,
-			caption: item.caption?.text || null,
-			media_count: item.product_type == ProductType.CAROUSEL ? item.carousel_media_count : 1,
-			comment_count: item.comment_count,
-			video_duration: item?.video_duration || null,
-			music: item?.clips_metadata || null,
-			links: this._formatSidecar(metadata),
-		}
-	}
-
 	public fetchPostByMediaId = async (mediaId: string | number): Promise<IRawBody> => {
 		try {
 			const res = await this.fetchApi(
@@ -213,66 +262,6 @@ export class InsScraperService {
 		}
 	}
 
-	/**
-	 * fetch profile by username. including email, phone number 
-	 * @param {username} username
-	 * @returns 
-	 */
-	public fetchUser = async (username: username): Promise<IGUserMetadata> => {
-		const userID = await this.getIdByUsername(username);
-		const res = await this.fetchApi(
-			config.instagram_api_v1,
-			`/users/${userID}/info/`
-		);
-		const graphql: UserGraphQL = res?.data;
-		return {
-			id: graphql.user.pk,
-			username: graphql.user.username,
-			fullname: graphql.user.full_name,
-			followers: graphql.user.follower_count,
-			following: graphql.user.following_count,
-			post_count: graphql.user.media_count,
-			is_private: graphql.user.is_private,
-			is_verified: graphql.user.is_verified,
-			biography: graphql.user.biography,
-			external_url: graphql.user.external_url,
-			total_igtv_videos: graphql.user.total_igtv_videos,
-			has_videos: graphql.user.has_videos,
-			hd_profile_pic_url_info: graphql.user.hd_profile_pic_url_info,
-			has_highlight_reels: graphql.user.has_highlight_reels,
-			has_guides: graphql.user.has_guides,
-			is_business: graphql.user.is_business,
-			contact_phone_number: graphql.user.contact_phone_number,
-			public_email: graphql.user.public_email,
-			account_type: graphql.user.account_type,
-			...graphql
-		}
-	}
-
-	/**
-	 * hmmm..?
-	 * @param username 
-	 * @returns 
-	 */
-	public fetchUserV2 = async (username: username) => {
-		const res = await this.fetchApi(
-			config.instagram_api_v1,
-			`/users/web_profile_info/?username=${username}`,
-			config.iPhone,
-		);
-		const graphql: Graphql = res?.data;
-		return graphql.data?.user as UserGraphQlV2;
-	}
-
-	/**
-	 * simple method to check is user follow me
-	 * @param username 
-	 * @returns true if user is follow me
-	 */
-	public isFollowMe = async (username: username): Promise<boolean | undefined> => {
-		const user = await this.fetchUserV2(username);
-		return user.follows_viewer;
-	}
 
 	/**
 	 * 
@@ -329,7 +318,7 @@ export class InsScraperService {
 	 * @param {string} username username target to fetch the stories, also work with private profile if you use cookie \w your account that follows target account
 	 * @returns
 	 */
-	public fetchStories = async (username: username): Promise<IGStoriesMetadata> => {
+	public fetchStories = async (username: string): Promise<IGStoriesMetadata> => {
 		const userID = await this.getIdByUsername(username);
 		const res = await this.fetchApi(
 			config.instagram_api_v1,
@@ -356,7 +345,7 @@ export class InsScraperService {
 	 * @param {username} username
 	 * @returns 
 	 */
-	public _getReelsIds = async (username: username): Promise<ReelsIds[]> => {
+	public _getReelsIds = async (username: string): Promise<ReelsIds[]> => {
 		const userID: string = await this.getIdByUsername(username);
 		const res = await this.fetchApi(
 			config.instagram_base_url,
@@ -402,163 +391,6 @@ export class InsScraperService {
 			url: item.is_video ? item.video_resources[0].src : item.display_url,
 			dimensions: item.dimensions,
 		}))
-	}
-
-	/**
-	 * fetches highlight metadata
-	 * @param {string} username username target to fetch the highlights, also work with private profile if you use cookie \w your account that follows target account
-	 * @returns
-	 */
-	public fetchHighlights = async (username: username): Promise<IHighlightsMetadata> => {
-		try {
-			const ids = await this._getReelsIds(username);
-			const reels = await Promise.all(ids.map(async x => this.formatHighlight(await this._getReels(x.highlight_id))))
-
-			let data: IReelsMetadata[] = [];
-			for (let i = 0; i < reels.length; i++) {
-				data.push({
-					title: ids[i].title,
-					cover: ids[i].cover,
-					media_count: reels[i].length,
-					highlights_id: ids[i].highlight_id,
-					highlights: reels[i]
-				})
-			}
-			let json: IHighlightsMetadata = {
-				username,
-				highlights_count: ids.length,
-				data: data
-			}
-
-			return json;
-		} catch (error) {
-			throw error
-		}
-	}
-
-	/**
-	 * fetches user posts, with pagination
-	 * @deprecated Does not return all information about a post, use fetchUserPostsV2()
-	 * @param username 
-	 * @param end_cursor get end_cursor by fetch user posts first
-	 * @returns 
-	 */
-	public fetchUserPosts = async (username: username, end_cursor = ''): Promise<IPaginatedPosts> => {
-		const userId = await this.getIdByUsername(username);
-		const params = {
-			'query_id': '17880160963012870',
-			'id': userId,
-			'first': 12,
-			'after': end_cursor
-		}
-		const res = await this.fetchApi(config.instagram_base_url, '/graphql/query/', config.android, { params })
-
-		return res?.data?.data.user.edge_owner_to_timeline_media
-	}
-
-	/**
-	 * fetches user posts, with pagination
-	 * @param username 
-	 * @param end_cursor get end_cursor by fetchUserPostsV2 first
-	 * @returns 
-	 */
-
-	public fetchUserPostsV2 = async (username: username, end_cursor = ''): Promise<IPaginatedPosts> => {
-		const userId = await this.getIdByUsername(username);
-		const params = {
-			'query_hash': '69cba40317214236af40e7efa697781d',
-			'variables': {
-				"id": userId,
-				"first": 12,
-				"after": end_cursor
-			}
-		}
-		const res = await this.fetchApi(config.instagram_base_url, '/graphql/query/', config.android, { params })
-
-		return res?.data?.data.user.edge_owner_to_timeline_media
-	}
-
-	private uploadPhoto = async (photo: string | Buffer) => {
-		try {
-			const uploadId = Date.now();
-
-			const file = Buffer.isBuffer(photo)
-				? photo
-				: fs.existsSync(photo)
-					? fs.readFileSync(photo)
-					: photo;
-
-			const uploadParams = {
-				media_type: 1,
-				upload_id: uploadId.toString(),
-				upload_media_height: 1080,
-				upload_media_width: 1080,
-				xsharing_user_ids: JSON.stringify([]),
-				image_compression: JSON.stringify({
-					lib_name: 'moz',
-					lib_version: '3.1.m',
-					quality: '80'
-				})
-			}
-
-			const nameEntity = `${uploadId}_0_${randInt(1000000000, 9999999999)}`
-
-			const headers = {
-				'x-entity-type': 'image/jpeg',
-				offset: 0,
-				'x-entity-name': nameEntity,
-				'x-instagram-rupload-params': JSON.stringify(uploadParams),
-				'x-entity-length': Buffer.byteLength(file),
-				'Content-Length': Buffer.byteLength(file),
-				'Content-Type': 'application/octet-stream',
-				'x-ig-app-id': `1217981644879628`,
-				'Accept-Encoding': 'gzip',
-				'X-Pigeon-Rawclienttime': (Date.now() / 1000).toFixed(3),
-				'X-IG-Connection-Speed': `${randInt(3700, 1000)}kbps`,
-				'X-IG-Bandwidth-Speed-KBPS': '-1.000',
-				'X-IG-Bandwidth-TotalBytes-B': '0',
-				'X-IG-Bandwidth-TotalTime-MS': '0',
-			}
-
-			const headersPhoto = this.buildHeaders(config.android, headers)
-
-			const result = await this.fetchApi(
-				`${config.instagram_base_url}`,
-				`/rupload_igphoto/fb_uploader_${nameEntity}`,
-				config.android,
-				{ headers: headersPhoto, data: file, method: 'POST' }
-			);
-			return result?.data
-		} catch (error) {
-			throw error
-		}
-	}
-
-
-	/**
-	 * 
-	 * @param photo input must be filepath or buffer
-	 */
-	public changeProfilePicture = async (photo: string | Buffer): Promise<IChangedProfilePicture> => {
-		const media = Buffer.isBuffer(photo) ? bufferToStream(photo) : fs.createReadStream(photo)
-
-		const form = new FormData();
-		form.append('profile_pic', media, 'profilepic.jpg')
-
-		const headers = this.buildHeaders(
-			config.desktop,
-			{
-				'X-CSRFToken': await getCsrfToken(),
-				...form.getHeaders()
-			}
-		)
-		const result = await this.fetchApi(config.instagram_base_url, '/accounts/web_change_profile_picture/', config.desktop, {
-			method: 'post',
-			data: form,
-			headers
-		})
-
-		return result?.data
 	}
 }
 

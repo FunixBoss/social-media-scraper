@@ -1,7 +1,7 @@
 import axios, { AxiosRequestHeaders, AxiosResponse } from "axios";
 import { formatCookie } from "../utils";
 import { config } from "../config";
-import { csrfToken, IgCookie, LoginData, password, username } from "../types";
+import { csrfToken, LoginData } from "../types";
 import { randomUUID } from "crypto";
 
 export const getCsrfToken = async (): Promise<csrfToken> => {
@@ -38,7 +38,7 @@ export const getCookie = async (username: string, password: string, withLoginDat
             `username=${username}&password=${encodeURIComponent(password)}&device_id=${randomUUID()}&login_attempt_count=0`, {
             headers: login_headers
         })
-        const cookie: IgCookie = formatCookie(res.headers['set-cookie']) || '';
+        const cookie: string = formatCookie(res.headers['set-cookie']) || '';
         const result = res.data;
         if (withLoginData) {
             result['cookie'] = cookie;

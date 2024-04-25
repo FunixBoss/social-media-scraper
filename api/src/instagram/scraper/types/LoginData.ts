@@ -1,7 +1,5 @@
-import { IgCookie } from ".";
-
 export interface LoginData {
-    cookie: IgCookie
+    cookie: string;
     logged_in_user: LoggedInUser;
     session_flush_nonce: any;
     status: string;
