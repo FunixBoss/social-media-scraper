@@ -6,16 +6,17 @@ import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import { InsScraperService } from '../scraper';
 import { IPaginatedPosts, ReelsIds} from '../scraper/types';
+import { InsFriendshipUser, InsFriendshipUsers } from 'src/pptr-crawler/types/ins/InsFriendship';
+import { InsProfile } from 'src/pptr-crawler/types/ins/InsProfile';
+import { InsHighlights } from 'src/pptr-crawler/types/ins/InsHighlights';
+import { InsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
+import InsUser from 'src/pptr-crawler/types/ins/InsUser';
 
-class ScrapeChannelQueryDto {
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(200)
-  username: string;
-
+export type ScrapeInfo = 'all' | 'profile' | 'highlights' | 'friendships' | 'posts' | 'reels'
+class GetUserScrapeInfosDto {
   @IsNotEmpty()
   @IsValidScraperInfo()
-  infos: string[];
+  infos: ScrapeInfo[];
 }
 
 export class GetUserParamsDto {
@@ -34,23 +35,18 @@ export class ChannelController {
   ) {}
 
   @Get(':username')
-  async fetchUser(@Param() params: GetUserParamsDto): Promise<any> {
+  async fetchUser(@Param() params: GetUserParamsDto, @Query() queries: GetUserScrapeInfosDto): Promise<InsUser> {
+    return await this.channelService.fetchUser(params.username, queries.infos);
   }
 
-
   @Get(':username/profile')
-  async fetchProfile(@Param() params: GetUserParamsDto): Promise<any> {
+  async fetchProfile(@Param() params: GetUserParamsDto): Promise<InsProfile> {
     return await this.channelService.fetchUserProfile(params.username);
   }
 
   @Get(':username/posts')
-  async fetchPosts(@Param() params: GetUserParamsDto): Promise<IPaginatedPosts> {
-    return await this.scraperService.fetchUserPosts(params.username)
-  }
-
-  @Get(':username/reelIds')
-  async fetchReelIds(@Param() params: GetUserParamsDto): Promise<ReelsIds[]> {
-    return await this.scraperService._getReelsIds(params.username)
+  async fetchPosts(@Param() params: GetUserParamsDto): Promise<InsPosts> {
+    return await this.channelService.fetchPosts(params.username)
   }
 
   @Get(':username/reels')
@@ -58,33 +54,13 @@ export class ChannelController {
     return await this.channelService.fetchReels(params.username);
   }
 
-  @Get(':username/stories')
-  async fetchStories(@Param() params: GetUserParamsDto): Promise<any> {
-
+  @Get(':username/friendships')
+  async fetchFriendships(@Param() params: GetUserParamsDto): Promise<InsFriendshipUsers> {
+    return await this.channelService.fetchFriendships(params.username);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.channelService.findOne(+id);
-  }
-
-  @Get()
-  findAll() {
-    return this.channelService.findAll();
-  }
-
-  @Post()
-  create(@Body() createChannelDto: CreateChannelDto) {
-    return this.channelService.create(createChannelDto);
-  }
-
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
-    return this.channelService.update(+id, updateChannelDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.channelService.remove(+id);
+  @Get(':username/highlights')
+  async fetchHighlights(@Param() params: GetUserParamsDto): Promise<InsHighlights> {
+    return await this.channelService.fetchHighlights(params.username);
   }
 }

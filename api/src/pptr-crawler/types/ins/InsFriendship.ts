@@ -1,7 +1,12 @@
-export type InsFriendshipUsers = {
+export type InsFriendshipUserFull = {
     xdt_api__v1__discover__chaining: {
         users: InsFriendshipUser[]
     }
+}
+
+export type InsFriendshipUsers = {
+    users: InsFriendshipUser[],
+    len: number;
 }
 
 export type InsFriendshipUser = {

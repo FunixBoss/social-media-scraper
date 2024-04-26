@@ -5,9 +5,9 @@ import { InsProfile } from "./InsProfile";
 import { InsReels } from "./InsReels";
 
 export default interface InsUser {
-    profile: InsProfile;
-    highlights: InsHighlights;
-    friendshipUsers: InsFriendshipUsers;
-    posts: InsPosts;
-    reels: InsReels;
+    profile?: InsProfile;
+    highlights?: InsHighlights;
+    friendshipUsers?: InsFriendshipUsers;
+    posts?: InsPosts;
+    reels?: InsReels;
 }

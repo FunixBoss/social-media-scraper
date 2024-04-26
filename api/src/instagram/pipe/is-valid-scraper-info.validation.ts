@@ -1,6 +1,6 @@
 import { registerDecorator, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 
-export const validChannelScraperInfos: string[] = ['profile', 'posts', 'reel', 'friendship', 'tagged'];
+export const validChannelScraperInfos: string[] = ['profile', 'posts', 'reels', 'friendships', 'tagged', 'highlights'];
 
 @ValidatorConstraint({ name: 'isValidScraperInfo', async: false })
 export class IsValidScraperInfoConstraint implements ValidatorConstraintInterface {
@@ -17,8 +17,6 @@ export class IsValidScraperInfoConstraint implements ValidatorConstraintInterfac
         }
         return true;
     }
-
-    transform
 
     defaultMessage(args: ValidationArguments) {
         return `Each info in "${args.property}" must be one of: ${validChannelScraperInfos.join(', ')}`;

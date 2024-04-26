@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { UpdateChannelDto } from './dto/update-channel.dto';
 import { InjectPage } from 'nestjs-puppeteer';
-import { Page } from 'puppeteer';
+import { Page, TimeoutError } from 'puppeteer';
 import { RequestInterceptionManager } from 'puppeteer-intercept-and-modify-requests';
 import { InsProfile, InsProfileFull, mapInsProfile } from 'src/pptr-crawler/types/ins/InsProfile';
 import { InsAPIWrapper } from 'src/pptr-crawler/types/ins/InsAPIWrapper';
 import { InsReel, InsReels, InsReelsFull, mapInsReels } from 'src/pptr-crawler/types/ins/InsReels';
 import { sleep } from 'src/pptr-crawler/utils/Utils';
-import { InsPageInfo } from 'src/pptr-crawler/types/ins/InsPageInfo';
+import { InsFriendshipUserFull, InsFriendshipUsers } from 'src/pptr-crawler/types/ins/InsFriendship';
+import { InsHighlight, InsHighlights, InsHighlightsFull, mapInsHighlight } from 'src/pptr-crawler/types/ins/InsHighlights';
+import { InsPost, InsPosts, InsPostsFull, mapInsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
+import { ScrapeInfo } from './channel.controller';
+import InsUser from 'src/pptr-crawler/types/ins/InsUser';
+import { info } from 'console';
 
 @Injectable()
 export class ChannelService {
@@ -31,65 +34,108 @@ export class ChannelService {
         },
       }
     )
-    // await interceptManager.intercept(
-    //   {
-    //     urlPattern: `https://www.instagram.com/api/graphql`,
-    //     resourceType: 'XHR',
-    //     modifyResponse: async ({ body }) => {
-    //       try {
-    //         const dataObj: InsAPIWrapper = JSON.parse(body);
-    //         if (!dataObj.data) return;
-
-    //         if (dataObj.data["user"]) {
-    //           console.log("==> Found Response: User Profile");
-    //           const profile: InsProfile = mapInsProfile(dataObj.data as InsProfileFull)
-    //           writeFile(`./src/store/profiles/${profile.username}.json`, JSON.stringify(profile), 'utf-8')
-    //         } else if (dataObj.data["xdt_api__v1__discover__chaining"]) {
-    //           console.log("==> Found Response: Friendship Users");
-    //           const friendshipUsers = dataObj.data as InsFriendshipUsers
-    //           const len: number = friendshipUsers.xdt_api__v1__discover__chaining.users.length
-    //           for (let i = 0; i < len; i++) {
-    //             const user: InsFriendshipUser = friendshipUsers.xdt_api__v1__discover__chaining.users[i];
-    //             writeFile(`./src/store/friendship-users/${i}-${user.username}.json`, JSON.stringify(user), 'utf-8')
-    //           }
-    //         } else if (dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
-    //           console.log("==> Found Response: Posts");
-    //           const posts: InsPosts = mapInsPosts(dataObj.data as InsPostsFull);
-    //           const len: number = posts.posts.length
-    //           for (let i = 0; i < len; i++) {
-    //             const post: InsPost = posts.posts[i];
-    //             writeFile(`./src/store/posts/${i}-${post.code}.json`, JSON.stringify(post), 'utf-8')
-    //           }
-    //         }
-    //       } catch (error) {
-    //         console.log(error);
-    //       }
-    //     },
-    //   },
-    //   {
-    //     urlPattern: `https://www.instagram.com/graphql/query`,
-    //     resourceType: 'XHR',
-    //     modifyResponse: async ({ body }) => {
-    //       try {
-    //         const dataObj: InsAPIWrapper = JSON.parse(body);
-    //         if (dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
-    //           console.log("==> Found Graphql Request: Reels");
-    //           const reels: InsReels = mapInsReels(dataObj.data as InsReelsFull)
-    //           const reelsLen: number = reels.reels.length
-    //           for (let i = 0; i < reelsLen; i++) {
-    //             const reel: InsReel = reels.reels[i];
-    //             writeFile(`./src/store/reels/${i}-${reel.code}.json`, JSON.stringify(reel), 'utf-8')
-    //           }
-    //         }
-    //       } catch (error) {
-    //         console.log(error);
-    //       }
-    //     },
-    //   }
-    // )
   }
 
-  async fetchUserProfile(username): Promise<InsProfile> {
+  async fetchUser(username: string, infos: ScrapeInfo[]): Promise<InsUser> {
+    let profile: InsProfile;
+    let friendshipUsers: InsFriendshipUsers = { users: [], len: 0 };
+    let highlights: InsHighlights = { highlights: [], len: 0 };
+    let posts: InsPosts = { posts: [], len: 0 };
+    let reels: InsReels = { reels: [], len: 0 };
+    let scanned: ScrapeInfo[] = []
+    await this.interceptManager.intercept(
+      {
+        urlPattern: `https://www.instagram.com/api/graphql`,
+        resourceType: 'XHR',
+        modifyResponse: async ({ body }) => {
+          try {
+            const dataObj: InsAPIWrapper = JSON.parse(body);
+            if (!dataObj.data) return;
+
+            if (!scanned.includes('profile') && infos.includes('profile') && dataObj.data["user"]) {
+              console.log("==> Found Response: User Profile");
+              profile = mapInsProfile(dataObj.data as InsProfileFull)
+              scanned.push('profile')
+            } else if (!scanned.includes('friendships') && infos.includes('friendships') && dataObj.data["xdt_api__v1__discover__chaining"]) {
+              console.log("==> Found Response: Friendship Users");
+              const friendshipUserApis = dataObj.data as InsFriendshipUserFull
+              friendshipUsers = {
+                users: friendshipUserApis.xdt_api__v1__discover__chaining.users,
+                len: friendshipUserApis.xdt_api__v1__discover__chaining.users.length
+              }
+              scanned.push('friendships');
+            } else if (infos.includes('posts') && dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
+              console.log("==> Found Response: Posts");
+              const pagedPosts: InsPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
+              posts.posts.push(...pagedPosts);
+              posts.len += pagedPosts.length
+              console.log(posts.len);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        },
+      },
+      {
+        urlPattern: `https://www.instagram.com/graphql/query`,
+        resourceType: 'XHR',
+        modifyResponse: async ({ body }) => {
+          try {
+            const dataObj: InsAPIWrapper = JSON.parse(body);
+            if (!scanned.includes('highlights') && infos.includes('highlights') && dataObj.data && dataObj.data["highlights"]) {
+              console.log("==> Found Graphql Request: Highlights");
+              let pagedHighlights: InsHighlight[] = mapInsHighlight(dataObj.data as InsHighlightsFull)
+              highlights.highlights.push(...pagedHighlights)
+              highlights.len += pagedHighlights.length
+              scanned.push('highlights')
+            } else if (infos.includes('reels') && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
+              console.log("==> Found Graphql Request: Reels");
+              const pagedReels: InsReel[] = mapInsReels(dataObj.data as InsReelsFull)
+              reels.reels.push(...pagedReels)
+              reels.len += pagedReels.length
+              console.log(reels.len);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        },
+      }
+    )
+
+    await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+    if (infos.includes('posts')) {
+      try {
+        await scrollToBottom(this.page);
+        scanned.push('posts')
+      } catch (error) {
+        if (error instanceof TimeoutError) {
+          console.log("Scanned All Posts")
+        }
+      };
+    }
+    await sleep(2)
+    if(infos.includes('reels')) {
+      await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
+      try {
+        await scrollToBottom(this.page);
+        scanned.push('reels')
+      } catch (error) {
+        if (error instanceof TimeoutError) {
+          console.log("Scanned All Posts")
+        }
+      };
+    }
+
+    return {
+      profile,
+      friendshipUsers,
+      highlights,
+      posts,
+      reels
+    }
+  }
+
+  async fetchUserProfile(username: string): Promise<InsProfile> {
     let profile: InsProfile;
     await this.interceptManager.intercept(
       {
@@ -109,11 +155,93 @@ export class ChannelService {
           }
         }
       })
-    await this.page.goto(`${this.baseUrl}/${username}`)
+    await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
     return profile;
   }
 
-  async fetchReels(username): Promise<InsReels> {
+  async fetchFriendships(username: string): Promise<InsFriendshipUsers> {
+    let friendshipUsers: InsFriendshipUsers = { users: [], len: 0 };
+    await this.interceptManager.intercept({
+      urlPattern: `https://www.instagram.com/api/graphql`,
+      resourceType: 'XHR',
+      modifyResponse: async ({ body }) => {
+        try {
+          const dataObj: InsAPIWrapper = JSON.parse(body);
+          if (!dataObj.data) return;
+
+          if (dataObj.data["xdt_api__v1__discover__chaining"]) {
+            console.log("==> Found Response: Friendship Users");
+            const friendshipUserApis = dataObj.data as InsFriendshipUserFull
+            friendshipUsers = {
+              users: friendshipUserApis.xdt_api__v1__discover__chaining.users,
+              len: friendshipUserApis.xdt_api__v1__discover__chaining.users.length
+            }
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    });
+    await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+    return friendshipUsers;
+  }
+
+  async fetchHighlights(username: string): Promise<InsHighlights> {
+    let highlights: InsHighlights = { highlights: [], len: 0 };
+    await this.interceptManager.intercept({
+      urlPattern: `https://www.instagram.com/graphql/query`,
+      resourceType: 'XHR',
+      modifyResponse: async ({ body }) => {
+        try {
+          const dataObj: InsAPIWrapper = JSON.parse(body);
+          if (dataObj.data && dataObj.data["highlights"]) {
+            console.log("==> Found Graphql Request: Highlights");
+            let pagedHighlights: InsHighlight[] = mapInsHighlight(dataObj.data as InsHighlightsFull)
+            highlights.highlights.push(...pagedHighlights)
+            highlights.len += pagedHighlights.length
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      },
+    })
+    await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
+    return highlights;
+  }
+
+  async fetchPosts(username: string): Promise<InsPosts> {
+    let posts: InsPosts = { posts: [], len: 0 };
+    await this.interceptManager.intercept({
+      urlPattern: `https://www.instagram.com/api/graphql`,
+      resourceType: 'XHR',
+      modifyResponse: async ({ body }) => {
+        try {
+          const dataObj: InsAPIWrapper = JSON.parse(body);
+          if (dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
+            console.log("==> Found Response: Posts");
+            const pagedPosts: InsPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
+            posts.posts.push(...pagedPosts);
+            posts.len += pagedPosts.length
+            console.log(posts.len);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    })
+    await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+    try {
+      await scrollToBottom(this.page);
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        console.log("Scanned All Posts")
+      }
+    };
+    await sleep(2);
+    return posts;
+  }
+
+  async fetchReels(username: string): Promise<InsReels> {
     let reels: InsReels = { reels: [], len: 0 };
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/graphql/query`,
@@ -134,41 +262,25 @@ export class ChannelService {
       },
     })
     await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
-    await scrollToBottom(this.page);
-    await sleep(2)
-    return reels
+    try {
+      await scrollToBottom(this.page);
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        console.log("Scanned All Posts")
+      }
+    };
+    await sleep(2);
+    return reels;
   }
 
-  create(createChannelDto: CreateChannelDto) {
-    return 'This action adds a new channel';
-  }
-
-  findAll() {
-    return `This action returns all channel`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} channel`;
-  }
-
-  update(id: number, updateChannelDto: UpdateChannelDto) {
-    return `This action updates a #${id} channel`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} channel`;
-  }
 }
 
-async function scrollToBottom(page) {
+async function scrollToBottom(page: Page) {
   let previousHeight = await page.evaluate('document.body.scrollHeight');
-
   while (true) {
     console.log("run")
     await page.evaluate('window.scrollBy(0, document.body.scrollHeight)');
-    await page.waitForFunction(
-      `document.body.scrollHeight >= ${previousHeight}`
-    );
+    await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 2000 });
     let currentHeight = await page.evaluate('document.body.scrollHeight');
 
     if (previousHeight >= currentHeight) {
@@ -177,6 +289,5 @@ async function scrollToBottom(page) {
     previousHeight = currentHeight;
     await sleep(1);
   }
-
   console.log("out")
 }
