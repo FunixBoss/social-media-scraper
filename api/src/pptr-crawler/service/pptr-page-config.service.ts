@@ -22,7 +22,9 @@ export class PptrPageConfig {
             const page = pages[i];
             const redirectUrls = [INS_URL, FB_URL, THREADS_URL];
             const cookiesPaths = ['./uploads/cookies/instagram/0.json', null, null]
-            await this.setupPage(page, cookiesPaths[i], redirectUrls[i], { username: 'eklbdtximj', password: 'mR1oHLz6IQa9' })
+            await this.setupPage(page, cookiesPaths[i], redirectUrls[i]
+                // , { username: 'eklbdtximj', password: 'mR1oHLz6IQa9' }
+            )
         }
     }
 

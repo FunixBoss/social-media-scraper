@@ -1,9 +1,9 @@
 export type InsReels = {
-    reels: InsReel[]
+    reels: InsReel[];
+    len: number;
 }
 
 export type InsReel = {
-    audience: string;
     code: string;
     comment_count: number;
     id: string;
@@ -70,7 +70,7 @@ export type IntReelsEdgeFull = {
     cursor: string;
 };
 
-export function mapInsReels(reels: InsReelsFull): InsReels {
+export function mapInsReels(reels: InsReelsFull): InsReel[] {
     const mappedReels: InsReel[] = [];
 
     if (
@@ -103,7 +103,6 @@ export function mapInsReels(reels: InsReelsFull): InsReels {
 
         // Map the reel data
         const mappedReel: InsReel = {
-            audience: node.media.audience ?? '',
             code: node.media.code,
             comment_count: node.media.comment_count,
             id: node.media.id,
@@ -125,5 +124,5 @@ export function mapInsReels(reels: InsReelsFull): InsReels {
     }
 
     // Return the mapped reels
-    return { reels: mappedReels };
+    return mappedReels;
 }

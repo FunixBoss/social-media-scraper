@@ -5,8 +5,7 @@ import { UpdateChannelDto } from './dto/update-channel.dto';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import { InsScraperService } from '../scraper';
-import { HMedia, IPaginatedPosts, ReelsIds} from '../scraper/types';
-import { InsReel, InsReels } from 'src/pptr-crawler/types/ins/InsReels';
+import { IPaginatedPosts, ReelsIds} from '../scraper/types';
 
 class ScrapeChannelQueryDto {
   @IsNotEmpty()
@@ -19,16 +18,10 @@ class ScrapeChannelQueryDto {
   infos: string[];
 }
 
-class ScrapeChannelUsername {
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(200)
-  username: string;
-}
-
 export class GetUserParamsDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(200)
   username: string;
 }
 

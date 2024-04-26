@@ -41,8 +41,7 @@ const minimal_args = [
     '--password-store=basic',
     '--use-gl=swiftshader',
     '--use-mock-keychain',
-    `--proxy-server=http://206.206.69.103:6367`,
-    '--proxy-auth=eklbdtximj:mR1oHLz6IQa9'
+    // `--proxy-server=http://206.206.69.103:6367`,
 ];
 
 @Injectable()

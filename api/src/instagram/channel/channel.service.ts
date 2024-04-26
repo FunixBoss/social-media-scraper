@@ -7,7 +7,8 @@ import { RequestInterceptionManager } from 'puppeteer-intercept-and-modify-reque
 import { InsProfile, InsProfileFull, mapInsProfile } from 'src/pptr-crawler/types/ins/InsProfile';
 import { InsAPIWrapper } from 'src/pptr-crawler/types/ins/InsAPIWrapper';
 import { InsReel, InsReels, InsReelsFull, mapInsReels } from 'src/pptr-crawler/types/ins/InsReels';
-import { writeFile } from 'fs';
+import { sleep } from 'src/pptr-crawler/utils/Utils';
+import { InsPageInfo } from 'src/pptr-crawler/types/ins/InsPageInfo';
 
 @Injectable()
 export class ChannelService {
@@ -113,25 +114,28 @@ export class ChannelService {
   }
 
   async fetchReels(username): Promise<InsReels> {
-    let reels: InsReels = { reels: [] };
-    await this.interceptManager.intercept(
-      {
-        urlPattern: `https://www.instagram.com/graphql/query`,
-        resourceType: 'XHR',
-        modifyResponse: async ({ body }) => {
-          try {
-            const dataObj: InsAPIWrapper = JSON.parse(body);
-            if (dataObj && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
-              console.log("==> Found Graphql Request: Reels");
-              reels = mapInsReels(dataObj.data as InsReelsFull)
-            }
-          } catch (error) {
-            console.log(error);
+    let reels: InsReels = { reels: [], len: 0 };
+    await this.interceptManager.intercept({
+      urlPattern: `https://www.instagram.com/graphql/query`,
+      resourceType: 'XHR',
+      modifyResponse: async ({ body }) => {
+        try {
+          const dataObj: InsAPIWrapper = JSON.parse(body);
+          if (dataObj && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
+            console.log("==> Found Graphql Request: Reels");
+            const pagedReels: InsReel[] = mapInsReels(dataObj.data as InsReelsFull)
+            reels.reels.push(...pagedReels)
+            reels.len += pagedReels.length
+            console.log(reels.len);
           }
-        },
-      }
-    ) 
-    await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle0' })
+        } catch (error) {
+          console.log(error);
+        }
+      },
+    })
+    await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
+    await scrollToBottom(this.page);
+    await sleep(2)
     return reels
   }
 
@@ -154,4 +158,25 @@ export class ChannelService {
   remove(id: number) {
     return `This action removes a #${id} channel`;
   }
+}
+
+async function scrollToBottom(page) {
+  let previousHeight = await page.evaluate('document.body.scrollHeight');
+
+  while (true) {
+    console.log("run")
+    await page.evaluate('window.scrollBy(0, document.body.scrollHeight)');
+    await page.waitForFunction(
+      `document.body.scrollHeight >= ${previousHeight}`
+    );
+    let currentHeight = await page.evaluate('document.body.scrollHeight');
+
+    if (previousHeight >= currentHeight) {
+      break;
+    }
+    previousHeight = currentHeight;
+    await sleep(1);
+  }
+
+  console.log("out")
 }
