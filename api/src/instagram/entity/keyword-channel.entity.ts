@@ -5,7 +5,7 @@ import { Channel } from './channel.entity';
 @Entity()
 export class KeywordChannel {
     @PrimaryColumn()
-    keyword_name: number;
+    keyword_name: string;
 
     @PrimaryColumn({ length: 200 })
     channel_username: string;
@@ -15,9 +15,9 @@ export class KeywordChannel {
 
     @ManyToOne(() => Keyword, keyword => keyword.channels)
     @JoinColumn({ name: 'keyword_name' })
-    keyword: Keyword;
+    keyword?: Keyword;
 
     @ManyToOne(() => Channel, channel => channel.keywords)
     @JoinColumn({ name: 'channel_username' })
-    channel: Channel;
+    channel?: Channel;
 }

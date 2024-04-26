@@ -8,23 +8,23 @@ import { KeywordChannel } from './keyword-channel.entity';
 @Entity()
 export class Channel {
     @PrimaryColumn({ length: 200 })
-    username: string;
+    username?: string;
 
     @Column({ length: 200, nullable: true })
-    category: string;
+    category?: string;
 
     @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel)
-    crawlingHistory: ChannelCrawlingHistory[];
+    crawlingHistory?: ChannelCrawlingHistory[];
 
     @OneToOne(() => ChannelProfile, profile => profile.channel)
-    profile: ChannelProfile;
+    profile?: ChannelProfile;
 
     @OneToMany(() => ChannelFriendship, friendship => friendship.channel)
-    friendships: ChannelFriendship[];
+    friendships?: ChannelFriendship[];
 
     @OneToMany(() => ChannelReel, reel => reel.channel)
-    reels: ChannelReel[];
+    reels?: ChannelReel[];
 
     @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.channel)
-    keywords: KeywordChannel[];
+    keywords?: KeywordChannel[];
 }

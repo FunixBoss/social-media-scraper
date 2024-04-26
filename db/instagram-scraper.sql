@@ -86,15 +86,15 @@ create table `keyword_channel` (
     foreign key (channel_username) references `channel`(username)
 );
 
-
-
-
 create table `hashtag`(
     code varchar(200) primary key,
+    media_count bigint,
     category varchar(50),
     classify varchar(50), -- tự add/bot quét
+    keyword varchar(200),
     priority varchar(50) default 'MEDIUM',
-    foreign key (priority) references `priority`(name)
+    foreign key (priority) references `priority`(name),
+    foreign key (keyword) references `keyword`(name)
 );
 
 create table `channel_reel_hashtag`(

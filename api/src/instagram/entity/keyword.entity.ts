@@ -15,7 +15,14 @@ export class Keyword {
     @JoinColumn({ name: 'priority' })
     priorityObj: Priority;
 
-    @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.keyword)
+    @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.keyword, {
+        cascade: ['insert', 'remove', 'soft-remove']
+    })
     channels: KeywordChannel[];
+
+    @OneToMany(() => Hashtag, hashtag => hashtag.keyword, {
+        cascade: ['insert']
+    })
+    hashtags: Hashtag[];
 
 }

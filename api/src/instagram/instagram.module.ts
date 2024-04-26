@@ -6,6 +6,7 @@ import { ReelModule } from './reel/reel.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ScraperModule } from './scraper/scraper.module';
+import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
 
 // const envData = process.env;
 @Module({
@@ -30,7 +31,7 @@ import { ScraperModule } from './scraper/scraper.module';
     }),
   ],
   exports: [
-    TypeOrmModule
+    TypeOrmModule,
   ]
 })
 export class InstagramModule { }

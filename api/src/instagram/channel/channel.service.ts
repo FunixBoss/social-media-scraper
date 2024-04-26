@@ -25,7 +25,6 @@ export class ChannelService {
   }
 
   async setUpPageInterceptors(): Promise<void> {
-    let i = 0;
     this.interceptManager = new RequestInterceptionManager(
       await this.page.target().createCDPSession(),
       {

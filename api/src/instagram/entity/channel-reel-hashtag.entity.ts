@@ -14,7 +14,7 @@ export class ChannelReelHashtag {
     @JoinColumn({ name: 'channel_reel_code' })
     channelReel: ChannelReel;
 
-    @ManyToOne(() => Hashtag, hashtag => hashtag.channelReels)
-    @JoinColumn({ name: 'hashtag_code' })
-    hashtag: Hashtag;
+    // @ManyToOne(() => Hashtag, hashtag => hashtag.channelReels)
+    // @JoinColumn({ name: 'hashtag_code' })
+    // hashtag: Hashtag;
 }

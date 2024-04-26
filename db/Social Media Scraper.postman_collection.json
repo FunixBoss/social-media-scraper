@@ -1,0 +1,119 @@
+{
+	"info": {
+		"_postman_id": "2e7198cd-b11c-49bc-9b78-bfb5f14f3e88",
+		"name": "Social Media Scraper",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "24896824"
+	},
+	"item": [
+		{
+			"name": "Instagram",
+			"item": [
+				{
+					"name": "Keyword",
+					"item": [
+						{
+							"name": "find by id",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "find all",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword"
+							},
+							"response": []
+						},
+						{
+							"name": "update",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Channel",
+					"item": [
+						{
+							"name": "full channel",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/posts"
+							},
+							"response": []
+						},
+						{
+							"name": "profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/profile"
+							},
+							"response": []
+						},
+						{
+							"name": "friendships",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/friendships"
+							},
+							"response": []
+						},
+						{
+							"name": "highlights",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "posts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
+							},
+							"response": []
+						},
+						{
+							"name": "reels",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
