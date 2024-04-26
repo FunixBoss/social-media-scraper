@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMan
 import { Priority } from './priority.entity';
 import { KeywordChannel } from './keyword-channel.entity';
 import { Hashtag } from './hashtag.entity';
+import { map } from 'rxjs/operators';
 
 @Entity()
 export class Keyword {
@@ -16,12 +17,14 @@ export class Keyword {
     priorityObj: Priority;
 
     @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.keyword, {
-        cascade: ['insert', 'remove', 'soft-remove']
+        cascade: ['insert'],
+        onDelete: 'CASCADE'
     })
     channels: KeywordChannel[];
 
     @OneToMany(() => Hashtag, hashtag => hashtag.keyword, {
-        cascade: ['insert']
+        cascade: ['insert'],
+        onDelete: 'CASCADE'
     })
     hashtags: Hashtag[];
 

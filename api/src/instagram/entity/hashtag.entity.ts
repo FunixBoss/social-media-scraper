@@ -32,5 +32,6 @@ export class Hashtag {
     // channelReels?: ChannelReel[];
 
     @ManyToOne(() => Keyword, keyword => keyword.hashtags)
+    @JoinColumn({ name: 'keyword_name' })
     keyword?: Keyword;
 }

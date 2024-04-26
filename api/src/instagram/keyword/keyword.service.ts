@@ -3,7 +3,7 @@ import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Keyword } from '../entity/keyword.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Hashtag } from '../entity/hashtag.entity';
 import { EntityAlreadyExists } from 'src/exception/entity-already-exists.exception';
 import { InjectPage } from 'nestjs-puppeteer';
@@ -24,7 +24,9 @@ export class KeywordService {
     @InjectRepository(Keyword) private readonly keywordRepository: Repository<Keyword>,
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
-    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page
+    @InjectRepository(KeywordChannel) private readonly keywordChannelRepository: Repository<KeywordChannel>,
+    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
+    private readonly dataSource: DataSource
   ) {
     this.setUpPageInterceptors()
   }
@@ -48,7 +50,21 @@ export class KeywordService {
   }
 
 
+  async findOne(keyword: string): Promise<Keyword> {
+    if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
+    return await this.keywordRepository.findOne({
+      relations: {
+        channels: true,
+        hashtags: true,
+      },
+      where: {
+        name: keyword
+      }
+    })
+  }
+
   async create(createKeywordDto: CreateKeywordDto): Promise<Keyword> {
+    if ((await this.isExists(createKeywordDto.name))) throw new EntityAlreadyExists('Keyword', createKeywordDto.name);
 
     const keyword = new Keyword();
     keyword.name = createKeywordDto.name;
@@ -66,8 +82,6 @@ export class KeywordService {
       }
       hashtags.push(hashtag)
     }
-
-
 
     const channelsFromKeyword: InsSearchChannels = await this.fetchChannel(keyword);
     let channels: Channel[] = []
@@ -89,6 +103,7 @@ export class KeywordService {
 
     this.channelRepository.save(channels);
     keyword.channels = kwChannels;
+    keyword.hashtags = hashtags;
     return await this.keywordRepository.save(keyword);
   }
 
@@ -148,7 +163,6 @@ export class KeywordService {
 
   async findHashtags(keyword: string): Promise<Hashtag[]> {
     if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
-
     return this.hashtagRepository.findBy({
       keyword: {
         name: keyword
@@ -156,19 +170,29 @@ export class KeywordService {
     })
   }
 
+  async findChannels(keywordName: string): Promise<Channel[]> {
+    if (!(await this.isExists(keywordName))) throw new EntityNotExists('Keyword', keywordName);
+    const keyword = await this.keywordRepository.findOne({
+      where: { name: keywordName },
+      relations: ['channels', 'channels.channel']
+    });
+    return keyword.channels.map(keywordChannel => keywordChannel.channel);
+  }
+
   async findAll(): Promise<Keyword[]> {
     return this.keywordRepository.find()
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} keyword`;
-  }
-
-  update(id: number, updateKeywordDto: UpdateKeywordDto) {
-    return `This action updates a #${id} keyword`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} keyword`;
+  async remove(keyword: string): Promise<void> {
+    if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      await this.keywordChannelRepository.delete({ keyword_name: keyword });
+      await this.hashtagRepository.delete({
+        keyword: {
+          name: keyword
+        }
+      });
+      await this.keywordRepository.delete({ name: keyword });
+    })
   }
 }
