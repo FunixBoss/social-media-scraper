@@ -5,7 +5,7 @@ import { PuppeteerNodeLaunchOptions } from "puppeteer";
 // const PUPPETEER_HEADLESS = (process.env.PUPPETEER_HEADLESS == 'true') ? "new" : false;
 const PUPPETEER_HEADLESS = false;
 const EXECUTABLE_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-const PROFILE_PATH = "C:/Users/nguye/AppData/Local/Google/Chrome/User Data/Default"
+const PROFILE_PATH = "C:/Users/My Rog/AppData/Local/Google/Chrome/User Data/Profile 41"
 const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
     '--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪

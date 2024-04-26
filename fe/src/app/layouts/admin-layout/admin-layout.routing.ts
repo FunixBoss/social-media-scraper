@@ -8,6 +8,9 @@ import { IconsComponent } from '../../icons/icons.component';
 import { MapsComponent } from '../../maps/maps.component';
 import { NotificationsComponent } from '../../notifications/notifications.component';
 import { UpgradeComponent } from '../../upgrade/upgrade.component';
+import { InstagramComponent } from 'app/instagram/instagram-profile/instagram.component';
+import { InstagramConsoleComponent } from 'app/instagram/instagram-console/instagram-console.component';
+import { InstagramKeywordComponent } from 'app/instagram/instagram-keyword/instagram-keyword.component';
 
 export const AdminLayoutRoutes: Routes = [
     // {
@@ -54,6 +57,13 @@ export const AdminLayoutRoutes: Routes = [
     // }
     { path: 'dashboard',      component: DashboardComponent },
     { path: 'user-profile',   component: UserProfileComponent },
+    { 
+        path: 'instagram',   
+        component: InstagramConsoleComponent,
+    },
+    { path: 'instagram/profile',   component: InstagramComponent },
+    { path: 'instagram/keyword',   component: InstagramKeywordComponent },
+
     { path: 'table-list',     component: TableListComponent },
     { path: 'typography',     component: TypographyComponent },
     { path: 'icons',          component: IconsComponent },
