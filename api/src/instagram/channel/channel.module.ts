@@ -9,7 +9,7 @@ import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
   imports: [
     HelperModule,
     ScraperModule,
-    PptrCrawlerModule,
+    PptrCrawlerModule, 
   ],
   controllers: [ChannelController],
   providers: [

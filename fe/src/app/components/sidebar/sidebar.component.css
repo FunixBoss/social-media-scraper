@@ -1,0 +1,15 @@
+/* Style cho các mục menu cấp cao */
+.nav > li.nav-item {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+/* Style cho các mục menu con */
+.nav > li.nav-item > ul {
+    margin-top: 5px; /* Điều chỉnh theo nhu cầu */
+}
+
+.nav > li.nav-item > ul > li.nav-item {
+    padding-left: 20px; /* Thụt lùi các mục con */
+}
