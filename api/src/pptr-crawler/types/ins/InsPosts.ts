@@ -279,6 +279,7 @@ export async function mapInsPosts(posts: InsPostsFull): Promise<ChannelPost[]> {
         video_type: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].type : null,
         code: node.code,
         comment_count: node.comment_count,
+        product_type: node.product_type,
       };
       insPosts.push(insPost);
     });

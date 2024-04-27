@@ -44,6 +44,9 @@ export class ChannelPost {
     @JoinColumn({ name: 'channel_username' })
     channel?: Channel;
 
-    @OneToMany(() => ChannelPostImage, image => image.post)
+    @OneToMany(() => ChannelPostImage, image => image.post, {
+        cascade: true,
+        onDelete: "CASCADE"
+    })
     images?: ChannelPostImage[];
 }
