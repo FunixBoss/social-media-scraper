@@ -25,7 +25,9 @@ create table `channel`(
     profile_pic_url varchar(1000),
     hd_profile_pic_url_info varchar(1000),
     id varchar(200),
-    media_count int,
+    total_posts int,
+    total_reels int,
+    total_friendships int,
     pk varchar(200)
 );
 
@@ -110,7 +112,8 @@ create table `keyword_channel` (
 );
 
 create table `hashtag`(
-    code varchar(200) primary key,
+	id bigint auto_increment primary key,
+    code varchar(200),
     media_count bigint,
     category varchar(200),
     classify varchar(200), -- tự add/bot quét
@@ -122,10 +125,10 @@ create table `hashtag`(
 
 create table `channel_reel_hashtag`(
 	channel_reel_code varchar(200),
-    hashtag_code varchar(200),
-    primary key(channel_reel_code, hashtag_code),
+    hashtag_id bigint,
+    primary key(channel_reel_code, hashtag_id),
 	foreign key (channel_reel_code) references `channel_reel`(code),
-    foreign key (hashtag_code) references `hashtag`(code)
+    foreign key (hashtag_id) references `hashtag`(id)
 );
 
 

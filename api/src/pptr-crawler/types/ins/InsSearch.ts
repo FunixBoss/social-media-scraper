@@ -1,26 +1,5 @@
-export type InsHashtags = {
-    hashtags: InsHashtag[]
-    len: number;
-}
-
-export type InsHashtag = {
-    position?: number;
-    name?: string;
-    id?: number;
-    media_count?: number;
-}
-
-export type InsSearchChannels = {
-    channels: InsSearchChannel[];
-    len: number;
-}
-
-export type InsSearchChannel = {
-    username: string;
-    full_name: string;
-    unseen_count: number | null;
-    profile_pic_url: string;
-}
+import { Channel } from "src/instagram/entity/channel.entity";
+import { Hashtag } from "src/instagram/entity/hashtag.entity";
 
 export type InsSearching = {
     xdt_api__v1__fbsearch__topsearch_connection: {
@@ -60,8 +39,8 @@ export type InsSearchChannelFull = {
     id: string | number; // Change the type accordingly if you know the type
 }
 
-export function mapInsSearchChannel(channels: InsSearching): InsSearchChannel[] {
-    const searchChannels: InsSearchChannel[] = [];
+export function mapInsSearchChannel(channels: InsSearching): Channel[] {
+    const searchChannels: Channel[] = [];
 
     if (!channels || !channels.xdt_api__v1__fbsearch__topsearch_connection || !channels.xdt_api__v1__fbsearch__topsearch_connection.users) {
         return searchChannels; // Return an empty array if there are no users
@@ -72,15 +51,12 @@ export function mapInsSearchChannel(channels: InsSearching): InsSearchChannel[] 
             continue; // Skip invalid entries
         }
 
-        const { username, full_name, unseen_count, profile_pic_url } = user.user;
-
-        const searchChannel: InsSearchChannel = {
+        const { username, full_name, profile_pic_url } = user.user;
+        const searchChannel: Channel = {
             username,
             full_name,
-            unseen_count,
             profile_pic_url,
         };
-
         searchChannels.push(searchChannel);
     }
 
@@ -88,9 +64,8 @@ export function mapInsSearchChannel(channels: InsSearching): InsSearchChannel[] 
 }
 
 
-export function mapInsHashtag(hashtags: InsSearching): InsHashtag[] {
-    const result: InsHashtag[] = [];
-
+export function mapInsHashtag(hashtags: InsSearching): Hashtag[] {
+    const result: Hashtag[] = [];
     if (!hashtags || !hashtags.xdt_api__v1__fbsearch__topsearch_connection) {
         return result;
     }
@@ -99,19 +74,16 @@ export function mapInsHashtag(hashtags: InsSearching): InsHashtag[] {
         if (!fullHashtag || !fullHashtag.hashtag) {
             continue; // Skip invalid entries
         }
-
-        const { position, hashtag: { name, media_count, id } } = fullHashtag;
-
+        const { hashtag: { name, media_count, id } } = fullHashtag;
         if (name && media_count && id) {
-            const mappedHashtag: InsHashtag = {
-                position: position || 0,
-                name,
+            const mappedHashtag: Hashtag = {
+                code: name,
                 media_count,
-                id,
+                classify: "BOT_SCANNING",
+                priority: "MEDIUM"
             };
             result.push(mappedHashtag);
         }
     }
-
     return result;
 }

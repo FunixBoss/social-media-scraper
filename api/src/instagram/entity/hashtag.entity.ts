@@ -1,11 +1,13 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { Keyword } from './keyword.entity';
-import { ChannelReel } from './channel-reel.entity';
 
 @Entity()
 export class Hashtag {
-    @PrimaryColumn({ length: 200 })
-    code: string;
+    @PrimaryGeneratedColumn()
+    id?: number;
+
+    @Column({ length: 200 })
+    code?: string;
 
     @Column({ nullable: true })
     media_count?: number;
@@ -15,7 +17,6 @@ export class Hashtag {
 
     @Column({ length: 200, nullable: true })
     classify?: string;
-
 
     @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;

@@ -1,6 +1,5 @@
-import { Injectable, Put } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
-import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Keyword } from '../entity/keyword.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -10,11 +9,13 @@ import { InjectPage } from 'nestjs-puppeteer';
 import { Page } from 'puppeteer';
 import { RequestInterceptionManager } from 'puppeteer-intercept-and-modify-requests';
 import { InsAPIWrapper } from 'src/pptr-crawler/types/ins/InsAPIWrapper';
-import { InsHashtag, InsHashtags, InsSearching, InsSearchChannel, InsSearchChannels, mapInsHashtag, mapInsSearchChannel } from 'src/pptr-crawler/types/ins/InsSearch';
+import { InsSearching, mapInsHashtag, mapInsSearchChannel } from 'src/pptr-crawler/types/ins/InsSearch';
 import { sleep } from 'src/pptr-crawler/utils/Utils';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
 import { Channel } from '../entity/channel.entity';
 import { KeywordChannel } from '../entity/keyword-channel.entity';
+import { FindOneKeywordDTO } from './dto/findone-keyword.dto';
+import { FindAllKeywordDTO } from './dto/findall-keyword.dto';
 
 @Injectable()
 export class KeywordService {
@@ -31,6 +32,52 @@ export class KeywordService {
     this.setUpPageInterceptors()
   }
 
+  async findAll(): Promise<FindAllKeywordDTO[]> {
+    const keywords: Keyword[] = await this.keywordRepository.find({
+      relations: [
+        "channels", "channels.channel",
+        "hashtags"
+      ]
+    })
+
+    return keywords.map(kw => {
+      return {
+        name: kw.name,
+        priority: kw.priority,
+        total_channels: kw.channels.length,
+        total_hashtags: kw.hashtags.length
+      }
+    })
+  }
+
+  private async isExists(keyword: string): Promise<boolean> {
+    const kw: Keyword = await this.keywordRepository.findOneBy({
+      name: keyword
+    })
+    return !!kw;
+  }
+
+  async mapToFindOneKeywordDTO(kw: string): Promise<FindOneKeywordDTO> {
+    const keyword: Keyword = await this.keywordRepository.findOne({
+      where: {
+        name: kw
+      },
+      relations: [
+        "channels", "channels.channel",
+        "hashtags"
+      ]
+    })
+
+    return {
+      name: keyword.name,
+      priority: keyword.priority,
+      channels: keyword.channels.map(ch => ch.channel),
+      hashtags: keyword.hashtags,
+      total_hashtags: keyword.hashtags ? keyword.hashtags.length : 0,
+      total_channels: keyword.channels ? keyword.channels.length : 0
+    } as FindOneKeywordDTO;
+  }
+
   private async setUpPageInterceptors(): Promise<void> {
     this.interceptManager = new RequestInterceptionManager(
       await this.page.target().createCDPSession(),
@@ -42,73 +89,50 @@ export class KeywordService {
     )
   }
 
-  private async isExists(keyword: string): Promise<boolean> {
-    const kw: Keyword = await this.keywordRepository.findOneBy({
-      name: keyword
-    })
-    return !!kw;
-  }
 
 
-  async findOne(keyword: string): Promise<Keyword> {
+  async findOne(keyword: string): Promise<FindOneKeywordDTO> {
     if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
-    return await this.keywordRepository.findOne({
-      relations: {
-        channels: true,
-        hashtags: true,
-      },
-      where: {
-        name: keyword
-      }
-    })
+    return this.mapToFindOneKeywordDTO(keyword);
   }
 
-  async create(createKeywordDto: CreateKeywordDto): Promise<Keyword> {
+  async create(createKeywordDto: CreateKeywordDto): Promise<FindOneKeywordDTO> {
     if ((await this.isExists(createKeywordDto.name))) throw new EntityAlreadyExists('Keyword', createKeywordDto.name);
 
-    const keyword = new Keyword();
-    keyword.name = createKeywordDto.name;
-    keyword.priority = createKeywordDto.priority.toUpperCase() || 'MEDIUM'; // Assign default value if priority is not provided
+    try {
+      const keyword = new Keyword();
+      keyword.name = createKeywordDto.name;
+      keyword.priority = createKeywordDto.priority.toUpperCase() || 'MEDIUM'; // Assign default value if priority is not provided
 
-    const hashtagsFromKeyword: InsHashtags = await this.fetchHashtags(keyword);
-    let hashtags: Hashtag[] = []
-    for (let i = 0; i < hashtagsFromKeyword.len; i++) {
-      const insHashtag: InsHashtag = hashtagsFromKeyword.hashtags[i];
-      const hashtag: Hashtag = {
-        code: insHashtag.name,
-        media_count: insHashtag.media_count,
-        priority: 'MEDIUM',
-        classify: 'BOT_SCANNING',
+      const hashtags: Hashtag[] = await this.fetchHashtags(keyword);
+      hashtags.forEach(hashtag => hashtag.keyword = { name: keyword.name });
+
+      const channels: Channel[] = await this.fetchChannel(keyword);
+      const channelsLen: number = channels.length
+      let kwChannels: KeywordChannel[] = []
+      for (let i = 0; i < channelsLen; i++) {
+        const channel: Channel = channels[i]
+        const kwChannel: KeywordChannel = {
+          keyword_name: keyword.name,
+          channel_username: channel.username,
+          status: 'DONE',
+        }
+        kwChannels.push(kwChannel)
       }
-      hashtags.push(hashtag)
+      await this.dataSource.transaction(async (transactionalEntityManager) => {
+        await this.channelRepository.save(channels);
+        keyword.channels = kwChannels;
+        keyword.hashtags = hashtags;
+        await this.keywordRepository.save(keyword)
+      })
+      return this.mapToFindOneKeywordDTO(keyword.name);
+    } catch (error) {
+      console.log(error);
     }
-
-    const channelsFromKeyword: InsSearchChannels = await this.fetchChannel(keyword);
-    let channels: Channel[] = []
-    let kwChannels: KeywordChannel[] = []
-    for (let i = 0; i < channelsFromKeyword.len; i++) {
-      const searchChannel: InsSearchChannel = channelsFromKeyword.channels[i];
-      const channel: Channel = {
-        username: searchChannel.username
-      }
-      channels.push(channel)
-
-      const kwChannel: KeywordChannel = {
-        keyword_name: keyword.name,
-        channel_username: channel.username,
-        status: 'DONE',
-      }
-      kwChannels.push(kwChannel)
-    }
-
-    this.channelRepository.save(channels);
-    keyword.channels = kwChannels;
-    keyword.hashtags = hashtags;
-    return await this.keywordRepository.save(keyword);
   }
 
-  private async fetchHashtags(keyword: Keyword): Promise<InsHashtags> {
-    let hashtags: InsHashtags = { hashtags: [], len: 0 };
+  private async fetchHashtags(keyword: Keyword): Promise<Hashtag[]> {
+    let hashtags: Hashtag[] = [];
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
       resourceType: 'XHR',
@@ -117,10 +141,8 @@ export class KeywordService {
           const dataObj: InsAPIWrapper = JSON.parse(body);
           if (dataObj.data["xdt_api__v1__fbsearch__topsearch_connection"]) {
             console.log("==> Found Response: Hashtags");
-            const pagedHashtags: InsHashtag[] = await mapInsHashtag(dataObj.data as InsSearching);
-            hashtags.hashtags.push(...pagedHashtags);
-            hashtags.len += pagedHashtags.length
-            console.log(hashtags.len);
+            const pagedHashtags: Hashtag[] = await mapInsHashtag(dataObj.data as InsSearching);
+            hashtags.push(...pagedHashtags);
           }
         } catch (error) {
           console.log(error);
@@ -134,8 +156,8 @@ export class KeywordService {
     return hashtags;
   }
 
-  private async fetchChannel(keyword: Keyword): Promise<InsSearchChannels> {
-    let channels: InsSearchChannels = { channels: [], len: 0 };
+  private async fetchChannel(keyword: Keyword): Promise<Channel[]> {
+    let channels: Channel[] = [];
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
       resourceType: 'XHR',
@@ -144,10 +166,8 @@ export class KeywordService {
           const dataObj: InsAPIWrapper = JSON.parse(body);
           if (dataObj.data["xdt_api__v1__fbsearch__topsearch_connection"]) {
             console.log("==> Found Response: Search Channel");
-            const pagedChannels: InsSearchChannel[] = await mapInsSearchChannel(dataObj.data as InsSearching);
-            channels.channels.push(...pagedChannels);
-            channels.len += pagedChannels.length
-            console.log(channels.len);
+            const pagedChannels: Channel[] = await mapInsSearchChannel(dataObj.data as InsSearching);
+            channels.push(...pagedChannels);
           }
         } catch (error) {
           console.log(error);
@@ -177,10 +197,6 @@ export class KeywordService {
       relations: ['channels', 'channels.channel']
     });
     return keyword.channels.map(keywordChannel => keywordChannel.channel);
-  }
-
-  async findAll(): Promise<Keyword[]> {
-    return this.keywordRepository.find()
   }
 
   async remove(keyword: string): Promise<void> {

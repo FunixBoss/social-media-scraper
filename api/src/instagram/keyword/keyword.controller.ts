@@ -5,6 +5,8 @@ import { Keyword } from '../entity/keyword.entity';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { Hashtag } from '../entity/hashtag.entity';
 import { Channel } from '../entity/channel.entity';
+import { FindOneKeywordDTO } from './dto/findone-keyword.dto';
+import { FindAllKeywordDTO } from './dto/findall-keyword.dto';
 
 export class GetHashtagNameParamsDto {
   @IsNotEmpty()
@@ -18,8 +20,8 @@ export class KeywordController {
   constructor(private readonly keywordService: KeywordService) {}
 
   @Get(":name")
-  async findOne(@Param() param: GetHashtagNameParamsDto): Promise<Keyword> {
-    return this.keywordService.findOne(param.name);
+  async findOne(@Param() param: GetHashtagNameParamsDto): Promise<FindOneKeywordDTO> {
+    return this.keywordService.mapToFindOneKeywordDTO(param.name);
   }
 
   @Get(':name/hashtags')
@@ -33,13 +35,12 @@ export class KeywordController {
   }
 
   @Get()
-  async findAll(): Promise<Keyword[]> {
+  async findAll(): Promise<FindAllKeywordDTO[]> {
     return this.keywordService.findAll();
   }
 
-
   @Post()
-  create(@Body() createKeywordDto: CreateKeywordDto): Promise<Keyword> {
+  create(@Body() createKeywordDto: CreateKeywordDto): Promise<FindOneKeywordDTO> {
     return this.keywordService.create(createKeywordDto);
   }
 

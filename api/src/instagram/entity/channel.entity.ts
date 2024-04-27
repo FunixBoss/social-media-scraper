@@ -8,7 +8,7 @@ import { ChannelPost } from './channel-post.entity';
 @Entity()
 export class Channel {
     @PrimaryColumn({ length: 200 })
-    username: string;
+    username?: string;
 
     @Column({ length: 200, nullable: true })
     category?: string;
@@ -41,7 +41,13 @@ export class Channel {
     id?: string;
 
     @Column({ type: 'int', nullable: true })
-    media_count?: number;
+    total_posts?: number;
+
+    @Column({ type: 'int', nullable: true })
+    total_reels?: number;
+
+    @Column({ type: 'int', nullable: true })
+    total_friendships?: number;
 
     @Column({ length: 200, nullable: true })
     pk?: string;

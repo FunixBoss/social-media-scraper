@@ -99,7 +99,8 @@ export class ChannelService {
       ? await this.channelReelRepository.find({ where: { channel: { username } } })
       : [];
     let reelLen: number = reels.length;
-
+    console.log(reelLen);
+    
     if (hasScannedAll) return {
       profile,
       friendshipUsers,
@@ -125,6 +126,7 @@ export class ChannelService {
               const friendshipUserApis = dataObj.data as InsFriendshipUserFull
               friendshipUsers = friendshipUserApis.xdt_api__v1__discover__chaining.users;
               friendshipLen = friendshipUsers.length;
+              profile.total_friendships = friendshipLen;
               scanning.push('CHANNEL_FRIENDSHIP');
             } else if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts') && dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
               console.log("==> Found Response: Posts");
@@ -160,7 +162,8 @@ export class ChannelService {
 
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
     let hasReels: boolean = await this.hasReelsTab();
-
+    console.log(`hasReel: ${hasReels}`);
+    
     if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts')) {
       try {
         await scrollToBottom(this.page);
@@ -179,8 +182,11 @@ export class ChannelService {
         if (error instanceof TimeoutError) {
           console.log("Scanned All Reels")
           scanning.push('CHANNEL_REELS');
+          profile.total_reels = reelLen
         }
       };
+    } else if (!hasReels) {
+      profile.total_reels = 0;
     }
 
     await this.dataSource.transaction(async (transactionalEntityManager) => {
@@ -191,9 +197,9 @@ export class ChannelService {
           crawling_type_name: 'CHANNEL_PROFILE',
           date: new Date()
         })
-        await this.channelRepository.save(profile)
       }
 
+      await this.channelRepository.save(profile)
       if (scanning.includes("CHANNEL_FRIENDSHIP")) {
         channelCrawlings.push({
           channel_username: username,
@@ -217,7 +223,7 @@ export class ChannelService {
         await this.channelPostRepository.save(posts)
       }
 
-      if (scanning.includes("CHANNEL_REELS")) {
+      if (!hasReels || scanning.includes("CHANNEL_REELS")) {
         channelCrawlings.push({
           channel_username: username,
           crawling_type_name: 'CHANNEL_REELS',
@@ -274,8 +280,9 @@ export class ChannelService {
           crawling_type_name: 'CHANNEL_REELS',
           date: new Date()
         })
+        channel.total_reels = 0;
       }
-      if (channel.media_count == 0) {
+      if (channel.total_posts == 0) {
         channelCrawlings.push({
           channel_username: username,
           crawling_type_name: 'CHANNEL_POSTS',
@@ -302,6 +309,7 @@ export class ChannelService {
     }
 
     let friendshipUsers: ChannelFriendship[] = [];
+    let friendshipLen: number = 0;
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
       resourceType: 'XHR',
@@ -315,6 +323,7 @@ export class ChannelService {
             const friendshipUserApis = dataObj.data as InsFriendshipUserFull
             friendshipUsers = friendshipUserApis.xdt_api__v1__discover__chaining.users;
             friendshipUsers.forEach(f => f.channel = { username })
+            friendshipLen += friendshipUsers.length
           }
         } catch (error) {
           console.log(error);
@@ -328,6 +337,7 @@ export class ChannelService {
         crawling_type_name: 'CHANNEL_FRIENDSHIP',
         date: new Date()
       }
+      await this.channelRepository.save({username, total_friendships: friendshipLen})
       await this.channelFriendRepository.save(friendshipUsers)
       await this.channelCrawlingHistoryRepository.save(channelCrawling);
     })
@@ -396,7 +406,7 @@ export class ChannelService {
       })
     }
     let reels: ChannelReel[] = [];
-    let len: number = 0
+    let reelLen: number = 0
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/graphql/query`,
       resourceType: 'XHR',
@@ -407,8 +417,8 @@ export class ChannelService {
             console.log("==> Found Graphql Request: Reels");
             const pagedReels: ChannelReel[] = mapInsReels(dataObj.data as InsReelsFull)
             reels.push(...pagedReels)
-            len += pagedReels.length
-            console.log(len);
+            reelLen += pagedReels.length
+            console.log(reelLen);
           }
         } catch (error) {
           console.log(error);
@@ -432,7 +442,7 @@ export class ChannelService {
         console.log("Scanned All Reels")
       }
     };
-    for (let i = len; i > 0; i--) {
+    for (let i = reelLen; i > 0; i--) {
       let reel: ChannelReel = reels[i - 1];
       reel.channel_reel_numerical_order = i;
       reel.channel = { username: username }
@@ -443,6 +453,7 @@ export class ChannelService {
         crawling_type_name: 'CHANNEL_REELS',
         date: new Date()
       }
+      await this.channelRepository.save({username, total_reels: reelLen})
       await this.channelCrawlingHistoryRepository.save(channelCrawling);
       await this.channelReelRepository.save(reels)
     })
@@ -454,16 +465,14 @@ export class ChannelService {
 async function scrollToBottom(page: Page) {
   let previousHeight = await page.evaluate('document.body.scrollHeight');
   while (true) {
-    console.log("run")
     await page.evaluate('window.scrollBy(0, document.body.scrollHeight)');
     await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 2000 });
     let currentHeight = await page.evaluate('document.body.scrollHeight');
 
     if (previousHeight >= currentHeight) {
-      break;
+      throw new TimeoutError('abc');
     }
     previousHeight = currentHeight;
     await sleep(0.5);
   }
-  console.log("out")
 }

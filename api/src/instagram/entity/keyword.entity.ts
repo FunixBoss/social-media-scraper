@@ -5,21 +5,21 @@ import { Hashtag } from './hashtag.entity';
 @Entity()
 export class Keyword {
     @PrimaryColumn({ length: 200 })
-    name: string;
+    name?: string;
 
     @Column({ length: 50, default: 'MEDIUM' })
-    priority: string;
+    priority?: string;
 
     @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.keyword, {
         cascade: ['insert'],
         onDelete: 'CASCADE'
     })
-    channels: KeywordChannel[];
+    channels?: KeywordChannel[];
 
     @OneToMany(() => Hashtag, hashtag => hashtag.keyword, {
         cascade: ['insert'],
         onDelete: 'CASCADE'
     })
-    hashtags: Hashtag[];
+    hashtags?: Hashtag[];
 
 }
