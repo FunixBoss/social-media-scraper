@@ -313,6 +313,8 @@ export class ChannelService {
           reel.channel_reel_numerical_order = i;
           reel.channel = { username: username }
         }
+        console.log("gone Here");
+        
         await this.channelReelRepository.save(reels)
       }
       await this.channelCrawlingHistoryRepository.save(channelCrawlings);

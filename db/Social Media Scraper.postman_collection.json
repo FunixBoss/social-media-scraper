@@ -81,6 +81,15 @@
 					"name": "Channel",
 					"item": [
 						{
+							"name": "export excel",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/trung_nghia2409/profile"
+							},
+							"response": []
+						},
+						{
 							"name": "full channel",
 							"request": {
 								"method": "GET",
@@ -114,7 +123,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=posts-highlights-reels-profile-friendships",
+									"raw": "http://localhost:3000/api/ins/channel?classify=SELF_ADDING",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -123,13 +132,12 @@
 									"path": [
 										"api",
 										"ins",
-										"channel",
-										"_javadeveloper"
+										"channel"
 									],
 									"query": [
 										{
-											"key": "infos",
-											"value": "posts-highlights-reels-profile-friendships"
+											"key": "classify",
+											"value": "SELF_ADDING"
 										}
 									]
 								}

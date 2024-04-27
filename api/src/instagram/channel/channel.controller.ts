@@ -102,7 +102,11 @@ export class ChannelController {
 
   @Get(':username/profile')
   async fetchProfile(@Param() params: GetUserParamsDto): Promise<Channel> {
-    return await this.channelService.fetchUserProfile(params.username);
+    try {
+      return await this.channelService.fetchUserProfile(params.username);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   @Get(':username/friendships')

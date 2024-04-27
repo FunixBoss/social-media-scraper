@@ -109,6 +109,7 @@ export function mapInsProfile(profile: InsProfileFull): Channel {
         total_posts: profile.user?.media_count ?? 0,
         pk: profile.user?.pk ?? '',
         username: profile.user?.username ?? '',
-        is_self_adding: true
+        is_self_adding: true,
+        is_bot_scanning: false
     }
 }
