@@ -15,8 +15,11 @@ export class Hashtag {
     @Column({ length: 200, nullable: true })
     category?: string;
 
-    @Column({ length: 200, nullable: true })
-    classify?: string;
+    @Column({ type: 'bool', default: false })
+    is_self_adding?: boolean;
+
+    @Column({ type: 'bool', default: false })
+    is_bot_scanning?: boolean;
 
     @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;

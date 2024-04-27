@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ChannelService } from './channel.service';
+import { Controller, Get, Param, Query, Res, StreamableFile } from '@nestjs/common';
+import { ChannelService, ReadStreamDTO } from './channel.service';
 import { IsEmpty, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import InsUser from 'src/pptr-crawler/types/ins/InsUser';
@@ -7,13 +7,19 @@ import { Channel } from '../entity/channel.entity';
 import { ChannelFriendship } from '../entity/channel-friendship.entity';
 import { ChannelPost } from '../entity/channel-post.entity';
 import { ChannelReel } from '../entity/channel-reel.entity';
-import { IsNull } from 'typeorm';
+import type { Response } from 'express';
+import { FindAllChannelDTO } from './dto/findall-channel.dto';
 
 export type ScrapeInfo = 'all' | 'profile' | 'friendships' | 'posts' | 'reels'
 class GetUserScrapeInfosDto {
   @IsNotEmpty()
   @IsValidScraperInfo()
   infos: ScrapeInfo[];
+}
+
+export class GetExportTypeDto {
+  @IsIn(["excel", "json"])
+  type: string;
 }
 
 export class GetUserParamsDto {
@@ -32,10 +38,10 @@ export class GetChannelsParamsDto {
   @IsIn([undefined, "ASC", "DESC"])
   sortDirection: string;
 
-  @IsOptional() 
+  @IsOptional()
   page: number;
 
-  @IsOptional() 
+  @IsOptional()
   pageSize: number;
 
   @IsOptional()
@@ -68,8 +74,25 @@ export class ChannelController {
   ) { }
 
   @Get('')
-  async fetchAll(@Query() queries: GetChannelsParamsDto): Promise<Channel[]> {
+  async fetchAll(@Query() queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
     return await this.channelService.findAll(queries);
+  }
+
+  @Get('export')
+  async exportChannels(@Res({ passthrough: true }) res: Response, @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
+    const file: ReadStreamDTO = await this.channelService.exportChannels(queries.type);
+    if(queries.type == 'excep') {
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${file.fileName}"`,
+      });
+    } else {
+      res.set({
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${file.fileName}"`,
+      });
+    }
+    return new StreamableFile(file.readStream);
   }
 
   @Get(':username')

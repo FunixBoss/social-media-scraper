@@ -8,10 +8,10 @@ import { ApiResponseInterceptor } from './interceptors/global-api-response.inter
 
 @Module({
   providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ApiResponseInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: ApiResponseInterceptor,
+    // },
   ],
   imports: [
     InstagramModule,

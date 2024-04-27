@@ -55,10 +55,16 @@ export class Channel {
     @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;
 
-    @Column({ type: 'enum', enum: ["SELF_ADDING", "BOT_SCANNING"], nullable: true })
-    classify?: 'SELF_ADDING' | 'BOT_SCANNING' | null;
+    @Column({ type: 'bool', default: false })
+    is_self_adding?: boolean;
 
-    @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel)
+    @Column({ type: 'bool', default: false })
+    is_bot_scanning?: boolean;
+
+    @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel, {
+        eager: true,
+        onDelete: 'CASCADE'
+    })
     crawlingHistory?: ChannelCrawlingHistory[];
 
     @OneToMany(() => ChannelFriendship, friendship => friendship.channel)

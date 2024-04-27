@@ -121,6 +121,7 @@ export class KeywordService {
       }
       await this.dataSource.transaction(async (transactionalEntityManager) => {
         await this.channelRepository.save(channels);
+        await this.keywordRepository.save(keyword)
         keyword.channels = kwChannels;
         keyword.hashtags = hashtags;
         await this.keywordRepository.save(keyword)
@@ -128,7 +129,7 @@ export class KeywordService {
       return this.mapToFindOneKeywordDTO(keyword.name);
     } catch (error) {
       console.log(error);
-    }
+    } 
   }
 
   private async fetchHashtags(keyword: Keyword): Promise<Hashtag[]> {

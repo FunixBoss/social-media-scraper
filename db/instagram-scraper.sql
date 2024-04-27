@@ -29,6 +29,8 @@ create table `channel`(
     total_reels int,
     total_friendships int,
     pk varchar(200),
+	is_self_adding bool default false,
+    is_bot_scannig bool default false,
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name)
 );
@@ -56,7 +58,6 @@ create table `channel_friendship`(
     supervision_info varchar(200),
     social_context varchar(200),
     channel_username varchar(200),
-    classify enum("SELF_ADDING", "BOT_SCANNING"),
 	foreign key(channel_username) references `channel`(username)
 );
 
@@ -119,7 +120,8 @@ create table `hashtag`(
     code varchar(200),
     media_count bigint,
     category varchar(200),
-    classify varchar(200), -- tự add/bot quét
+	is_self_adding bool default false,
+    is_bot_scannig bool default false,
     keyword varchar(200),
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name),

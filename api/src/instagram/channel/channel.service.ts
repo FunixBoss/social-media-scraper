@@ -19,7 +19,18 @@ import { CrawlingType, TCrawlingType } from '../entity/crawling-type.entity';
 import { ChannelCrawlingHistory } from '../entity/channel-crawling-history.entity';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
 import { ChannelPost } from '../entity/channel-post.entity';
+import { Workbook } from 'exceljs'
+import { format } from 'date-fns';
+import { Buffer } from 'buffer';
+import { createReadStream, readFileSync, ReadStream, writeFile, writeFileSync } from 'fs';
+import { join } from 'path';
+import { FindAllChannelDTO } from './dto/findall-channel.dto';
+import { FindAllKeywordDTO } from '../keyword/dto/findall-keyword.dto';
 
+export type ReadStreamDTO = {
+  readStream: ReadStream;
+  fileName: string;
+}
 @Injectable()
 export class ChannelService {
   private baseUrl = 'https://instagram.com'
@@ -50,8 +61,16 @@ export class ChannelService {
     )
   }
 
-  async findAll(queries: GetChannelsParamsDto) {
-    return this.channelRepository.find();
+  async findAll(queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
+    let channels: Channel[] = await this.channelRepository.find()
+    return channels.map(channel => {
+      let crawled: string[] = channel.crawlingHistory.map(c => c.crawling_type_name)
+      return {
+        ...channel,
+        crawlingHistory: undefined,
+        crawled
+      }
+    })
   }
 
   private async hasReelsTab(): Promise<boolean> {
@@ -82,6 +101,62 @@ export class ChannelService {
     return !!await this.channelRepository.findOneBy({ username });
   }
 
+  async exportChannels(exportType: string | "json" | "excel"): Promise<ReadStreamDTO> {
+    if (exportType == 'excel') return await this.exportChannelsExcel();
+    if (exportType == 'json') return await this.exportChannelsJson();
+
+  }
+
+  private async exportChannelsExcel(): Promise<ReadStreamDTO> {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet('Channels');
+
+    // Define headers
+    worksheet.columns = [
+      { header: 'Username', key: 'username', width: 20 },
+      { header: 'Full Name', key: 'full_name', width: 25 },
+      { header: 'Category', key: 'category', width: 20 },
+      { header: 'Follower Count', key: 'follower_count', width: 15 },
+      { header: 'Following Count', key: 'following_count', width: 15 },
+      { header: 'Total Posts', key: 'total_posts', width: 12 },
+      { header: 'Total Reels', key: 'total_reels', width: 12 },
+      { header: 'Total Friendships', key: 'total_friendships', width: 17 },
+      { header: 'Priority', key: 'priority', width: 10 },
+      { header: 'Biography', key: 'biography', width: 100 },
+      { header: 'Bio Link URL', key: 'bio_link_url', width: 30 },
+      { header: 'External URL', key: 'external_url', width: 30 },
+      { header: 'Profile Pic URL', key: 'profile_pic_url', width: 30 },
+      { header: 'Is Bot Scanning', key: 'is_bot_scanning', width: 15 },
+    ];
+
+    // Add rows using the mock data
+    (await this.channelRepository.find()).forEach((channel) => {
+      worksheet.addRow(channel);
+    });
+
+    // Write to file
+    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
+    const downloadPath = 'downloads/instagram/channels'
+    const fileName = `channels-${currentDate}.xlsx`
+    await workbook.xlsx.writeFile(`${downloadPath}/${fileName}`);
+    console.log('Excel file was written successfully.');
+    return {
+      readStream: createReadStream(join(process.cwd(), `${downloadPath}/${fileName}`)),
+      fileName
+    }
+  }
+
+  private async exportChannelsJson(): Promise<ReadStreamDTO> {
+    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
+    const downloadPath = 'downloads/instagram/channels'
+    const fileName = `channels-${currentDate}.json`
+    writeFileSync(`${downloadPath}/${fileName}`, JSON.stringify(await this.channelRepository.find()), 'utf-8')
+    return {
+      readStream: createReadStream(join(process.cwd(), `${downloadPath}/${fileName}`)),
+      fileName
+    }
+  }
+
   async fetchUser(username: string, infos: ScrapeInfo[]): Promise<InsUser> {
     let scanned: TCrawlingType[] = (await this.getCrawledHistory(username)).sort()
     let hasScannedAll: boolean = JSON.stringify(scanned) === JSON.stringify(["CHANNEL_FRIENDSHIP", "CHANNEL_POSTS", "CHANNEL_PROFILE", "CHANNEL_REELS"])
@@ -104,7 +179,7 @@ export class ChannelService {
       : [];
     let reelLen: number = reels.length;
     console.log(reelLen);
-    
+
     if (hasScannedAll) return {
       profile,
       friendshipUsers,
@@ -167,7 +242,7 @@ export class ChannelService {
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
     let hasReels: boolean = await this.hasReelsTab();
     console.log(`hasReel: ${hasReels}`);
-    
+
     if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts')) {
       try {
         await scrollToBottom(this.page);
@@ -278,7 +353,7 @@ export class ChannelService {
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
     await this.dataSource.transaction(async (transactionalEntityManager) => {
       let channelCrawlings: ChannelCrawlingHistory[] = []
-      if(!await this.hasReelsTab()) {
+      if (!await this.hasReelsTab()) {
         channelCrawlings.push({
           channel_username: username,
           crawling_type_name: 'CHANNEL_REELS',
@@ -341,7 +416,7 @@ export class ChannelService {
         crawling_type_name: 'CHANNEL_FRIENDSHIP',
         date: new Date()
       }
-      await this.channelRepository.save({username, total_friendships: friendshipLen})
+      await this.channelRepository.save({ username, total_friendships: friendshipLen })
       await this.channelFriendRepository.save(friendshipUsers)
       await this.channelCrawlingHistoryRepository.save(channelCrawling);
     })
@@ -457,7 +532,7 @@ export class ChannelService {
         crawling_type_name: 'CHANNEL_REELS',
         date: new Date()
       }
-      await this.channelRepository.save({username, total_reels: reelLen})
+      await this.channelRepository.save({ username, total_reels: reelLen })
       await this.channelCrawlingHistoryRepository.save(channelCrawling);
       await this.channelReelRepository.save(reels)
     })

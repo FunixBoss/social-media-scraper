@@ -53,7 +53,7 @@ export function mapInsSearchChannel(channels: InsSearching): Channel[] {
 
         const { username, full_name, profile_pic_url } = user.user;
         const searchChannel: Channel = {
-            classify: "BOT_SCANNING",
+            is_bot_scanning: true,
             username,
             full_name,
             profile_pic_url,
@@ -80,7 +80,7 @@ export function mapInsHashtag(hashtags: InsSearching): Hashtag[] {
             const mappedHashtag: Hashtag = {
                 code: name,
                 media_count,
-                classify: "BOT_SCANNING",
+                is_bot_scanning: true,
                 priority: "MEDIUM"
             };
             result.push(mappedHashtag);
