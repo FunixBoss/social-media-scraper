@@ -1,4 +1,4 @@
-	insert into `priority`(name) values
+insert into `priority`(name) values
 ('HIGH'),
 ('MEDIUM'),
 ('LOW');

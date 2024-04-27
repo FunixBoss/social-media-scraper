@@ -52,6 +52,12 @@ export class Channel {
     @Column({ length: 200, nullable: true })
     pk?: string;
 
+    @Column({ length: 50, default: 'MEDIUM' })
+    priority?: string;
+
+    @Column({ type: 'enum', enum: ["SELF_ADDING", "BOT_SCANNING"], nullable: true })
+    classify?: 'SELF_ADDING' | 'BOT_SCANNING' | null;
+
     @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel)
     crawlingHistory?: ChannelCrawlingHistory[];
 

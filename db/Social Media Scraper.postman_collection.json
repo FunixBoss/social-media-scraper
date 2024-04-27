@@ -26,7 +26,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/gardening/channels"
+								"url": "http://localhost:3000/api/ins/keyword/java/channels"
 							},
 							"response": []
 						},
@@ -44,7 +44,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/"
+								"url": "http://localhost:3000/api/ins/keyword/java"
 							},
 							"response": []
 						},
@@ -82,6 +82,34 @@
 					"item": [
 						{
 							"name": "full channel",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=posts-highlights-reels-profile-friendships",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"_javadeveloper"
+									],
+									"query": [
+										{
+											"key": "infos",
+											"value": "posts-highlights-reels-profile-friendships"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "full channels",
 							"request": {
 								"method": "GET",
 								"header": [],

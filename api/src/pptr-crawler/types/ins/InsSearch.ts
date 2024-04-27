@@ -53,6 +53,7 @@ export function mapInsSearchChannel(channels: InsSearching): Channel[] {
 
         const { username, full_name, profile_pic_url } = user.user;
         const searchChannel: Channel = {
+            classify: "BOT_SCANNING",
             username,
             full_name,
             profile_pic_url,

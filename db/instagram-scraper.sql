@@ -28,7 +28,9 @@ create table `channel`(
     total_posts int,
     total_reels int,
     total_friendships int,
-    pk varchar(200)
+    pk varchar(200),
+    priority varchar(200) default 'MEDIUM',
+    foreign key (priority) references `priority`(name)
 );
 
 create table `crawling_type`(
@@ -54,6 +56,7 @@ create table `channel_friendship`(
     supervision_info varchar(200),
     social_context varchar(200),
     channel_username varchar(200),
+    classify enum("SELF_ADDING", "BOT_SCANNING"),
 	foreign key(channel_username) references `channel`(username)
 );
 

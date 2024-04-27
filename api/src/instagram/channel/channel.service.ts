@@ -8,7 +8,7 @@ import { InsReelsFull, mapInsReels } from 'src/pptr-crawler/types/ins/InsReels';
 import { sleep } from 'src/pptr-crawler/utils/Utils';
 import { InsFriendshipUserFull } from 'src/pptr-crawler/types/ins/InsFriendship';
 import { InsPostsFull, mapInsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
-import { ScrapeInfo } from './channel.controller';
+import { GetChannelsParamsDto, ScrapeInfo } from './channel.controller';
 import InsUser from 'src/pptr-crawler/types/ins/InsUser';
 import { Channel } from '../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -48,6 +48,10 @@ export class ChannelService {
         },
       }
     )
+  }
+
+  async findAll(queries: GetChannelsParamsDto) {
+    return this.channelRepository.find();
   }
 
   private async hasReelsTab(): Promise<boolean> {
