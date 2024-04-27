@@ -8,7 +8,6 @@ import { ComponentsModule } from './components/components.module';
 import { AppComponent } from './app.component';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
 import { InstagramComponent } from './instagram/instagram-profile/instagram.component';
-import { InstagramConsoleComponent } from './instagram/instagram-console/instagram-console.component';
 import { InstagramKeywordComponent } from './instagram/instagram-keyword/instagram-keyword.component';
 
 @NgModule({
@@ -25,7 +24,6 @@ import { InstagramKeywordComponent } from './instagram/instagram-keyword/instagr
     AppComponent,
     AdminLayoutComponent,
     InstagramComponent,
-    InstagramConsoleComponent,
     InstagramKeywordComponent,
 
   ],

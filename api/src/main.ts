@@ -4,9 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    cors: false,
-    });
+  const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: "*"
+  });
   app.setGlobalPrefix('api'); // Set global prefix for the entire application
   const config = new DocumentBuilder()
     .setTitle('Swagger API')

@@ -65,20 +65,16 @@
               ]
             },
             "development": {
-              "vendorChunk": true,
+              "optimization": false,
+              "outputHashing": "none",
+              "sourceMap": false,
+              "namedChunks": false,
+              "aot": true,
               "extractLicenses": false,
-              "namedChunks": true,
-              "buildOptimizer": false,
-              "sourceMap": true,
-              "optimization": {
-                "scripts": true,
-                "styles": {
-                  "minify": false,
-                  "inlineCritical": true
-                },
-                "fonts": true
-              },
-              "outputHashing": "all"
+              "statsJson": false,
+              "progress": false,
+              "vendorChunk": true,
+              "buildOptimizer": false
             }
           }
         },
