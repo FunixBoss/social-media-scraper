@@ -1,12 +1,8 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
 import { PuppeteerNodeLaunchOptions } from "puppeteer";
 
-// const PUPPETEER_HEADLESS = (process.env.PUPPETEER_HEADLESS == 'true') ? "new" : false;
-const PUPPETEER_HEADLESS = false;
-const EXECUTABLE_PATH = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-// const PROFILE_PATH = "C:/Users/My Rog/AppData/Local/Google/Chrome/User Data/Profile 41"
-const PROFILE_PATH = "C:/Users/nguye/AppData/Local/Google/Chrome/User Data/Default"
 const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
     '--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪
@@ -42,21 +38,28 @@ const minimal_args = [
     '--password-store=basic',
     '--use-gl=swiftshader',
     '--use-mock-keychain',
-    // `--proxy-server=http://206.206.69.103:6367`,
+    // `--proxy-server=http://206.206.69.103:6367`, 
 ];
 
 @Injectable()
 export class PptrBrowserConfig implements PuppeteerOptionsFactory {
+
+    constructor(private readonly configService: ConfigService) {
+        console.log(this.configService.get<boolean>("PUPPETEER_HEADLESS"))
+    }
+    
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
         return {
-            headless: PUPPETEER_HEADLESS,
             args: [
                 '--enable-automation',
                 ...minimal_args
             ],
-            executablePath: EXECUTABLE_PATH,
-            userDataDir: PROFILE_PATH,
-            devtools: true,
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new" 
+                ? "new" 
+                : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
+            executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
+            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            devtools: this.configService.get<boolean>("DEVTOOLS"),
         };
     }
 }
