@@ -1,23 +1,4 @@
-export type InsProfile = {
-    biography?: string;
-    bio_links?: {
-        link_type?: string;
-        lynx_url?: string;
-        title?: string;
-        url?: string;
-    }[];
-    category?: string;
-    external_url?: string;
-    follower_count?: number;
-    following_count?: number;
-    full_name?: string;
-    hd_profile_pic_url_info?: string;
-    id?: string;
-    media_count?: number;
-    pk?: string;
-    profile_pic_url?: string;
-    username?: string;
-}
+import { Channel } from "src/instagram/entity/channel.entity";
 
 export interface InsProfileFull {
     user?: {
@@ -111,20 +92,22 @@ export interface InsProfileFull {
     };
 }
 
-export function mapInsProfile(profile: InsProfileFull): InsProfile {
+export function mapInsProfile(profile: InsProfileFull): Channel {
     return {
         biography: profile.user?.biography ?? '',
-        bio_links: profile.user?.bio_links ?? [],
+        bio_link_url: profile.user?.bio_links && profile.user.bio_links.length > 0 
+            ? profile.user.bio_links[0].url
+            : null,
         category: profile.user?.category ?? '',
         external_url: profile.user?.external_url ?? '',
         follower_count: profile.user?.follower_count ?? 0,
         following_count: profile.user?.following_count ?? 0,
         full_name: profile.user?.full_name ?? '',
+        profile_pic_url: profile.user?.profile_pic_url ?? '',
         hd_profile_pic_url_info: profile.user?.hd_profile_pic_url_info?.url ?? '',
         id: profile.user?.id ?? '',
         media_count: profile.user?.media_count ?? 0,
         pk: profile.user?.pk ?? '',
-        profile_pic_url: profile.user?.profile_pic_url ?? '',
         username: profile.user?.username ?? '',
     }
 }

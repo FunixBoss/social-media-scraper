@@ -1,6 +1,6 @@
 import { InsFriendshipUserFull } from './InsFriendship';
-import { InsHighlights, InsHighlightsFull } from './InsHighlights';
-import { InsPosts, InsPostsFull } from './InsPosts';
+import { InsHighlightsFull } from './InsHighlights';
+import { InsPostsFull } from './InsPosts';
 import { InsProfileFull } from './InsProfile';
 import { InsReelsFull } from './InsReels';
 

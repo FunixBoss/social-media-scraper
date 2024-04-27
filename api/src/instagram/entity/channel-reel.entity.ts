@@ -7,49 +7,49 @@ export class ChannelReel {
     @PrimaryColumn({ length: 200 })
     code: string;
 
-    @Column({ type: 'int' })
-    channel_reel_numerical_order: number;
+    @Column({ type: 'int', nullable: true })
+    channel_reel_numerical_order?: number;
 
     @Column({ length: 200, nullable: true })
-    audience: string;
+    audience?: string;
 
-    @Column({ type: 'int' })
-    comment_count: number;
-
-    @Column({ length: 200 })
-    id: string;
-
-    @Column({ type: 'int' })
-    image_height: number;
-
-    @Column({ type: 'int' })
-    image_width: number;
-
-    @Column({ length: 200 })
-    image_url: string;
-
-    @Column({ type: 'int' })
-    like_count: number;
-
-    @Column({ type: 'int' })
-    media_type: number;
-
-    @Column({ length: 200 })
-    pk: string;
-
-    @Column({ type: 'int' })
-    play_count: number;
+    @Column({ type: 'int', nullable: true })
+    comment_count?: number;
 
     @Column({ length: 200, nullable: true })
-    product_type: string;
+    id?: string;
+
+    @Column({ type: 'int', nullable: true })
+    image_height?: number;
+
+    @Column({ type: 'int', nullable: true })
+    image_width?: number;
+
+    @Column({ length: 1000, nullable: true })
+    image_url?: string;
+
+    @Column({ type: 'int', nullable: true })
+    like_count?: number;
+
+    @Column({ type: 'int', nullable: true })
+    media_type?: number;
 
     @Column({ length: 200, nullable: true })
-    video_url: string;
+    pk?: string;
+
+    @Column({ type: 'int', nullable: true })
+    play_count?: number;
+
+    @Column({ length: 200, nullable: true })
+    product_type?: string;
+
+    @Column({ length: 1000, nullable: true })
+    video_url?: string;
 
     @ManyToOne(() => Channel, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'channel_username' })
-    channel: Channel;
+    channel?: Channel;
 
     @OneToMany(() => ChannelReelHashtag, channelReelHashtag => channelReelHashtag.channelReel)
-    hashtags: ChannelReelHashtag[];
+    hashtags?: ChannelReelHashtag[];
 }

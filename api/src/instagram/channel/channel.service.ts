@@ -2,26 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { InjectPage } from 'nestjs-puppeteer';
 import { Page, TimeoutError } from 'puppeteer';
 import { RequestInterceptionManager } from 'puppeteer-intercept-and-modify-requests';
-import { InsProfile, InsProfileFull, mapInsProfile } from 'src/pptr-crawler/types/ins/InsProfile';
+import { InsProfileFull, mapInsProfile } from 'src/pptr-crawler/types/ins/InsProfile';
 import { InsAPIWrapper } from 'src/pptr-crawler/types/ins/InsAPIWrapper';
-import { InsReel, InsReels, InsReelsFull, mapInsReels } from 'src/pptr-crawler/types/ins/InsReels';
+import { InsReelsFull, mapInsReels } from 'src/pptr-crawler/types/ins/InsReels';
 import { sleep } from 'src/pptr-crawler/utils/Utils';
-import { InsFriendshipUserFull, InsFriendshipUsers } from 'src/pptr-crawler/types/ins/InsFriendship';
-import { InsHighlight, InsHighlights, InsHighlightsFull, mapInsHighlight } from 'src/pptr-crawler/types/ins/InsHighlights';
-import { InsPost, InsPosts, InsPostsFull, mapInsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
+import { InsFriendshipUserFull } from 'src/pptr-crawler/types/ins/InsFriendship';
+import { InsPostsFull, mapInsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
 import { ScrapeInfo } from './channel.controller';
 import InsUser from 'src/pptr-crawler/types/ins/InsUser';
-import { info } from 'console';
+import { Channel } from '../entity/channel.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { ChannelFriendship } from '../entity/channel-friendship.entity';
+import { ChannelReel } from '../entity/channel-reel.entity';
+import { CrawlingType, TCrawlingType } from '../entity/crawling-type.entity';
+import { ChannelCrawlingHistory } from '../entity/channel-crawling-history.entity';
+import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
+import { ChannelPost } from '../entity/channel-post.entity';
 
 @Injectable()
 export class ChannelService {
   private baseUrl = 'https://instagram.com'
   private interceptManager: RequestInterceptionManager
   constructor(
-    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page
+    private readonly dataSource: DataSource,
+    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
+    @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(ChannelFriendship) private readonly channelFriendRepository: Repository<ChannelFriendship>,
+    @InjectRepository(ChannelReel) private readonly channelReelRepository: Repository<ChannelReel>,
+    @InjectRepository(CrawlingType) private readonly crawlingTypeRepository: Repository<CrawlingType>,
+    @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
+    @InjectRepository(ChannelPost) private readonly channelPostRepository: Repository<ChannelPost>,
+    @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
+
   ) {
     this.setUpPageInterceptors()
-
   }
 
   async setUpPageInterceptors(): Promise<void> {
@@ -35,13 +50,63 @@ export class ChannelService {
     )
   }
 
+  private async hasReelsTab(): Promise<boolean> {
+    return await this.page.$$eval(
+      "div[role='tablist'] a",
+      (anchors: HTMLAnchorElement[]) => {
+        const hrefs: string[] = anchors.map(a => a.href)
+        return hrefs.filter(href => href.includes("reels")).length > 0
+      }
+    )
+  }
+
+  private async isCrawledContent(username: string, crawledType: TCrawlingType): Promise<boolean> {
+    return !!(await this.channelCrawlRepository.findOneBy({
+      channel_username: username,
+      crawling_type_name: crawledType
+    }))
+  }
+
+  private async getCrawledHistory(username): Promise<TCrawlingType[]> {
+    const histories: ChannelCrawlingHistory[] = await this.channelCrawlRepository.findBy({
+      channel_username: username,
+    })
+    return histories.map(h => h.crawlingType.name) as TCrawlingType[]
+  }
+
+  private async isExists(username: string): Promise<boolean> {
+    return !!await this.channelRepository.findOneBy({ username });
+  }
+
   async fetchUser(username: string, infos: ScrapeInfo[]): Promise<InsUser> {
-    let profile: InsProfile;
-    let friendshipUsers: InsFriendshipUsers = { users: [], len: 0 };
-    let highlights: InsHighlights = { highlights: [], len: 0 };
-    let posts: InsPosts = { posts: [], len: 0 };
-    let reels: InsReels = { reels: [], len: 0 };
-    let scanned: ScrapeInfo[] = []
+    let scanned: TCrawlingType[] = (await this.getCrawledHistory(username)).sort()
+    let hasScannedAll: boolean = JSON.stringify(scanned) === JSON.stringify(["CHANNEL_FRIENDSHIP", "CHANNEL_POSTS", "CHANNEL_PROFILE", "CHANNEL_REELS"])
+    let scanning: TCrawlingType[] = [];
+    let profile: Channel = scanned.includes("CHANNEL_PROFILE")
+      ? await this.channelRepository.findOne({ where: { username } })
+      : undefined;
+    let friendshipUsers: ChannelFriendship[] = scanned.includes("CHANNEL_FRIENDSHIP")
+      ? await this.channelFriendRepository.find({ where: { channel: { username } } })
+      : [];
+    let friendshipLen: number = friendshipUsers.length;
+
+    let posts: ChannelPost[] = scanned.includes("CHANNEL_POSTS")
+      ? await this.channelPostRepository.find({ where: { channel: { username } } })
+      : [];
+    let postLen: number = posts.length;
+
+    let reels: ChannelReel[] = scanned.includes("CHANNEL_REELS")
+      ? await this.channelReelRepository.find({ where: { channel: { username } } })
+      : [];
+    let reelLen: number = reels.length;
+
+    if (hasScannedAll) return {
+      profile,
+      friendshipUsers,
+      posts,
+      reels
+    }
+
     await this.interceptManager.intercept(
       {
         urlPattern: `https://www.instagram.com/api/graphql`,
@@ -51,24 +116,22 @@ export class ChannelService {
             const dataObj: InsAPIWrapper = JSON.parse(body);
             if (!dataObj.data) return;
 
-            if (!scanned.includes('profile') && infos.includes('profile') && dataObj.data["user"]) {
+            if (!scanned.includes('CHANNEL_PROFILE') && infos.includes('profile') && dataObj.data["user"]) {
               console.log("==> Found Response: User Profile");
               profile = mapInsProfile(dataObj.data as InsProfileFull)
-              scanned.push('profile')
-            } else if (!scanned.includes('friendships') && infos.includes('friendships') && dataObj.data["xdt_api__v1__discover__chaining"]) {
+              scanning.push('CHANNEL_PROFILE')
+            } else if (!scanned.includes('CHANNEL_FRIENDSHIP') && infos.includes('friendships') && dataObj.data["xdt_api__v1__discover__chaining"]) {
               console.log("==> Found Response: Friendship Users");
               const friendshipUserApis = dataObj.data as InsFriendshipUserFull
-              friendshipUsers = {
-                users: friendshipUserApis.xdt_api__v1__discover__chaining.users,
-                len: friendshipUserApis.xdt_api__v1__discover__chaining.users.length
-              }
-              scanned.push('friendships');
-            } else if (infos.includes('posts') && dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
+              friendshipUsers = friendshipUserApis.xdt_api__v1__discover__chaining.users;
+              friendshipLen = friendshipUsers.length;
+              scanning.push('CHANNEL_FRIENDSHIP');
+            } else if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts') && dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
               console.log("==> Found Response: Posts");
-              const pagedPosts: InsPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
-              posts.posts.push(...pagedPosts);
-              posts.len += pagedPosts.length
-              console.log(posts.len);
+              const pagedPosts: ChannelPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
+              posts.push(...pagedPosts);
+              postLen += pagedPosts.length
+              console.log(postLen);
             }
           } catch (error) {
             console.log(error);
@@ -81,18 +144,12 @@ export class ChannelService {
         modifyResponse: async ({ body }) => {
           try {
             const dataObj: InsAPIWrapper = JSON.parse(body);
-            if (!scanned.includes('highlights') && infos.includes('highlights') && dataObj.data && dataObj.data["highlights"]) {
-              console.log("==> Found Graphql Request: Highlights");
-              let pagedHighlights: InsHighlight[] = mapInsHighlight(dataObj.data as InsHighlightsFull)
-              highlights.highlights.push(...pagedHighlights)
-              highlights.len += pagedHighlights.length
-              scanned.push('highlights')
-            } else if (infos.includes('reels') && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
+            if (!scanned.includes('CHANNEL_REELS') && infos.includes('reels') && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
               console.log("==> Found Graphql Request: Reels");
-              const pagedReels: InsReel[] = mapInsReels(dataObj.data as InsReelsFull)
-              reels.reels.push(...pagedReels)
-              reels.len += pagedReels.length
-              console.log(reels.len);
+              const pagedReels: ChannelReel[] = mapInsReels(dataObj.data as InsReelsFull)
+              reels.push(...pagedReels)
+              reelLen += pagedReels.length
+              console.log(reelLen);
             }
           } catch (error) {
             console.log(error);
@@ -102,40 +159,94 @@ export class ChannelService {
     )
 
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
-    if (infos.includes('posts')) {
+    let hasReels: boolean = await this.hasReelsTab();
+
+    if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts')) {
       try {
         await scrollToBottom(this.page);
-        scanned.push('posts')
       } catch (error) {
         if (error instanceof TimeoutError) {
           console.log("Scanned All Posts")
+          scanning.push('CHANNEL_POSTS');
         }
       };
     }
-    await sleep(2)
-    if(infos.includes('reels')) {
+    if (hasReels && !scanned.includes('CHANNEL_REELS') && infos.includes('reels')) {
       await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
       try {
         await scrollToBottom(this.page);
-        scanned.push('reels')
       } catch (error) {
         if (error instanceof TimeoutError) {
-          console.log("Scanned All Posts")
+          console.log("Scanned All Reels")
+          scanning.push('CHANNEL_REELS');
         }
       };
     }
 
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const channelCrawlings: ChannelCrawlingHistory[] = [];
+      if (scanning.includes("CHANNEL_PROFILE")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_PROFILE',
+          date: new Date()
+        })
+        await this.channelRepository.save(profile)
+      }
+
+      if (scanning.includes("CHANNEL_FRIENDSHIP")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_FRIENDSHIP',
+          date: new Date()
+        })
+        await this.channelFriendRepository.save(friendshipUsers)
+      }
+
+      if (scanning.includes("CHANNEL_POSTS")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_POSTS',
+          date: new Date()
+        })
+        for (let i = postLen; i > 0; i--) {
+          let post: ChannelPost = posts[i - 1];
+          post.channel_post_numerical_order = i;
+          post.channel = { username: username }
+        }
+        await this.channelPostRepository.save(posts)
+      }
+
+      if (scanning.includes("CHANNEL_REELS")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_REELS',
+          date: new Date()
+        })
+        for (let i = reelLen; i > 0; i--) {
+          let reel: ChannelReel = reels[i - 1];
+          reel.channel_reel_numerical_order = i;
+          reel.channel = { username: username }
+        }
+        await this.channelReelRepository.save(reels)
+      }
+      await this.channelCrawlingHistoryRepository.save(channelCrawlings);
+    })
+
     return {
       profile,
       friendshipUsers,
-      highlights,
       posts,
       reels
     }
   }
 
-  async fetchUserProfile(username: string): Promise<InsProfile> {
-    let profile: InsProfile;
+  async fetchUserProfile(username: string): Promise<Channel> {
+    if (await this.isExists(username) && await this.isCrawledContent(username, "CHANNEL_PROFILE")) {
+      return this.channelRepository.findOne({ where: { username } })
+    }
+
+    let channel: Channel;
     await this.interceptManager.intercept(
       {
         urlPattern: `https://www.instagram.com/api/graphql`,
@@ -147,7 +258,7 @@ export class ChannelService {
 
             if (dataObj.data["user"]) {
               console.log("==> Found Response: User Profile");
-              profile = mapInsProfile(dataObj.data as InsProfileFull)
+              channel = mapInsProfile(dataObj.data as InsProfileFull)
             }
           } catch (error) {
             console.log(error)
@@ -155,11 +266,42 @@ export class ChannelService {
         }
       })
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
-    return profile;
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      let channelCrawlings: ChannelCrawlingHistory[] = []
+      if(!await this.hasReelsTab()) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_REELS',
+          date: new Date()
+        })
+      }
+      if (channel.media_count == 0) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_POSTS',
+          date: new Date()
+        })
+      }
+      channelCrawlings.push({
+        channel_username: username,
+        crawling_type_name: 'CHANNEL_PROFILE',
+        date: new Date()
+      })
+      await this.channelRepository.save(channel)
+      await this.channelCrawlingHistoryRepository.save(channelCrawlings);
+    })
+    return channel;
   }
 
-  async fetchFriendships(username: string): Promise<InsFriendshipUsers> {
-    let friendshipUsers: InsFriendshipUsers = { users: [], len: 0 };
+  async fetchFriendships(username: string): Promise<ChannelFriendship[]> {
+    if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
+    if (await this.isCrawledContent(username, "CHANNEL_FRIENDSHIP")) {
+      return this.channelFriendRepository.find({
+        where: { channel: { username } }
+      })
+    }
+
+    let friendshipUsers: ChannelFriendship[] = [];
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
       resourceType: 'XHR',
@@ -171,10 +313,8 @@ export class ChannelService {
           if (dataObj.data["xdt_api__v1__discover__chaining"]) {
             console.log("==> Found Response: Friendship Users");
             const friendshipUserApis = dataObj.data as InsFriendshipUserFull
-            friendshipUsers = {
-              users: friendshipUserApis.xdt_api__v1__discover__chaining.users,
-              len: friendshipUserApis.xdt_api__v1__discover__chaining.users.length
-            }
+            friendshipUsers = friendshipUserApis.xdt_api__v1__discover__chaining.users;
+            friendshipUsers.forEach(f => f.channel = { username })
           }
         } catch (error) {
           console.log(error);
@@ -182,34 +322,28 @@ export class ChannelService {
       }
     });
     await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const channelCrawling: ChannelCrawlingHistory = {
+        channel_username: username,
+        crawling_type_name: 'CHANNEL_FRIENDSHIP',
+        date: new Date()
+      }
+      await this.channelFriendRepository.save(friendshipUsers)
+      await this.channelCrawlingHistoryRepository.save(channelCrawling);
+    })
     return friendshipUsers;
   }
 
-  async fetchHighlights(username: string): Promise<InsHighlights> {
-    let highlights: InsHighlights = { highlights: [], len: 0 };
-    await this.interceptManager.intercept({
-      urlPattern: `https://www.instagram.com/graphql/query`,
-      resourceType: 'XHR',
-      modifyResponse: async ({ body }) => {
-        try {
-          const dataObj: InsAPIWrapper = JSON.parse(body);
-          if (dataObj.data && dataObj.data["highlights"]) {
-            console.log("==> Found Graphql Request: Highlights");
-            let pagedHighlights: InsHighlight[] = mapInsHighlight(dataObj.data as InsHighlightsFull)
-            highlights.highlights.push(...pagedHighlights)
-            highlights.len += pagedHighlights.length
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      },
-    })
-    await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
-    return highlights;
-  }
+  async fetchPosts(username: string): Promise<ChannelPost[]> {
+    if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
+    if (await this.isCrawledContent(username, "CHANNEL_POSTS")) {
+      return this.channelPostRepository.find({
+        where: { channel: { username } }
+      })
+    }
 
-  async fetchPosts(username: string): Promise<InsPosts> {
-    let posts: InsPosts = { posts: [], len: 0 };
+    let posts: ChannelPost[] = [];
+    let len: number = 0
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
       resourceType: 'XHR',
@@ -218,10 +352,10 @@ export class ChannelService {
           const dataObj: InsAPIWrapper = JSON.parse(body);
           if (dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
             console.log("==> Found Response: Posts");
-            const pagedPosts: InsPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
-            posts.posts.push(...pagedPosts);
-            posts.len += pagedPosts.length
-            console.log(posts.len);
+            const pagedPosts: ChannelPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
+            posts.push(...pagedPosts);
+            len += pagedPosts.length
+            console.log(len);
           }
         } catch (error) {
           console.log(error);
@@ -236,12 +370,33 @@ export class ChannelService {
         console.log("Scanned All Posts")
       }
     };
-    await sleep(2);
+    for (let i = len; i > 0; i--) {
+      let post: ChannelPost = posts[i - 1];
+      post.channel_post_numerical_order = i;
+      post.channel = { username: username }
+    }
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const channelCrawling: ChannelCrawlingHistory = {
+        channel_username: username,
+        crawling_type_name: 'CHANNEL_POSTS',
+        date: new Date()
+      }
+      await this.channelCrawlingHistoryRepository.save(channelCrawling);
+      await this.channelPostRepository.save(posts)
+    })
+    await sleep(1);
     return posts;
   }
 
-  async fetchReels(username: string): Promise<InsReels> {
-    let reels: InsReels = { reels: [], len: 0 };
+  async fetchReels(username: string): Promise<ChannelReel[]> {
+    if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
+    if (await this.isCrawledContent(username, "CHANNEL_REELS")) {
+      return this.channelReelRepository.find({
+        where: { channel: { username } }
+      })
+    }
+    let reels: ChannelReel[] = [];
+    let len: number = 0
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/graphql/query`,
       resourceType: 'XHR',
@@ -250,10 +405,10 @@ export class ChannelService {
           const dataObj: InsAPIWrapper = JSON.parse(body);
           if (dataObj && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
             console.log("==> Found Graphql Request: Reels");
-            const pagedReels: InsReel[] = mapInsReels(dataObj.data as InsReelsFull)
-            reels.reels.push(...pagedReels)
-            reels.len += pagedReels.length
-            console.log(reels.len);
+            const pagedReels: ChannelReel[] = mapInsReels(dataObj.data as InsReelsFull)
+            reels.push(...pagedReels)
+            len += pagedReels.length
+            console.log(len);
           }
         } catch (error) {
           console.log(error);
@@ -262,13 +417,35 @@ export class ChannelService {
     })
     await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
     try {
+      if (!await this.hasReelsTab()) {
+        const channelCrawling: ChannelCrawlingHistory = {
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_REELS',
+          date: new Date()
+        }
+        await this.channelCrawlingHistoryRepository.save(channelCrawling);
+        return []
+      }
       await scrollToBottom(this.page);
     } catch (error) {
       if (error instanceof TimeoutError) {
-        console.log("Scanned All Posts")
+        console.log("Scanned All Reels")
       }
     };
-    await sleep(2);
+    for (let i = len; i > 0; i--) {
+      let reel: ChannelReel = reels[i - 1];
+      reel.channel_reel_numerical_order = i;
+      reel.channel = { username: username }
+    }
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const channelCrawling: ChannelCrawlingHistory = {
+        channel_username: username,
+        crawling_type_name: 'CHANNEL_REELS',
+        date: new Date()
+      }
+      await this.channelCrawlingHistoryRepository.save(channelCrawling);
+      await this.channelReelRepository.save(reels)
+    })
     return reels;
   }
 
@@ -286,7 +463,7 @@ async function scrollToBottom(page: Page) {
       break;
     }
     previousHeight = currentHeight;
-    await sleep(1);
+    await sleep(0.5);
   }
   console.log("out")
 }

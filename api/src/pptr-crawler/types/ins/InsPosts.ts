@@ -1,25 +1,4 @@
-export type InsPosts = {
-  posts: InsPost[]
-  len: number;
-}
-
-export type InsPost = {
-  caption_text?: string;
-  carousel_media_count?: number;
-  carousel_media?: {
-    imgage?: {
-      height?: number;
-      width?: number;
-      url?: string;
-    }
-  }[];
-  original_height?: number;
-  original_width?: number;
-  video_versions?: any;
-  code?: string;
-  comment_count?: number;
-  id?: string;
-}
+import { ChannelPost } from "src/instagram/entity/channel-post.entity";
 
 export type InsPostsFull = {
   xdt_api__v1__feed__user_timeline_graphql_connection: {
@@ -51,7 +30,28 @@ export type InsPostFull = {
     carousel_media_count?: number;
     carousel_parent_id?: string;
     clips_attribution_info?: string;
-    clips_metadata?: string;
+    clips_metadata?: {
+      audio_type: string;
+      achievements_info: {
+        show_achievements: boolean;
+      };
+      music_info: null;
+      original_sound_info: {
+        original_audio_title: string;
+        should_mute_audio: boolean;
+        audio_asset_id: string;
+        consumption_info: {
+          is_trending_in_clips: boolean;
+          should_mute_audio_reason: string;
+          should_mute_audio_reason_type: null;
+        };
+        ig_artist: {
+          username: string;
+          id: string;
+        };
+        is_explicit: boolean;
+      };
+    };
     coauthor_producers?: null;
     code?: string;
     comment_count?: number;
@@ -95,7 +95,14 @@ export type InsPostFull = {
     };
     logging_info_token?: null;
     main_feed_carousel_starting_media_id?: null;
-    media_cropping_info?: null;
+    media_cropping_info?: {
+      square_crop: {
+        crop_bottom: number;
+        crop_left: number;
+        crop_right: number;
+        crop_top: number;
+      };
+    };
     media_overlay_info?: null;
     media_type?: number;
     number_of_qualities?: null;
@@ -128,7 +135,7 @@ export type InsPostFull = {
     photo_of_you?: boolean;
     pk?: string;
     preview?: null;
-    product_type?: string;
+    product_type?: string; // 'clips'
     saved_collection_ids?: null;
     share_urls?: null;
     sharing_friction_info?: {
@@ -142,7 +149,7 @@ export type InsPostFull = {
     thumbnails?: null;
     timeline_pinned_user_ids
     title?: null;
-    top_likers?: any[]
+    top_likers?: string[]
     upcoming_event?: null;
     user?: {
       pk?: string;
@@ -181,12 +188,16 @@ export type InsPostFull = {
       };
       position?: [number, number];
     }[];
-    video_dash_manifest?: null;
-    video_versions?: null;
+    video_dash_manifest?: string;
+    video_versions?: {
+      width: number;
+      height: number;
+      url: string;
+      type: number;
+    }[];
     view_count?: null;
     visibility?: null;
     __typename?: string;
-
   }
 };
 
@@ -238,37 +249,36 @@ export type InsPostCarouselMedia = {
   carousel_media: null;
 }
 
-export async function mapInsPosts(posts: InsPostsFull): Promise<InsPost[]> {
-  const insPosts: InsPost[] = [];
+export async function mapInsPosts(posts: InsPostsFull): Promise<ChannelPost[]> {
+  const insPosts: ChannelPost[] = [];
 
   if (posts && posts.xdt_api__v1__feed__user_timeline_graphql_connection && posts.xdt_api__v1__feed__user_timeline_graphql_connection.edges) {
     posts.xdt_api__v1__feed__user_timeline_graphql_connection.edges.forEach((edge) => {
       const node = edge.node;
-      const insPost: InsPost = {
+      const insPost: ChannelPost = {
         caption_text: node.caption ? node.caption.text : '',
         carousel_media_count: node.carousel_media_count,
-        carousel_media: (node.carousel_media_count) 
-        ? node.carousel_media.map((carouselItem) => {
-          if (!carouselItem || !carouselItem.image_versions2 || !carouselItem.image_versions2.candidates || carouselItem.image_versions2.candidates.length === 0) {
-            // Skip processing if essential data for carousel media is missing
-            return null;
-          }
-
-          return {
-            imgage: {
-              height: carouselItem.image_versions2.candidates[0].height,
-              width: carouselItem.image_versions2.candidates[0].width,
-              url: carouselItem.image_versions2.candidates[0].url
+        images: (node.carousel_media_count)
+          ? node.carousel_media.map((carouselItem) => {
+            if (!carouselItem || !carouselItem.image_versions2 || !carouselItem.image_versions2.candidates || carouselItem.image_versions2.candidates.length === 0) {
+              return null;
             }
-          };
-        }).filter(Boolean)
-        : null, // Remove null values
+
+            return {
+              image_height: carouselItem.image_versions2.candidates[0].height,
+              image_width: carouselItem.image_versions2.candidates[0].width,
+              image_url: carouselItem.image_versions2.candidates[0].url
+            };
+          }).filter(Boolean)
+          : null, // Remove null values
         original_height: node.original_height,
         original_width: node.original_width,
-        video_versions: node.video_versions,
+        video_height: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].height : null,
+        video_width: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].width : null,
+        video_url: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].url : null,
+        video_type: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].type : null,
         code: node.code,
         comment_count: node.comment_count,
-        id: node.id
       };
       insPosts.push(insPost);
     });

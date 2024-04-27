@@ -10,6 +10,6 @@ export class Priority {
     @PrimaryColumn({ length: 50 })
     name: string;
 
-    @Column({ length: 50, nullable: true })
+    @Column({ length: 200, nullable: true })
     description: string;
-}
+} 

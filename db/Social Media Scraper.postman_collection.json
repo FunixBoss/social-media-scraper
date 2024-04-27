@@ -13,10 +13,29 @@
 					"name": "Keyword",
 					"item": [
 						{
-							"name": "find by id",
+							"name": "find hashtags",
 							"request": {
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword/gardening/hashtags"
+							},
+							"response": []
+						},
+						{
+							"name": "find channel",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword/gardening/channels"
+							},
+							"response": []
+						},
+						{
+							"name": "find one",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword/java"
 							},
 							"response": []
 						},
@@ -24,7 +43,8 @@
 							"name": "find all",
 							"request": {
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword/"
 							},
 							"response": []
 						},
@@ -33,23 +53,25 @@
 							"request": {
 								"method": "POST",
 								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"java\",\r\n    \"priority\": \"HIGH\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": "http://localhost:3000/api/ins/keyword"
-							},
-							"response": []
-						},
-						{
-							"name": "update",
-							"request": {
-								"method": "GET",
-								"header": []
 							},
 							"response": []
 						},
 						{
 							"name": "delete",
 							"request": {
-								"method": "GET",
-								"header": []
+								"method": "DELETE",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/keyword/java"
 							},
 							"response": []
 						}
@@ -63,7 +85,26 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/posts"
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=posts-highlights-reels-profile-friendships",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"_javadeveloper"
+									],
+									"query": [
+										{
+											"key": "infos",
+											"value": "posts-highlights-reels-profile-friendships"
+										}
+									]
+								}
 							},
 							"response": []
 						},
@@ -89,7 +130,8 @@
 							"name": "highlights",
 							"request": {
 								"method": "GET",
-								"header": []
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/highlights"
 							},
 							"response": []
 						},
@@ -98,7 +140,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
+								"url": "http://localhost:3000/api/ins/channel/java.world/posts"
 							},
 							"response": []
 						},

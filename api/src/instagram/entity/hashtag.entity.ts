@@ -1,30 +1,24 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
-import { Priority } from './priority.entity';
-import { ChannelReel } from './channel-reel.entity';
 import { Keyword } from './keyword.entity';
+import { ChannelReel } from './channel-reel.entity';
 
 @Entity()
 export class Hashtag {
     @PrimaryColumn({ length: 200 })
     code: string;
 
-    @Column({nullable: true})
+    @Column({ nullable: true })
     media_count?: number;
-    
-    @Column({ length: 50, nullable: true})
+
+    @Column({ length: 200, nullable: true })
     category?: string;
 
-    @Column({ length: 50 })
+    @Column({ length: 200, nullable: true })
     classify?: string;
 
 
     @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;
-
-    // Define the relationship with the Priority entity
-    @ManyToOne(() => Priority)
-    @JoinColumn({ name: 'priority' })
-    priorityEntity?: Priority;
 
     // @ManyToOne(() => ChannelReel, channelReel => channelReel.hashtags, {
     //     cascade: false

@@ -1,6 +1,4 @@
-// channel-crawling-history.entity.ts
-
-import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { Channel } from './channel.entity';
 import { CrawlingType } from './crawling-type.entity';
 
@@ -9,17 +7,17 @@ export class ChannelCrawlingHistory {
     @PrimaryColumn({ length: 200 })
     channel_username: string;
 
-    @PrimaryColumn({ length: 50 })
-    crawling_type: string;
+    @PrimaryColumn({ length: 200 })
+    crawling_type_name: string;
 
     @ManyToOne(() => Channel, { cascade: true })
     @JoinColumn({ name: 'channel_username' })
-    channel: Channel;
+    channel?: Channel;
 
-    @ManyToOne(() => CrawlingType, { cascade: true })
+    @ManyToOne(() => CrawlingType, { cascade: true, eager: true })
     @JoinColumn({ name: 'crawling_type_name' })
-    crawlingType: CrawlingType;
+    crawlingType?: CrawlingType; 
 
-    @Column()
+    @Column({ nullable: true })
     date: Date;
-}
+} 

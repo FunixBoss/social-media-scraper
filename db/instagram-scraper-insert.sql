@@ -1,9 +1,9 @@
-insert into `priority`(name) values
+	insert into `priority`(name) values
 ('HIGH'),
 ('MEDIUM'),
 ('LOW');
 insert into `crawling_type`(name) values
-('CHANNEL_RPOFILE'),
+('CHANNEL_PROFILE'),
 ('CHANNEL_FRIENDSHIP'),
 ('CHANNEL_HIGHLIGHTS'),
 ('CHANNEL_POSTS'),

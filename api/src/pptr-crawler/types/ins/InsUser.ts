@@ -1,13 +1,12 @@
-import { InsFriendshipUsers } from "./InsFriendship";
+import { Channel } from "src/instagram/entity/channel.entity";
 import { InsHighlights } from "./InsHighlights";
-import { InsPosts } from "./InsPosts";
-import { InsProfile } from "./InsProfile";
-import { InsReels } from "./InsReels";
+import { ChannelFriendship } from "src/instagram/entity/channel-friendship.entity";
+import { ChannelReel } from "src/instagram/entity/channel-reel.entity";
+import { ChannelPost } from "src/instagram/entity/channel-post.entity";
 
 export default interface InsUser {
-    profile?: InsProfile;
-    highlights?: InsHighlights;
-    friendshipUsers?: InsFriendshipUsers;
-    posts?: InsPosts;
-    reels?: InsReels;
+    profile?: Channel;
+    friendshipUsers?: ChannelFriendship[];
+    posts?: ChannelPost[];
+    reels?: ChannelReel[];
 }

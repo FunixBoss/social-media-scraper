@@ -10,7 +10,7 @@ export class KeywordChannel {
     @PrimaryColumn({ length: 200 })
     channel_username: string;
 
-    @Column({ length: 50 })
+    @Column({ length: 200, nullable: true })
     status: string;
 
     @ManyToOne(() => Keyword, keyword => keyword.channels)
