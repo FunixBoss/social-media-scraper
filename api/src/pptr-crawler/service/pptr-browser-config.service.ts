@@ -20,7 +20,7 @@ const minimal_args = [
     '--disable-ipc-flooding-protection',
     '--disable-notifications',
     '--disable-offer-store-unmasked-wallet-cards',
-    '--disable-popup-blocking', 
+    '--disable-popup-blocking',
     '--disable-print-preview',
     '--disable-prompt-on-repost',
     '--disable-renderer-backgrounding',
@@ -47,15 +47,15 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
     constructor(private readonly configService: ConfigService) {
         console.log(this.configService.get<boolean>("PUPPETEER_HEADLESS"))
     }
-    
+
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
         return {
             args: [
                 '--enable-automation',
                 ...minimal_args
             ],
-            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new" 
-                ? "new" 
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new"
+                ? "new"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
             userDataDir: this.configService.get<string>("PROFILE_PATH"),
