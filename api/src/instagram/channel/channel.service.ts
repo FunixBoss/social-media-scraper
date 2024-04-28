@@ -9,6 +9,7 @@ import { sleep } from 'src/pptr-crawler/utils/Utils';
 import { InsFriendshipUserFull } from 'src/pptr-crawler/types/ins/InsFriendship';
 import { InsPostsFull, mapInsPosts } from 'src/pptr-crawler/types/ins/InsPosts';
 import { GetChannelsParamsDto, ScrapeInfo } from './channel.controller';
+import InsUser from 'src/pptr-crawler/types/ins/InsUser';
 import { Channel } from '../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -20,14 +21,11 @@ import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
 import { ChannelPost } from '../entity/channel-post.entity';
 import { Workbook } from 'exceljs'
 import { format } from 'date-fns';
-import { createReadStream, createWriteStream, promises, ReadStream, writeFileSync } from 'fs';
+import { Buffer } from 'buffer';
+import { createReadStream, readFileSync, ReadStream, writeFile, writeFileSync } from 'fs';
 import { join } from 'path';
-import FindAllChannelDTO from './dto/findall-channel.dto';
-import axios from 'axios';
-import ChannelPostDTO from './dto/channel-post.dto';
-import ChannelFriendshipDTO from './dto/channel-friendship.dto';
-import ChannelReelDTO from './dto/channel-reel.dto';
-import FindOneChannelDTO from './dto/findone-channel.dto';
+import { FindAllChannelDTO } from './dto/findall-channel.dto';
+import { FindAllKeywordDTO } from '../keyword/dto/findall-keyword.dto';
 
 export type ReadStreamDTO = {
   readStream: ReadStream;
@@ -47,6 +45,7 @@ export class ChannelService {
     @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
     @InjectRepository(ChannelPost) private readonly channelPostRepository: Repository<ChannelPost>,
     @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
+
   ) {
     this.setUpPageInterceptors()
   }
@@ -62,71 +61,16 @@ export class ChannelService {
     )
   }
 
-  async mapToFindAllChannelDTO(channel: Channel): Promise<FindAllChannelDTO> {
-    let crawled: string[] = channel.crawlingHistory.map(c => c.crawling_type_name)
-    channel.crawlingHistory = undefined;
-    return {
-      ...channel,
-      url: `${this.baseUrl}/${channel.username}`,
-      crawled
-    }
-  }
-
-  async mapToChannelPostDTOs(posts: ChannelPost[]): Promise<ChannelPostDTO[]> {
-    return posts.map(post => {
-      return {
-        ...post,
-        url: `${this.baseUrl}/p/${post.code}/`,
-      }
-    })
-  }
-
-  async mapToChannelReelDTOs(reels: ChannelReel[]): Promise<ChannelReelDTO[]> {
-    return reels.map(reel => {
-      return {
-        ...reel,
-        url: `${this.baseUrl}/reel/${reel.code}/`,
-        channel_username: reel.channel?.username
-      }
-    })
-  }
-
-  async mapToChannelFriendshipDTOs(friends: ChannelFriendship[]): Promise<ChannelFriendshipDTO[]> {
-    return friends.map(f => {
-      const { profile_pic_url, full_name, username } = f
-      return {
-        profile_pic_url,
-        username,
-        full_name,
-        channel_username: f.channel?.username
-      }
-    })
-  }
-
-  async mapToFindOneChannel(channel: Channel, friendships?: ChannelFriendship[], posts?: ChannelPost[], reels?: ChannelReel[]): Promise<FindOneChannelDTO> {
-    return {
-      ...(await this.mapToFindAllChannelDTO(channel)),
-      friendships: friendships ? await this.mapToChannelFriendshipDTOs(friendships) : friendships,
-      posts: posts ? await this.mapToChannelPostDTOs(posts) : posts,
-      reels: reels ? await this.mapToChannelReelDTOs(reels) : reels
-    }
-  }
-
-  async mapToFindAllChannelDTOs(channels: Channel[]): Promise<FindAllChannelDTO[]> {
+  async findAll(queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
+    let channels: Channel[] = await this.channelRepository.find()
     return channels.map(channel => {
       let crawled: string[] = channel.crawlingHistory.map(c => c.crawling_type_name)
       return {
         ...channel,
-        url: `${this.baseUrl}/${channel.username}`,
         crawlingHistory: undefined,
         crawled
       }
     })
-  }
-
-  async findAll(queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
-    let channels: Channel[] = await this.channelRepository.find()
-    return this.mapToFindAllChannelDTOs(channels);
   }
 
   private async hasReelsTab(): Promise<boolean> {
@@ -160,6 +104,7 @@ export class ChannelService {
   async exportChannels(exportType: string | "json" | "excel"): Promise<ReadStreamDTO> {
     if (exportType == 'excel') return await this.exportChannelsExcel();
     if (exportType == 'json') return await this.exportChannelsJson();
+
   }
 
   private async exportChannelsExcel(): Promise<ReadStreamDTO> {
@@ -212,50 +157,7 @@ export class ChannelService {
     }
   }
 
-  async downloadReels(username: string): Promise<any[]> {
-    if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
-    let reels: ChannelReelDTO[] = [];
-    if (await this.isCrawledContent(username, "CHANNEL_REELS")) {
-      reels = await this.mapToChannelReelDTOs(await this.channelReelRepository.find({
-        where: { channel: { username } }
-      }))
-    } else {
-      reels = await this.fetchReels(username)
-    }
-    let reelsLen = reels.length;
-    if (reelsLen == 0) return [];
-
-    const DOWNLOAD_PATH = `downloads/instagram/channel/${username}`
-    await createAndAccessFolder(DOWNLOAD_PATH);
-    const downloadPromises = reels.map(reel => this.downloadVideo(reel, DOWNLOAD_PATH));
-    return await Promise.all(downloadPromises);
-  }
-
-  async downloadVideo(reel: ChannelReelDTO, downloadPath: string): Promise<string> {
-    const { video_url, channel_reel_numerical_order, code } = reel;
-    const videoName = `${channel_reel_numerical_order}-${code}.mp4`;
-    const filePath = `${downloadPath}/${videoName}`;
-    console.log(`Downloading: ${videoName}`)
-    try {
-      const response = await axios(video_url, { method: 'GET', responseType: 'stream' });
-      const writer = createWriteStream(filePath);
-      response.data.pipe(writer);
-      return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve(filePath));
-        writer.on('error', (err) => {
-          console.error(`Error writing file at ${filePath}:`, err);
-          writer.close();
-          reject(err);
-        });
-      });
-    } catch (error) {
-      console.error(`Error downloading video from ${video_url} to ${filePath}:`, error["name"]);
-      throw error;
-    }
-  }
-
-
-  async fetchUser(username: string, infos: ScrapeInfo[]): Promise<FindOneChannelDTO> {
+  async fetchUser(username: string, infos: ScrapeInfo[]): Promise<InsUser> {
     let scanned: TCrawlingType[] = (await this.getCrawledHistory(username)).sort()
     let hasScannedAll: boolean = JSON.stringify(scanned) === JSON.stringify(["CHANNEL_FRIENDSHIP", "CHANNEL_POSTS", "CHANNEL_PROFILE", "CHANNEL_REELS"])
     let scanning: TCrawlingType[] = [];
@@ -278,7 +180,12 @@ export class ChannelService {
     let reelLen: number = reels.length;
     console.log(reelLen);
 
-    if (hasScannedAll) return await this.mapToFindOneChannel(profile, friendshipUsers, posts, reels);
+    if (hasScannedAll) return {
+      profile,
+      friendshipUsers,
+      posts,
+      reels
+    }
 
     await this.interceptManager.intercept(
       {
@@ -292,8 +199,6 @@ export class ChannelService {
             if (!scanned.includes('CHANNEL_PROFILE') && infos.includes('profile') && dataObj.data["user"]) {
               console.log("==> Found Response: User Profile");
               profile = mapInsProfile(dataObj.data as InsProfileFull)
-              profile.is_bot_scanning = false;
-              profile.is_self_adding = true;
               scanning.push('CHANNEL_PROFILE')
             } else if (!scanned.includes('CHANNEL_FRIENDSHIP') && infos.includes('friendships') && dataObj.data["xdt_api__v1__discover__chaining"]) {
               console.log("==> Found Response: Friendship Users");
@@ -302,7 +207,6 @@ export class ChannelService {
               friendshipLen = friendshipUsers.length;
               profile.total_friendships = friendshipLen;
               scanning.push('CHANNEL_FRIENDSHIP');
-              console.log("Scanned All Friendships")
             } else if (!scanned.includes('CHANNEL_POSTS') && infos.includes('posts') && dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
               console.log("==> Found Response: Posts");
               const pagedPosts: ChannelPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
@@ -363,70 +267,70 @@ export class ChannelService {
     } else if (!hasReels) {
       profile.total_reels = 0;
     }
-    try {
 
-      await this.dataSource.transaction(async (transactionalEntityManager) => {
-        const channelCrawlings: ChannelCrawlingHistory[] = [];
-        if (scanning.includes("CHANNEL_PROFILE")) {
-          channelCrawlings.push({
-            channel_username: username,
-            crawling_type_name: 'CHANNEL_PROFILE',
-            date: new Date()
-          })
-          await this.channelRepository.save(profile)
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      const channelCrawlings: ChannelCrawlingHistory[] = [];
+      if (scanning.includes("CHANNEL_PROFILE")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_PROFILE',
+          date: new Date()
+        })
+      }
+
+      await this.channelRepository.save(profile)
+      if (scanning.includes("CHANNEL_FRIENDSHIP")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_FRIENDSHIP',
+          date: new Date()
+        })
+        await this.channelFriendRepository.save(friendshipUsers)
+      }
+
+      if (scanning.includes("CHANNEL_POSTS")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_POSTS',
+          date: new Date()
+        })
+        for (let i = postLen; i > 0; i--) {
+          let post: ChannelPost = posts[i - 1];
+          post.channel_post_numerical_order = i;
+          post.channel = { username: username }
         }
-        profile = await this.channelRepository.findOne({ where: { username } })
-        if (scanning.includes("CHANNEL_FRIENDSHIP")) {
-          channelCrawlings.push({
-            channel_username: username,
-            crawling_type_name: 'CHANNEL_FRIENDSHIP',
-            date: new Date()
-          })
-          await this.channelFriendRepository.save(friendshipUsers)
+        await this.channelPostRepository.save(posts)
+      }
+
+      if (!hasReels || scanning.includes("CHANNEL_REELS")) {
+        channelCrawlings.push({
+          channel_username: username,
+          crawling_type_name: 'CHANNEL_REELS',
+          date: new Date()
+        })
+        for (let i = reelLen; i > 0; i--) {
+          let reel: ChannelReel = reels[i - 1];
+          reel.channel_reel_numerical_order = i;
+          reel.channel = { username: username }
         }
+        console.log("gone Here");
+        
+        await this.channelReelRepository.save(reels)
+      }
+      await this.channelCrawlingHistoryRepository.save(channelCrawlings);
+    })
 
-        if (scanning.includes("CHANNEL_POSTS")) {
-          channelCrawlings.push({
-            channel_username: username,
-            crawling_type_name: 'CHANNEL_POSTS',
-            date: new Date()
-          })
-          for (let i = postLen; i > 0; i--) {
-            let post: ChannelPost = posts[i - 1];
-            post.channel_post_numerical_order = i;
-            post.channel = { username: username }
-          }
-          await this.channelPostRepository.save(posts)
-        }
-
-        if (!hasReels || scanning.includes("CHANNEL_REELS")) {
-          channelCrawlings.push({
-            channel_username: username,
-            crawling_type_name: 'CHANNEL_REELS',
-            date: new Date()
-          })
-          for (let i = reelLen; i > 0; i--) {
-            let reel: ChannelReel = reels[i - 1];
-            reel.channel_reel_numerical_order = i;
-            reel.channel = { username: username }
-          }
-          await this.channelReelRepository.save(reels)
-        }
-        await this.channelCrawlingHistoryRepository.save(channelCrawlings);
-      })
-      profile = await this.channelRepository.findOne({ where: { username } })
-
-    } catch (error) {
-      console.log(error);
-
+    return {
+      profile,
+      friendshipUsers,
+      posts,
+      reels
     }
-
-    return await this.mapToFindOneChannel(profile, friendshipUsers, posts, reels)
   }
 
-  async fetchUserProfile(username: string): Promise<FindAllChannelDTO> {
+  async fetchUserProfile(username: string): Promise<Channel> {
     if (await this.isExists(username) && await this.isCrawledContent(username, "CHANNEL_PROFILE")) {
-      return this.mapToFindAllChannelDTO(await this.channelRepository.findOne({ where: { username } }))
+      return this.channelRepository.findOne({ where: { username } })
     }
 
     let channel: Channel;
@@ -473,12 +377,11 @@ export class ChannelService {
       })
       await this.channelRepository.save(channel)
       await this.channelCrawlingHistoryRepository.save(channelCrawlings);
-      channel = await this.channelRepository.findOne({ where: { username } })
     })
-    return this.mapToFindAllChannelDTO(channel);
+    return channel;
   }
 
-  async fetchFriendships(username: string): Promise<ChannelFriendshipDTO[]> {
+  async fetchFriendships(username: string): Promise<ChannelFriendship[]> {
     if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
     if (await this.isCrawledContent(username, "CHANNEL_FRIENDSHIP")) {
       return this.channelFriendRepository.find({
@@ -522,12 +425,12 @@ export class ChannelService {
     return friendshipUsers;
   }
 
-  async fetchPosts(username: string): Promise<ChannelPostDTO[]> {
+  async fetchPosts(username: string): Promise<ChannelPost[]> {
     if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
     if (await this.isCrawledContent(username, "CHANNEL_POSTS")) {
-      return this.mapToChannelPostDTOs(
-        await this.channelPostRepository.find({ where: { channel: { username } } })
-      )
+      return this.channelPostRepository.find({
+        where: { channel: { username } }
+      })
     }
 
     let posts: ChannelPost[] = [];
@@ -576,10 +479,12 @@ export class ChannelService {
     return posts;
   }
 
-  async fetchReels(username: string): Promise<ChannelReelDTO[]> {
+  async fetchReels(username: string): Promise<ChannelReel[]> {
     if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
     if (await this.isCrawledContent(username, "CHANNEL_REELS")) {
-      return this.mapToChannelReelDTOs(await this.channelReelRepository.find({ where: { channel: { username } } }))
+      return this.channelReelRepository.find({
+        where: { channel: { username } }
+      })
     }
     let reels: ChannelReel[] = [];
     let reelLen: number = 0
@@ -618,9 +523,9 @@ export class ChannelService {
         console.log("Scanned All Reels")
       }
     };
-    for (let i = 0; i < reelLen; i++) {
-      let reel: ChannelReel = reels[i];
-      reel.channel_reel_numerical_order = reelLen - i;
+    for (let i = reelLen; i > 0; i--) {
+      let reel: ChannelReel = reels[i - 1];
+      reel.channel_reel_numerical_order = i;
       reel.channel = { username: username }
     }
     await this.dataSource.transaction(async (transactionalEntityManager) => {
@@ -641,26 +546,14 @@ export class ChannelService {
 async function scrollToBottom(page: Page) {
   let previousHeight = await page.evaluate('document.body.scrollHeight');
   while (true) {
-    await page.evaluate('window.scrollBy(0, -1500)');
-    await sleep(1)
-    await page.evaluate('window.scrollBy(0, +document.body.scrollHeight)');
+    await page.evaluate('window.scrollBy(0, document.body.scrollHeight)');
     await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 2000 });
     let currentHeight = await page.evaluate('document.body.scrollHeight');
 
     if (previousHeight >= currentHeight) {
-      throw new TimeoutError('');
+      throw new TimeoutError('abc');
     }
     previousHeight = currentHeight;
-    await sleep(1);
-  }
-}
-
-async function createAndAccessFolder(path: string): Promise<void> {
-  try {
-    await promises.mkdir(path, { recursive: true });
-    console.log(`Directory created at ${path}`);
-  } catch (error) {
-    console.error(`Error creating directory at ${path}:`, error);
-    throw error; // Rethrow to handle it in the calling function
+    await sleep(0.5);
   }
 }

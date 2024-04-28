@@ -52,13 +52,13 @@ export class Channel {
     @Column({ length: 200, nullable: true })
     pk?: string;
 
-    @Column({ length: 50, nullable: true, default: 'MEDIUM' })
+    @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;
 
-    @Column({ type: 'bool', nullable: true, default: false })
+    @Column({ type: 'bool', default: false })
     is_self_adding?: boolean;
 
-    @Column({ type: 'bool', name: "is_bot_scanning", nullable: true, default: false })
+    @Column({ type: 'bool', default: false })
     is_bot_scanning?: boolean;
 
     @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel, {

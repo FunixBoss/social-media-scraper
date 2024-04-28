@@ -46,8 +46,7 @@ export class ChannelPost {
 
     @OneToMany(() => ChannelPostImage, image => image.post, {
         cascade: true,
-        onDelete: "CASCADE",
-        eager: true
+        onDelete: "CASCADE"
     })
     images?: ChannelPostImage[];
 }

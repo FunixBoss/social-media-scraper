@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { KeywordService } from './keyword.service';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
+import { Keyword } from '../entity/keyword.entity';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { Hashtag } from '../entity/hashtag.entity';
 import { Channel } from '../entity/channel.entity';
-import FindOneKeywordDTO from './dto/findone-keyword.dto';
-import FindAllKeywordDTO from './dto/findall-keyword.dto';
-import FindAllHashtagDTO from '../hashtag/dto/findall-hashtag.dto';
-import FindAllChannelDTO from '../channel/dto/findall-channel.dto';
+import { FindOneKeywordDTO } from './dto/findone-keyword.dto';
+import { FindAllKeywordDTO } from './dto/findall-keyword.dto';
 
 export class GetHashtagNameParamsDto {
   @IsNotEmpty()
@@ -25,12 +25,12 @@ export class KeywordController {
   }
 
   @Get(':name/hashtags')
-  async findHashtags(@Param() param: GetHashtagNameParamsDto): Promise<FindAllHashtagDTO[]> {
+  async findHashtags(@Param() param: GetHashtagNameParamsDto): Promise<Hashtag[]> {
     return this.keywordService.findHashtags(param.name);
   }
 
   @Get(':name/channels')
-  async findChannel(@Param() param: GetHashtagNameParamsDto): Promise<FindAllChannelDTO[]> {
+  async findChannel(@Param() param: GetHashtagNameParamsDto): Promise<Channel[]> {
     return this.keywordService.findChannels(param.name);
   }
 

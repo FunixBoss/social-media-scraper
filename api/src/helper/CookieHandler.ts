@@ -1,14 +1,15 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { Injectable } from '@nestjs/common';
 
+let COOKIE_BASE_DIR: string = path.join(__dirname, '../../uploads/cookies');
 export type cookieType = "instagram" | "threads" | "facebook"
 
 @Injectable()
 export class CookieHandler {
-	private readonly COOKIE_BASE_DIR: string = 'uploads/cookies';
 
 	public save = (cookieType: cookieType, cookieName: string, cookie: string): void => {
-		const cookieDir = `${this.COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
+		const cookieDir = `${COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
 		if (!fs.existsSync(cookieDir)) {
 			fs.writeFileSync(cookieDir, cookie, 'utf-8');
 		} else {
@@ -17,7 +18,7 @@ export class CookieHandler {
 	}
 
 	public update = (cookieType: cookieType, cookieName: string, cookie: string): void => {
-		const cookieDir = `${this.COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
+		const cookieDir = `${COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
 
 		if (fs.existsSync(cookieDir)) {
 			fs.writeFileSync(cookieDir, cookie, 'utf-8');
@@ -29,16 +30,20 @@ export class CookieHandler {
 	}
 
 	public getAsText = (cookieType: cookieType, cookieName: string): string => {
-		const cookieDir = `${this.COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
+		const cookieDir = `${COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
+		
 		let cookieText: string = fs.existsSync(cookieDir)
-			? fs.readFileSync(cookieDir, 'utf-8').toString() 
-			: '';
+			? fs.readFileSync(cookieDir, 'utf-8').toString() : '';
 		return cookieText;
 	}
 
-	// public getAsObj = (cookieType: cookieType, cookieName: string): any => {
-	// 	return {
-	// 		cookie: JSON.parse(this.getAsText(cookieType, cookieName))
-	// 	};
-	// }
+	public getAsObj = (cookieType: cookieType, cookieName: string): any => {
+		const cookieDir = `${COOKIE_BASE_DIR}/${cookieType}/${cookieName}`
+		
+		let cookieText: string = fs.existsSync(cookieDir)
+			? fs.readFileSync(cookieDir, 'utf-8').toString() : '';
+		return {
+			cookie: JSON.parse(cookieText)
+		};
+	}
 }

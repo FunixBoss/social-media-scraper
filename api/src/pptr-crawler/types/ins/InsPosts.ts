@@ -1,4 +1,3 @@
-import { ChannelPostImage } from "src/instagram/entity/channel-post-image.entity";
 import { ChannelPost } from "src/instagram/entity/channel-post.entity";
 
 export type InsPostsFull = {
@@ -256,32 +255,22 @@ export async function mapInsPosts(posts: InsPostsFull): Promise<ChannelPost[]> {
   if (posts && posts.xdt_api__v1__feed__user_timeline_graphql_connection && posts.xdt_api__v1__feed__user_timeline_graphql_connection.edges) {
     posts.xdt_api__v1__feed__user_timeline_graphql_connection.edges.forEach((edge) => {
       const node = edge.node;
-      let images: ChannelPostImage[] = []
-      if (node.product_type == 'carousel_container') {
-        images = node.carousel_media.map((carouselItem) => {
-          if (!carouselItem || !carouselItem.image_versions2 || !carouselItem.image_versions2.candidates || carouselItem.image_versions2.candidates.length === 0) {
-            return null;
-          }
-
-          return {
-            image_height: carouselItem.image_versions2.candidates[0].height,
-            image_width: carouselItem.image_versions2.candidates[0].width,
-            image_url: carouselItem.image_versions2.candidates[0].url
-          };
-        }).filter(Boolean)
-      } else if(node.product_type == 'feed') {
-        const image = node.image_versions2.candidates[0]
-        images.push({
-          image_url: image.url,
-          image_height: image.height,
-          image_width: image.width
-        })
-      }
-
-      let insPost: ChannelPost = {
+      const insPost: ChannelPost = {
         caption_text: node.caption ? node.caption.text : '',
         carousel_media_count: node.carousel_media_count,
-        images: images,
+        images: (node.carousel_media_count)
+          ? node.carousel_media.map((carouselItem) => {
+            if (!carouselItem || !carouselItem.image_versions2 || !carouselItem.image_versions2.candidates || carouselItem.image_versions2.candidates.length === 0) {
+              return null;
+            }
+
+            return {
+              image_height: carouselItem.image_versions2.candidates[0].height,
+              image_width: carouselItem.image_versions2.candidates[0].width,
+              image_url: carouselItem.image_versions2.candidates[0].url
+            };
+          }).filter(Boolean)
+          : null, // Remove null values
         original_height: node.original_height,
         original_width: node.original_width,
         video_height: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].height : null,

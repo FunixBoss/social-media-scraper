@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Keyword } from '../entity/keyword.entity';
@@ -14,18 +14,14 @@ import { sleep } from 'src/pptr-crawler/utils/Utils';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
 import { Channel } from '../entity/channel.entity';
 import { KeywordChannel } from '../entity/keyword-channel.entity';
-import FindOneKeywordDTO from './dto/findone-keyword.dto';
-import FindAllKeywordDTO from './dto/findall-keyword.dto';
-import FindAllHashtagDTO from '../hashtag/dto/findall-hashtag.dto';
-import FindAllChannelDTO from '../channel/dto/findall-channel.dto';
-import { ChannelService } from '../channel/channel.service';
+import { FindOneKeywordDTO } from './dto/findone-keyword.dto';
+import { FindAllKeywordDTO } from './dto/findall-keyword.dto';
 
 @Injectable()
 export class KeywordService {
   private interceptManager: RequestInterceptionManager
 
   constructor(
-    private readonly channelService: ChannelService,
     @InjectRepository(Keyword) private readonly keywordRepository: Repository<Keyword>,
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
@@ -35,65 +31,6 @@ export class KeywordService {
   ) {
     this.setUpPageInterceptors()
   }
-
-  async mapToFindOneKeywordDTO(kw: string): Promise<FindOneKeywordDTO> {
-    if (!(await this.isExists(kw))) throw new EntityNotExists('Keyword', kw);
-    const keyword: Keyword = await this.keywordRepository.findOne({
-      where: {
-        name: kw
-      },
-      relations: [
-        "channels", "channels.channel",
-        "hashtags"
-      ]
-    })
-
-    return {
-      name: keyword.name,
-      priority: keyword.priority,
-      channels: keyword.channels.map(ch => ch.channel),
-      hashtags: keyword.hashtags,
-      total_hashtags: keyword.hashtags ? keyword.hashtags.length : 0,
-      total_channels: keyword.channels ? keyword.channels.length : 0
-    } as FindOneKeywordDTO;
-  }
-
-  async mapToFindAllKeywordDTOs(keywords: Keyword[]): Promise<FindAllKeywordDTO[]> {
-    let keywordDtos: FindAllKeywordDTO[] = []
-    for (const k of keywords) {
-      const { name, priority } = k
-      const total_channels: number = await this.keywordChannelRepository.countBy({
-        keyword_name: k.name
-      })
-      const total_hashtags: number = await this.hashtagRepository.countBy({
-        keyword: { name: k.name }
-      })
-      keywordDtos.push({
-        name,
-        priority,
-        total_channels,
-        total_hashtags,
-      })
-    }
-    return keywordDtos;
-  }
-
-  async mapToFindAllHashtagDTOs(hashtags: Hashtag[]): Promise<FindAllHashtagDTO[]> {
-    return hashtags.map(h => {
-      const { id, code, media_count, category, is_self_adding, is_bot_scanning, priority } = h
-      return {
-        id,
-        code,
-        media_count,
-        category,
-        is_self_adding,
-        is_bot_scanning,
-        priority,
-        keyword: h.keyword ? h.keyword.name : null
-      }
-    });
-  }
-
 
   async findAll(): Promise<FindAllKeywordDTO[]> {
     const keywords: Keyword[] = await this.keywordRepository.find({
@@ -120,7 +57,26 @@ export class KeywordService {
     return !!kw;
   }
 
+  async mapToFindOneKeywordDTO(kw: string): Promise<FindOneKeywordDTO> {
+    const keyword: Keyword = await this.keywordRepository.findOne({
+      where: {
+        name: kw
+      },
+      relations: [
+        "channels", "channels.channel",
+        "hashtags"
+      ]
+    })
 
+    return {
+      name: keyword.name,
+      priority: keyword.priority,
+      channels: keyword.channels.map(ch => ch.channel),
+      hashtags: keyword.hashtags,
+      total_hashtags: keyword.hashtags ? keyword.hashtags.length : 0,
+      total_channels: keyword.channels ? keyword.channels.length : 0
+    } as FindOneKeywordDTO;
+  }
 
   private async setUpPageInterceptors(): Promise<void> {
     this.interceptManager = new RequestInterceptionManager(
@@ -132,6 +88,7 @@ export class KeywordService {
       }
     )
   }
+
 
 
   async findOne(keyword: string): Promise<FindOneKeywordDTO> {
@@ -163,8 +120,8 @@ export class KeywordService {
         kwChannels.push(kwChannel)
       }
       await this.dataSource.transaction(async (transactionalEntityManager) => {
-        await this.keywordRepository.save(keyword)
         await this.channelRepository.save(channels);
+        await this.keywordRepository.save(keyword)
         keyword.channels = kwChannels;
         keyword.hashtags = hashtags;
         await this.keywordRepository.save(keyword)
@@ -172,7 +129,7 @@ export class KeywordService {
       return this.mapToFindOneKeywordDTO(keyword.name);
     } catch (error) {
       console.log(error);
-    }
+    } 
   }
 
   private async fetchHashtags(keyword: Keyword): Promise<Hashtag[]> {
@@ -225,18 +182,22 @@ export class KeywordService {
     return channels;
   }
 
-  async findHashtags(keyword: string): Promise<FindAllHashtagDTO[]> {
+  async findHashtags(keyword: string): Promise<Hashtag[]> {
     if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
-    return this.mapToFindAllHashtagDTOs(await this.hashtagRepository.findBy({ keyword: { name: keyword } }))
+    return this.hashtagRepository.findBy({
+      keyword: {
+        name: keyword
+      }
+    })
   }
 
-  async findChannels(keywordName: string): Promise<FindAllChannelDTO[]> {
+  async findChannels(keywordName: string): Promise<Channel[]> {
     if (!(await this.isExists(keywordName))) throw new EntityNotExists('Keyword', keywordName);
     const keyword = await this.keywordRepository.findOne({
       where: { name: keywordName },
       relations: ['channels', 'channels.channel']
     });
-    return this.channelService.mapToFindAllChannelDTOs(keyword.channels.map(keywordChannel => keywordChannel.channel));
+    return keyword.channels.map(keywordChannel => keywordChannel.channel);
   }
 
   async remove(keyword: string): Promise<void> {

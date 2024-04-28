@@ -30,7 +30,7 @@ create table `channel`(
     total_friendships int,
     pk varchar(200),
 	is_self_adding bool default false,
-    is_bot_scanning bool default false,
+    is_bot_scannig bool default false,
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name)
 );
@@ -121,11 +121,11 @@ create table `hashtag`(
     media_count bigint,
     category varchar(200),
 	is_self_adding bool default false,
-    is_bot_scanning bool default false,
-    keyword_name varchar(200),
+    is_bot_scannig bool default false,
+    keyword varchar(200),
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name),
-    foreign key (keyword_name) references `keyword`(name)
+    foreign key (keyword) references `keyword`(name)
 );
 
 create table `channel_reel_hashtag`(
@@ -136,20 +136,6 @@ create table `channel_reel_hashtag`(
     foreign key (hashtag_id) references `hashtag`(id)
 );
 
-insert into `priority`(name) values
-('HIGH'),
-('MEDIUM'),
-('LOW');
-insert into `crawling_type`(name) values
-('CHANNEL_PROFILE'),
-('CHANNEL_FRIENDSHIP'),
-('CHANNEL_HIGHLIGHTS'),
-('CHANNEL_POSTS'),
-('CHANNEL_REELS'),
-('CHANNEL_TAGGED'),
-('EXPLORE_HASHTAG'),
-('EXPORE_KEYWORD')
-;
 
 
 

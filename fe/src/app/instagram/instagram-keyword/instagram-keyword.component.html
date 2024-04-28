@@ -1,0 +1,255 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-danger">
+                        <h4 class="card-title ">Instagram Keywords Scraper
+                        </h4>
+                        <!-- <p class="card-category">
+                            Scrape all Instagram profile info. Just add one or more Instagram usernames and extract number of followers&follows, URLs, bio, posts, likes, counts, related profiles, captions, highlight reels. Export scraped data, run the scraper via API, schedule and monitor runs or integrate with other tools.
+                        </p> -->
+                    </div>
+                    <div class="card-body">
+                        <form (ngSubmit)="createKeyword()">
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="keywordName" [(ngModel)]="keywordName" name="keywordName" placeholder="Enter Keyword Name">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="keywordPriority" [(ngModel)]="keywordPriority" name="keywordPriority" placeholder="Enter Keyword Priority">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Keyword</button>
+                        </form>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="table-responsive text-center">
+                            <button class="btn btn-info">Update Table</button>
+                            <table class="table">
+                                <thead class="text-primary">
+                                  <th>Name</th>
+                                  <th>Priority</th>
+                                  <th>Action</th>
+                                </thead>
+                                <tbody>
+                                  <tr *ngFor="let keyword of keywords">
+                                    <td>{{ keyword.name }}</td>
+                                    <td>{{ keyword.priority }}</td>
+                                    <td>
+                                        <button class="btn btn-success" (click)="selectKeyword(keyword); " data-toggle="modal" data-target="#myModal">Scan</button>
+                                        <button class="btn btn-primary" (click)="deleteKeyword(keyword)">Delete</button>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Modal -->
+            <div class="modal " id="myModal" *ngIf="selectedKeyword">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                          <h4 class="modal-title">Scan Results for '{{ selectedKeyword.name }}'</h4>
+                          <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                      
+                        <!-- Modal Body -->
+                        <div class="modal-body">
+                          <h5>Channels: </h5>
+                          <div class="table-responsive-keyword">
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Username</th>
+                                  <th>Status</th>
+                                  <!-- Add additional channel fields as needed -->
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr *ngFor="let channel of selectedKeyword.channels; let i = index">
+                                  <td>{{ i + 1 }}</td>
+                                  <td>{{ channel.channel_username }}</td>
+                                  <td>{{ channel.status }}</td>
+                                  <!-- Additional channel data columns here -->
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <h5>Hashtags: </h5>
+                          <div class="table-responsive-keyword">
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Code</th>
+                                  <th>Posts</th>
+                                  <!-- Add additional hashtag fields as needed -->
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr *ngFor="let hashtag of selectedKeyword.hashtags; let j = index">
+                                  <td>{{ j + 1 }}</td>
+                                  <td>{{ hashtag.code }}</td>
+                                  <td>{{ hashtag.media_count }}</td>
+                                  <!-- Additional hashtag data columns here -->
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      
+                        <!-- Modal Footer -->
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        </div>
+                      </div>
+                      
+                </div>
+              </div>
+   <!-- Vertically centered modal -->
+
+            <!-- <div class="col-md-12">
+                <div class="card card-plain">
+                    <div class="card-header card-header-danger">
+                        <h4 class="card-title mt-0"> Table on Plain Background</h4>
+                        <p class="card-category"> Here is a subtitle for this table</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="">
+                                    <th>
+                                        ID
+                                    </th>
+                                    <th>
+                                        Name
+                                    </th>
+                                    <th>
+                                        Country
+                                    </th>
+                                    <th>
+                                        City
+                                    </th>
+                                    <th>
+                                        Salary
+                                    </th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            1
+                                        </td>
+                                        <td>
+                                            Dakota Rice
+                                        </td>
+                                        <td>
+                                            Niger
+                                        </td>
+                                        <td>
+                                            Oud-Turnhout
+                                        </td>
+                                        <td>
+                                            $36,738
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            2
+                                        </td>
+                                        <td>
+                                            Minerva Hooper
+                                        </td>
+                                        <td>
+                                            Curaçao
+                                        </td>
+                                        <td>
+                                            Sinaai-Waas
+                                        </td>
+                                        <td>
+                                            $23,789
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            3
+                                        </td>
+                                        <td>
+                                            Sage Rodriguez
+                                        </td>
+                                        <td>
+                                            Netherlands
+                                        </td>
+                                        <td>
+                                            Baileux
+                                        </td>
+                                        <td>
+                                            $56,142
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            4
+                                        </td>
+                                        <td>
+                                            Philip Chaney
+                                        </td>
+                                        <td>
+                                            Korea, South
+                                        </td>
+                                        <td>
+                                            Overland Park
+                                        </td>
+                                        <td>
+                                            $38,735
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            5
+                                        </td>
+                                        <td>
+                                            Doris Greene
+                                        </td>
+                                        <td>
+                                            Malawi
+                                        </td>
+                                        <td>
+                                            Feldkirchen in Kärnten
+                                        </td>
+                                        <td>
+                                            $63,542
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            6
+                                        </td>
+                                        <td>
+                                            Mason Porter
+                                        </td>
+                                        <td>
+                                            Chile
+                                        </td>
+                                        <td>
+                                            Gloucester
+                                        </td>
+                                        <td>
+                                            $78,615
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+  </div>
+  

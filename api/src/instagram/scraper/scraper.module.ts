@@ -9,7 +9,7 @@ import { HelperModule } from 'src/helper/helper.module';
         {
             provide: 'IgCookie',
             useFactory: (cookieHandler: CookieHandler) => {
-                return cookieHandler.getAsText('instagram', '0.json')
+                return JSON.stringify(cookieHandler.getAsObj('instagram', '0.json'))
             },
             inject: [CookieHandler]
         },

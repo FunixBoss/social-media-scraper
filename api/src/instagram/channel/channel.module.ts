@@ -30,8 +30,5 @@ import { ChannelPost } from '../entity/channel-post.entity';
   providers: [
     ChannelService,
   ],
-  exports: [
-    ChannelService,
-  ]
 })
 export class ChannelModule { }
