@@ -112,7 +112,7 @@ export class ChannelExportService {
     if (crawledTypes.includes("CHANNEL_POSTS"))
       posts = await this.channelService.fetchPosts(username);
     if (crawledTypes.includes("CHANNEL_REELS"))
-      reels = await this.channelService.fetchPosts(username);
+      reels = await this.channelService.fetchReels(username);
     const channelFull: FindOneChannelDTO = await this.channelService.mapToFindOneChannelDTOfromOrigin(channel, friendships, posts, reels);
  
     const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
@@ -134,7 +134,7 @@ export class ChannelExportService {
     if (crawledTypes.includes("CHANNEL_POSTS"))
       createAndWritePostsWorkSheet(workbook, await this.channelService.fetchPosts(username));
     if (crawledTypes.includes("CHANNEL_REELS"))
-      createAndWriteReelsWorkSheet(workbook, await this.channelService.fetchPosts(username));
+      createAndWriteReelsWorkSheet(workbook, await this.channelService.fetchReels(username));
 
     const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
     const downloadPath = 'downloads/instagram/channel'
@@ -212,16 +212,16 @@ async function createAndWritePostsWorkSheet(workbook: Workbook, posts: ChannelPo
 async function createAndWriteReelsWorkSheet(workbook: Workbook, reels: ChannelReelDTO[]): Promise<void> {
   let worksheet = workbook.addWorksheet(`Reels`)
   worksheet.columns = [
-    { header: 'Order', key: 'channel_post_numerical_order', width: 20 },
+    { header: 'Order', key: 'channel_reel_numerical_order', width: 20 },
     { header: 'Code', key: 'code', width: 20 },
     { header: 'Url', key: 'url', width: 25 },
-    { header: 'Likes', key: 'like_count', width: 15 },
+    { header: 'Likes', key: 'like_count', width: 15 }, 
     { header: 'Comment Count', key: 'comment_count', width: 12 },
     { header: 'Image Url', key: 'image_url', width: 25 },
     { header: 'Play Count', key: 'play_count', width: 12 },
     { header: 'Video Url', key: 'video_url', width: 12 },
     { header: 'Video Type', key: 'video_type', width: 12 },
-    { header: 'Media Type', key: 'media_type', width: 100 },
+    { header: 'Media Type', key: 'media_type', width: 12 }, 
 
   ];
   reels.forEach(r => worksheet.addRow(r))

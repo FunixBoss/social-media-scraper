@@ -300,7 +300,7 @@ export class ChannelService {
             crawling_type_name: 'CHANNEL_PROFILE',
             date: new Date()
           })
-          if(scanning.includes("CHANNEL_REELS")) {
+          if (scanning.includes("CHANNEL_REELS")) {
             profile.total_reels = reelLen;
           }
           await this.channelRepository.save(profile)
@@ -572,9 +572,25 @@ export class ChannelService {
 async function scrollToBottom(page: Page) {
   let previousHeight = await page.evaluate('document.body.scrollHeight');
   while (true) {
-    await page.evaluate('window.scrollBy(0, -1500)');
-    await sleep(1)
-    await page.evaluate('window.scrollBy(0, +document.body.scrollHeight)');
+    const numberOfScrolls = 10;
+    const scrollAmount = -150;
+    const delayBetweenScrolls = 0.1; 
+
+    for (let i = 0; i < numberOfScrolls; i++) {
+      await page.evaluate((scrollY) => window.scrollBy(0, scrollY), scrollAmount);
+      await sleep(delayBetweenScrolls)
+    }
+    const numberOfIncrements = 10;
+    const scrollHeight =( await page.evaluate(() => document.body.scrollHeight))+500;
+    const scrollIncrement = Math.floor(scrollHeight / numberOfIncrements);
+
+    for (let i = 0; i < numberOfIncrements; i++) {
+      await page.evaluate((scrollIncrement) => {
+        window.scrollBy(0, scrollIncrement);
+      }, scrollIncrement);
+      await sleep(delayBetweenScrolls)
+    }
+    
     await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 2000 });
     let currentHeight = await page.evaluate('document.body.scrollHeight');
 
@@ -582,6 +598,5 @@ async function scrollToBottom(page: Page) {
       throw new TimeoutError('');
     }
     previousHeight = currentHeight;
-    await sleep(1);
   }
 }

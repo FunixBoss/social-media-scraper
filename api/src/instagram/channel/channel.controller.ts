@@ -18,6 +18,11 @@ class GetUserScrapeInfosDto {
   infos: ScrapeInfo[];
 }
 
+
+export class GetDownloadTypeDto {
+  @IsIn([undefined, "posts", "reels"])
+  type: string;
+}
 export class GetExportTypeDto {
   @IsIn(["excel", "json"])
   type: string;
@@ -79,6 +84,23 @@ export class ChannelController {
   @Get('')
   async fetchAll(@Query() queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
     return await this.channelService.findAll(queries);
+  }
+
+  @Get('download/:username')
+  async downloadReels(@Param('username') username: string, @Query() queries: GetDownloadTypeDto, @Res() res: Response) {
+    try {
+      const { readStream, fileName } = await this.channelDownloadService.download(username, queries.type);
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      }); 
+      readStream.pipe(res);
+    } catch (error) {
+      console.error('Error:', error.message);
+      if (!res.headersSent) {
+        res.status(404).send(error.message);
+      }
+    }
   }
 
   @Get('export')
@@ -147,8 +169,4 @@ export class ChannelController {
     return await this.channelService.fetchReels(params.username);
   }
 
-  @Get('download/:username/reels')
-  async downloadReels(@Param() params: GetUserParamsDto): Promise<any[]> {
-    return await this.channelDownloadService.downloadReels(params.username);
-  }
 } 

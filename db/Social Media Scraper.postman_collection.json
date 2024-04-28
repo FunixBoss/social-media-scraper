@@ -22,11 +22,11 @@
 							"response": []
 						},
 						{
-							"name": "find channel",
+							"name": "find channels",
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java/channels"
+								"url": "http://localhost:3000/api/ins/keyword/java.world/channels"
 							},
 							"response": []
 						},
@@ -35,7 +35,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java"
+								"url": "http://localhost:3000/api/ins/keyword/gardening"
 							},
 							"response": []
 						},
@@ -44,7 +44,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java"
+								"url": "http://localhost:3000/api/ins/keyword"
 							},
 							"response": []
 						},
@@ -55,7 +55,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"java\",\r\n    \"priority\": \"HIGH\"\r\n}",
+									"raw": "{\r\n    \"name\": \"gardening2\",\r\n    \"priority\": \"HIGH\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -71,7 +71,7 @@
 							"request": {
 								"method": "DELETE",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java"
+								"url": "http://localhost:3000/api/ins/keyword/java.world"
 							},
 							"response": []
 						}
@@ -81,11 +81,58 @@
 					"name": "Channel",
 					"item": [
 						{
-							"name": "export excel",
+							"name": "export channels (excel, json)",
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/trung_nghia2409/profile"
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/export?type=excel",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"export"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "excel"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "export channel (excel, json)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/export?type=excel",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"export"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "excel"
+										}
+									]
+								}
 							},
 							"response": []
 						},
@@ -95,7 +142,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=posts-highlights-reels-profile-friendships",
+									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=profile-reels-posts-friendships",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -110,7 +157,7 @@
 									"query": [
 										{
 											"key": "infos",
-											"value": "posts-highlights-reels-profile-friendships"
+											"value": "profile-reels-posts-friendships"
 										}
 									]
 								}
@@ -149,7 +196,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/trung_nghia2409/profile"
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/profile"
 							},
 							"response": []
 						},
@@ -176,7 +223,36 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/trung_nghia2409/reels"
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
+							},
+							"response": []
+						},
+						{
+							"name": "download reels/posts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/download/_javadeveloper?type=areels",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"download",
+										"_javadeveloper"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "areels"
+										}
+									]
+								}
 							},
 							"response": []
 						}
