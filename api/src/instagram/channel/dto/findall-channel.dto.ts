@@ -1,5 +1,6 @@
-export interface FindAllChannelDTO {
+export default interface FindAllChannelDTO {
     username?: string;
+    url?: string;
     category?: string;
     biography?: string;
     bio_link_url?: string;

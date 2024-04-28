@@ -1,0 +1,35 @@
+<ng-container *ngIf="loadedList; else loadingBlock">
+    <nb-card>
+        <nb-card-header class="d-flex justify-content-between align-items-center">
+            <h6>
+                Product List
+            </h6>
+            <ngx-item-of-list (selectNumberOfItem)="source.setPaging(1, $event)"></ngx-item-of-list>
+        </nb-card-header>
+        <nb-card-body>
+            <ng2-smart-table 
+                id="product-table" [settings]="settings"
+                [source]="source" [ngClass]="'smart-table'"
+                (userRowSelect)="onRowSelect($event)">
+            </ng2-smart-table>
+        </nb-card-body>
+        <nb-card-footer>
+            <ng-container *ngIf="selectedProducts.length > 0">
+                <ngx-products-list-multi 
+                    [selectedProducts]="selectedProducts"
+                    (isDeleted)="onDelete($event)"
+                    (isUpdatedNewStatus)="onUpdateNewStatus($event)"
+                    (isUpdatedTopStatus)="onUpdateTopStatus($event)"
+                    (isUpdatedActiveStatus)="onUpdateActiveStatus($event)"
+                    (isAppliedSale)="onAppliedSale($event)"
+                    (isUpdatedStatuses)="onUpdateStatuses($event)">
+                </ngx-products-list-multi>
+            </ng-container>
+        </nb-card-footer>
+    </nb-card>
+</ng-container>
+
+<ng-template #loadingBlock>
+    <nb-card [size]="'large'" [nbSpinner]="!loadedList" nbSpinnerSize="large" nbSpinnerStatus="primary" >
+    </nb-card>
+</ng-template>

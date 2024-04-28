@@ -1,0 +1,158 @@
+<div class="row d-flex justify-content-center"  [formGroup]="productForm">
+    <div class="col-12 d-flex justify-content-center">
+        <h4>Basic Information #1</h4>
+    </div>
+    <div class="col-lg-6 col-md-12 mt-5">
+        <div class="row px-0">
+            <div class="col-12">
+                <input type="text" nbInput fullWidth placeholder="Product Name"
+                    formControlName="name" maxlength="200">
+                <div class="alert alert-danger mt-1"
+                    *ngIf="productForm.get('name').invalid && (productForm.get('name').dirty || productForm.get('name').touched)">
+                    <div *ngIf="productForm.get('name').errors['notblank']">
+                        Product Name is required
+                    </div>
+
+                    <div *ngIf="productForm.get('name').errors['maxlength']">
+                        Product Name must not exceed 200 characters
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12 mt-3">
+                <nb-select fullWidth placeholder="Catalog" formControlName="catalog">
+                    <nb-select-label>
+                        Catalog: {{ productForm.get('catalog').value !== null ?
+                        productForm.get('catalog').value['catalogName'] : null}}
+                    </nb-select-label>
+                    <ng-container *ngIf="mode !== 'edit'">
+                        <nb-option>Reset</nb-option>
+                    </ng-container>
+                    <nb-option *ngFor="let cata of catalogs" [value]="cata">
+                        <div class="row no-gutter px-0">
+                            <div class="col-5">
+                                <img [src]="cata.image.imageUrl" class="d-block w-100">
+                            </div>
+                            <div class="col-7 d-flex justify-content-between align-items-center">
+                                <p><b>{{cata.catalogName}}</b></p>
+                            </div>
+                        </div>
+                    </nb-option>
+                </nb-select>
+            </div>
+            <div class="col-lg-6 col-md-12 mt-3">
+                <nb-select fullWidth placeholder="Product Sale" formControlName="productSale"
+                    (selectedChange)="selectProductSale()">
+                    <nb-select-label>
+                        Sale: {{ productForm.get('productSale').value !== null ?
+                        productForm.get('productSale').value['saleName'] : null}}
+                    </nb-select-label>
+                    <ng-container *ngIf="mode !== 'edit'">
+                        <nb-option>Reset</nb-option>
+                    </ng-container>
+                    <nb-option *ngFor="let sale of sales" [value]="sale">
+                        <div class="sale-item">
+                            <div class="sale-info">
+                                <p>
+                                    <b>
+                                        {{ sale.saleName | uppercase }} -
+                                        {{(sale.productSaleType.typeName === 'Fixed') ? ('$' +
+                                        sale.discount) : (sale.discount + '%') }}
+                                    </b>
+                                </p>
+                                <p>{{ sale.startedAt | date }} - {{ sale.expiredAt | date }}</p>
+                                <p>Desc: {{ sale.description }}</p>
+                            </div>
+                        </div>
+                    </nb-option>
+                </nb-select>
+            </div>
+            <div class="col-lg-6 col-md-12 mt-3">
+                <nb-select fullWidth placeholder="Difficulty In Growing" formControlName="level">
+                    <nb-select-label>
+                        Difficulty: {{ productForm.get('level').value !== null ?
+                        productForm.get('level').value['level'] : null}}
+                    </nb-select-label>
+                    <ng-container *ngIf="mode !== 'edit'">
+                        <nb-option>Reset</nb-option>
+                    </ng-container>
+                    <nb-option *ngFor="let level of levels"
+                        [value]="level">{{level.level}}</nb-option>
+                </nb-select>
+            </div>
+            <div class="col-6 mt-3">
+                <div class="row">
+                    <div class="col-6">
+                        <nb-checkbox (checkedChange)="productForm.get('new').setValue($event)"
+                            [checked]="productForm.get('new').value" status="success">
+                            New
+                        </nb-checkbox>
+                    </div>
+                    <div class="col-6">
+                        <nb-checkbox (checkedChange)="productForm.get('active').setValue($event)"
+                            [checked]="productForm.get('active').value" status="warning">
+                            Active
+                        </nb-checkbox>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <nb-checkbox (checkedChange)="productForm.get('top').setValue($event)"
+                            [checked]="productForm.get('top').value" status="danger">
+                            Top
+                        </nb-checkbox>
+                    </div>
+                    <div class="col-6 mt-2">
+                        <nb-checkbox (checkedChange)="productForm.get('sale').setValue($event)"
+                            [checked]="productForm.get('sale').value" status="info"
+                            (click)="$event.preventDefault()">
+                            Sale
+                        </nb-checkbox>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 mt-3">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Upload</span>
+                    </div>
+                    <div class="custom-file">
+                        <input type="file" mutliple class="custom-file-input" multiple
+                            accept="image/png, image/jpeg" (change)="selectFiles($event)">
+                        <label class="custom-file-label">Choose images</label>
+                    </div>
+                </div>
+                <div class="alert alert-danger mt-1"
+                    *ngIf="productForm.get('images').invalid && (productForm.get('images').dirty || productForm.get('images').touched)">
+                    <div *ngIf="productForm.get('images').errors['required']">
+                        Must upload at least 1 image
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="row align-item-center justify-content-center">
+                    <div class="col-8 align-item-center justify-content-center border border-primary"
+                        style="height: 300px">
+                        <ngx-images-carousel></ngx-images-carousel>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 col-md-12 mt-4">
+        <div class="row">
+            <div class="col-12">
+                <ckeditor class="ckeditor" [editor]="Editor" [config]="editorConfig"
+                    formControlName="description" maxlength="1000"></ckeditor>
+                <div class="alert alert-danger mt-1"
+                    *ngIf="productForm.get('description').invalid && (productForm.get('description').dirty || productForm.get('description').touched)">
+                    <div *ngIf="productForm.get('description').errors['notblank']">
+                        Product description is required
+                    </div>
+
+                    <div *ngIf="productForm.get('description').errors['maxlength']">
+                        Product description must not exceed 1000 characters
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>

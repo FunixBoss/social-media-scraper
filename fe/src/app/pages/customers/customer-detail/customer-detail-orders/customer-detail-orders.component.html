@@ -1,0 +1,115 @@
+<ng-container *ngIf="isOrdersAvailable">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8 col-md-12">
+                <nb-card>
+                    <nb-card-body>
+                        <div class="row">
+                            <div class="col-12 mb-4 d-flex" [formGroup]="searchFormGroup">
+                                <nb-form-field>
+                                    <input type="text" nbInput status="primary" placeholder="Search by tracking number"
+                                        formControlName="trackingNumber">
+                                    <nb-icon nbSuffix icon="search-outline" pack="eva"></nb-icon>
+                                </nb-form-field>
+                                <nb-select placeholder="Sort" formControlName="sort" class="ml-3"
+                                    (selectedChange)="onSort($event)">
+                                    <nb-select-label>
+                                        Sort: {{ searchFormGroup.get('sort').value }}
+                                    </nb-select-label>
+                                    <nb-option>Reset</nb-option>
+                                    <nb-option value="Newest">Newest</nb-option>
+                                    <nb-option value="Total Price">Total Price</nb-option>
+                                </nb-select>
+                                <nb-select placeholder="Filter By Status" formControlName="filterStatus" class="ml-3"
+                                    (selectedChange)="onFilterStatus($event)">
+                                    <nb-select-label>
+                                        Filter By Status: {{searchFormGroup.get('filterStatus').value}}
+                                    </nb-select-label>
+                                    <nb-option>Reset</nb-option>
+                                    <nb-option value="Canceled">Canceled</nb-option>
+                                    <nb-option value="Handling">Handling</nb-option>
+                                    <nb-option value="Delivering">Delivering</nb-option>
+                                    <nb-option value="Completed">Completed</nb-option>
+                                </nb-select>
+                                <nb-select placeholder="Filter By Payment" formControlName="filterPayment" class="ml-3"
+                                    (selectedChange)="onFilterPayment($event)">
+                                    <nb-select-label>
+                                        Filter By Payment: {{searchFormGroup.get('filterPayment').value}}
+                                    </nb-select-label>
+                                    <nb-option>Reset</nb-option>
+                                    <nb-option value="Vnpay">Vnpay</nb-option>
+                                    <nb-option value="Paypal">Paypal</nb-option>
+                                </nb-select>
+                            </div>
+
+                            <ng-container *ngIf="filterMode">
+                                <div class="row m-3 p-3 border border-primary mb-3" *ngFor="let order of filteredOrders">
+                                    <ng-container [ngTemplateOutlet]="orderTemplate" [ngTemplateOutletContext]="{ order: order }">
+                                    </ng-container>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="!filterMode">
+                                <div class="row m-3 p-3 border border-primary mb-3" *ngFor="let order of orders">
+                                    <ng-container [ngTemplateOutlet]="orderTemplate" [ngTemplateOutletContext]="{ order: order }">
+                                    </ng-container>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </nb-card-body>
+                </nb-card>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-template #orderTemplate let-order="order">
+    <a [href]="'/admin/orders/detail/' + order.orderId">
+        <div class="col-12">
+            <p><span class="font-weight-bold">Tracking Number: </span>{{order.orderTrackingNumber}}</p>
+            <div class="row">
+                <div class="col-6">
+                    <p>
+                        <span class="font-weight-bold">Coupon Applied: </span>
+                        {{ order.couponCode !== null ?order.couponCode : 'NONE' }}
+                    </p>
+                </div>
+                <div class="col-6">
+                    <p>
+                        <span class="font-weight-bold">Payment method: </span>
+                        {{order.paymentMethod.methodName}}
+                    </p>
+                </div>
+                <div class="col-6">
+                    <p><span class="font-weight-bold">Total Quantity: </span>{{order.totalQuantity}}</p>
+                </div>
+                <div class="col-6">
+                    <p><span class="font-weight-bold">Total Price: </span>{{order.totalPrice | currency: 'USD'}}
+                    </p>
+                </div>
+                <div class="col-6">
+                    <p><span class="font-weight-bold">Created At: </span>{{order.createdAt | date: 'short'}}</p>
+                </div>
+                <div class="col-6 d-flex align-items-center">
+                    <p class="font-weight-bold">Status:</p>
+                    <div class="pl-3" *ngIf="order.orderStatus.statusName==='Canceled'">
+                        <h6><span class="badge badge-pill badge-danger">Canceled</span></h6>
+                    </div>
+                    <div class="pl-3" *ngIf="order.orderStatus.statusName==='Hanling'">
+                        <h6><span class="badge badge-pill badge-info">Handling</span></h6>
+                    </div>
+                    <div class="pl-3" *ngIf="order.orderStatus.statusName==='Delivering'">
+                        <h6><span class="badge badge-pill badge-warning">Delivering</span></h6>
+                    </div>
+                    <div class="pl-3" *ngIf="order.orderStatus.statusName==='Completed'">
+                        <h6><span class="badge badge-pill badge-success">Completed</span></h6>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <p><span class="font-weight-bold">Shipping Address: </span>{{order.address}}</p>
+                </div>
+            </div>
+    
+        </div>
+    </a>
+</ng-template>

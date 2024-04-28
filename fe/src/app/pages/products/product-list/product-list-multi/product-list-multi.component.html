@@ -1,0 +1,218 @@
+<button nbButton status="success" (click)="openNewStatusWindow()" class="ml-3">
+    <nb-icon icon="edit-outline"></nb-icon>
+    Status New
+</button>
+
+<button nbButton status="danger" (click)="openTopStatusWindow()" class="ml-3">
+    <nb-icon icon="edit-outline"></nb-icon>
+    Status Top
+</button>
+
+<button nbButton status="warning" (click)="openActiveStatusWindow()" class="ml-3">
+    <nb-icon icon="edit-outline"></nb-icon>
+    Status Active
+</button>
+
+<button nbButton status="info" (click)="openSaleStatusWindow()" class="ml-3">
+    <nb-icon icon="edit-outline"></nb-icon>
+    Apply Sale
+</button>
+
+<button nbButton status="primary" (click)="openUpdateStatusesWindow()" class="ml-3">
+    <nb-icon icon="edit-outline"></nb-icon>
+    Statuses
+</button>
+
+<button nbButton status="danger" (click)="openDeleteWindow()" class="ml-3">
+    <nb-icon icon="trash-outline"></nb-icon>
+</button>
+
+<ng-template #onDeleteTemplate let-data>
+    <nb-card>
+        <nb-card-header>
+            Are you sure you want to delete the products?
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onDelete()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>
+
+<ng-template #onUpdateNewStatusTemplate let-data>
+    <nb-card>
+        <nb-card-header [formGroup]="newFormGroup">
+            <nb-select fullWidth placeholder="Status New" formControlName="new_">
+                <nb-select-label>
+                    Status New: {{ newFormGroup.get('new_').value ? 'Enable' : 'Disabled'}}
+                </nb-select-label>
+                <nb-option [value]="true">Enable</nb-option>
+                <nb-option [value]="false">Disabled</nb-option>
+            </nb-select>
+
+            <div class="alert alert-danger mt-1"
+                *ngIf="newFormGroup.get('new_').invalid && (newFormGroup.get('new_').dirty || newFormGroup.get('new_').touched)">
+                <div *ngIf="newFormGroup.get('new_').errors['required']">
+                    Status New is required
+                </div>
+            </div>
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onUpdateNewStatus()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>
+
+<ng-template #onUpdateTopStatusTemplate let-data>
+    <nb-card>
+        <nb-card-header [formGroup]="topFormGroup">
+            <nb-select fullWidth placeholder="Status Top" formControlName="top">
+                <nb-select-label>
+                    Status Top: {{ topFormGroup.get('top').value ? 'Enable' : 'Disabled'}}
+                </nb-select-label>
+                <nb-option [value]="true">Enable</nb-option>
+                <nb-option [value]="false">Disabled</nb-option>
+            </nb-select>
+
+            <div class="alert alert-danger mt-1"
+                *ngIf="topFormGroup.get('top').invalid && (topFormGroup.get('top').dirty || topFormGroup.get('top').touched)">
+                <div *ngIf="topFormGroup.get('top').errors['required']">
+                    Status Top is required
+                </div>
+            </div>
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onUpdateTopStatus()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>
+
+<ng-template #onUpdateActiveStatusTemplate let-data>
+    <nb-card>
+        <nb-card-header [formGroup]="activeFormGroup">
+            <nb-select fullWidth placeholder="Status Active" formControlName="active">
+                <nb-select-label>
+                    Status Active: {{ activeFormGroup.get('active').value ? 'Enable' : 'Disabled'}}
+                </nb-select-label>
+                <nb-option [value]="true">Enable</nb-option>
+                <nb-option [value]="false">Disabled</nb-option>
+            </nb-select>
+
+            <div class="alert alert-danger mt-1"
+                *ngIf="activeFormGroup.get('active').invalid && (activeFormGroup.get('active').dirty || activeFormGroup.get('active').touched)">
+                <div *ngIf="activeFormGroup.get('active').errors['required']">
+                    Status Active is required
+                </div>
+            </div>
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onUpdateActiveStatus()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>
+
+<ng-template #onAppliedSaleTemplate let-data>
+    <nb-card>
+        <nb-card-header [formGroup]="saleFormGroup">
+            <nb-select fullWidth placeholder="Product Sale" formControlName="productSale">
+                <nb-select-label>
+                    Sale: 
+                    {{ saleFormGroup.get('productSale').value !== null ? saleFormGroup.get('productSale').value['saleName'] : null}}
+                </nb-select-label>
+                <nb-option>Reset</nb-option>
+                <nb-option *ngFor="let sale of productSales " [value]="sale">
+                    <div class="sale-item">
+                        <div class="sale-info">
+                            <p>
+                                <b>
+                                    {{ sale.saleName | uppercase }} -
+                                    {{(sale.productSaleType.typeName === 'Fixed') ? ('$' +
+                                    sale.discount) : (sale.discount + '%') }}
+                                </b>
+                            </p>
+                            <p>{{ sale.startedAt | date }} - {{ sale.expiredAt | date }}</p>
+                            <p>Desc: {{ sale.description }}</p>
+                        </div>
+                    </div>
+                </nb-option>
+            </nb-select>
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onAppliedSale()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>
+
+<ng-template #updateStatusesTemplate let-data>
+    <nb-card>
+        <nb-card-header [formGroup]="statusesFormGroup">
+            <div class="row px-0">
+                <div class="col-lg-6 col-md-12">
+                    <nb-select fullWidth placeholder="New" formControlName="new_">
+                        <nb-select-label>
+                            New: {{ statusesFormGroup.get('new_').value ? 'Enable' : 'Disabled'}}
+                        </nb-select-label>
+                        <nb-option [value]="true">Enable</nb-option>
+                        <nb-option [value]="false">Disabled</nb-option>
+                    </nb-select>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <nb-select fullWidth placeholder="Top" formControlName="top">
+                        <nb-select-label>
+                            Top: {{ statusesFormGroup.get('top').value ? 'Enable' : 'Disabled'}}
+                        </nb-select-label>
+                        <nb-option [value]="true">Enable</nb-option>
+                        <nb-option [value]="false">Disabled</nb-option>
+                    </nb-select>
+                </div>
+                <div class="col-lg-6 col-md-12 mt-3">
+                    <nb-select fullWidth placeholder="Active" formControlName="active">
+                        <nb-select-label>
+                            Active: {{ statusesFormGroup.get('active').value ? 'Enable' : 'Disabled'}}
+                        </nb-select-label>
+                        <nb-option [value]="true">Enable</nb-option>
+                        <nb-option [value]="false">Disabled</nb-option>
+                    </nb-select>
+                </div>
+                <div class="col-lg-6 col-md-12 mt-3">
+                    <nb-select fullWidth placeholder="Product Sale" formControlName="productSale">
+                        <nb-select-label>
+                            Sale: 
+                            {{ statusesFormGroup.get('productSale').value !== null ? statusesFormGroup.get('productSale').value['saleName'] : null}}
+                        </nb-select-label>
+                        <nb-option>Reset</nb-option>
+                        <nb-option *ngFor="let sale of productSales " [value]="sale">
+                            <div class="sale-item">
+                                <div class="sale-info">
+                                    <p>
+                                        <b>
+                                            {{ sale.saleName | uppercase }} -
+                                            {{(sale.productSaleType.typeName === 'Fixed') ? ('$' +
+                                            sale.discount) : (sale.discount + '%') }}
+                                        </b>
+                                    </p>
+                                    <p>{{ sale.startedAt | date }} - {{ sale.expiredAt | date }}</p>
+                                    <p>Desc: {{ sale.description }}</p>
+                                </div>
+                            </div>
+                        </nb-option>
+                    </nb-select>
+                </div>
+            </div>
+        </nb-card-header>
+        <nb-card-body>
+            <button nbButton status="success" class="mt-3" (click)="onUpdateStatuses()">
+                CONFIRM
+            </button>
+        </nb-card-body>
+    </nb-card>
+</ng-template>

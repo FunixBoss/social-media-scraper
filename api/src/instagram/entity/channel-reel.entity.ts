@@ -46,7 +46,7 @@ export class ChannelReel {
     @Column({ length: 1000, nullable: true })
     video_url?: string;
 
-    @ManyToOne(() => Channel, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Channel, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'channel_username' })
     channel?: Channel;
 

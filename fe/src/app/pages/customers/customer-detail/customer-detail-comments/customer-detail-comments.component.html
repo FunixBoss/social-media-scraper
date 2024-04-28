@@ -1,0 +1,110 @@
+<ng-container *ngIf="isCommentAvailable">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-8 col-md-12">
+                <nb-card>
+                    <nb-card-body>
+                        <div class="row">
+                            <div class="col-12 mb-4 d-flex" [formGroup]="searchFormGroup">
+                                <nb-form-field>
+                                    <input type="text" nbInput status="primary" placeholder="Search by email" formControlName="email">
+                                    <nb-icon nbSuffix icon="search-outline" pack="eva"></nb-icon>
+                                </nb-form-field>
+                                <nb-select placeholder="Sort" formControlName="sort" class="ml-3"
+                                    (selectedChange)="onSort($event)">
+                                    <nb-select-label>
+                                        Sort: {{ searchFormGroup.get('sort').value }}
+                                    </nb-select-label>
+                                    <nb-option>Reset</nb-option>
+                                    <nb-option value="Newest">Newest</nb-option>
+                                    <nb-option value="Rating Star">Rating Star</nb-option>
+                                </nb-select>
+                                <nb-select placeholder="Filter" formControlName="filter" class="ml-3"
+                                    (selectedChange)="onFilter($event)">
+                                    <nb-select-label>
+                                        Filter: {{searchFormGroup.get('filter').value}}
+                                    </nb-select-label>
+                                    <nb-option>Reset</nb-option>
+                                    <nb-option [value]="1">
+                                        <ngb-rating [max]="1" [rate]="1" [readonly]="true">
+                                            <ng-template let-fill="fill" let-index="index">
+                                                <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                                            </ng-template>
+                                        </ngb-rating>
+                                    </nb-option>
+                                    <nb-option [value]="2">
+                                        <ngb-rating [max]="2" [rate]="2" [readonly]="true">
+                                            <ng-template let-fill="fill" let-index="index">
+                                                <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                                            </ng-template>
+                                        </ngb-rating>
+                                    </nb-option>
+                                    <nb-option [value]="3">
+                                        <ngb-rating [max]="3" [rate]="3" [readonly]="true">
+                                            <ng-template let-fill="fill" let-index="index">
+                                                <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                                            </ng-template>
+                                        </ngb-rating>
+                                    </nb-option>
+                                    <nb-option [value]="4">
+                                        <ngb-rating [max]="4" [rate]="4" [readonly]="true">
+                                            <ng-template let-fill="fill" let-index="index">
+                                                <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                                            </ng-template>
+                                        </ngb-rating>
+                                    </nb-option>
+                                    <nb-option [value]="5">
+                                        <ngb-rating [max]="5" [rate]="5" [readonly]="true">
+                                            <ng-template let-fill="fill" let-index="index">
+                                                <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                                            </ng-template>
+                                        </ngb-rating>
+                                    </nb-option>
+                                </nb-select>
+                            </div>
+                            
+                            <ng-container *ngIf="filterMode">
+                                <div class="col-12 mb-4" *ngFor="let comment of filteredComments">
+                                    <ng-container [ngTemplateOutlet]="commentTemplate" 
+                                        [ngTemplateOutletContext]="{ comment: comment }"></ng-container>
+                                </div>
+                            </ng-container>
+                            <ng-container *ngIf="!filterMode">
+                                <div class="col-12 mb-4" *ngFor="let comment of comments">
+                                    <ng-container [ngTemplateOutlet]="commentTemplate" 
+                                        [ngTemplateOutletContext]="{ comment: comment }"></ng-container>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </nb-card-body>
+                </nb-card>
+            </div>
+        </div>
+
+    </div>
+</ng-container>
+
+<ng-template #commentTemplate let-comment="comment">
+    <div class="row">
+        <div class="col-2 d-flex">
+            <img [src]="comment.imageUrl" alt="" class="d-block w-100" [height]="75">
+        </div>
+        <div class="col-10">
+            <p class="mb-0">
+                <span class="font-weight-bold">{{comment.accountEmail + " "}}</span>
+                <span>
+                    <ngb-rating [max]="5" [rate]="comment.rating" [readonly]="true">
+                        <ng-template let-fill="fill" let-index="index">
+                            <span class="star" [class.filled]="fill === 100">&#9733;</span>
+                        </ng-template>
+                    </ngb-rating>
+                </span>
+            </p>
+            <p>{{comment.content}}</p>
+            <p>
+                <span class="text-monospace">{{comment.createdAt | date:'hh:mma dd/MM/yy'}}</span>
+            </p>
+        </div>
+    </div>
+</ng-template>

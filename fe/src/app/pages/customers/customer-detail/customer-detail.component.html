@@ -1,0 +1,17 @@
+<nb-card>
+    <nb-card-body>
+        <nb-tabset fullWidth>
+            <nb-tab tabTitle="Basic Information" tabIcon="list-outline">
+                <ngx-customer-detail-basic *ngIf="account" [account]="account"></ngx-customer-detail-basic>
+            </nb-tab>
+            <nb-tab tabTitle="Orders" tabIcon="file-text-outline"
+                [badgeText]="account ? account.totalOrders : null" badgeStatus="success">
+                <ngx-customer-detail-orders *ngIf="account" [orders]="account.orders"></ngx-customer-detail-orders>
+            </nb-tab>
+            <nb-tab tabTitle="Comments" tabIcon="message-square-outline"
+                [badgeText]="numberOfComments" badgeStatus="success">
+                <ngx-customer-detail-comments *ngIf="account" [comments]="account.productReviews"></ngx-customer-detail-comments>
+            </nb-tab>
+        </nb-tabset>
+    </nb-card-body>
+</nb-card>

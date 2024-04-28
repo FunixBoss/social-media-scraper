@@ -1,0 +1,316 @@
+<nb-card fullWidth>
+    <nb-card-header>
+        <div class="row">
+            <div class="col d-flex align-items-center justify-content-between">
+                <h6>
+                    Add An Order
+                </h6>
+                <button nbButton status="success" size="large" (click)="onSubmit()">PUBLISH</button>
+            </div>
+        </div>
+    </nb-card-header>
+</nb-card>
+<div class="row" [formGroup]="addOrderFormGroup">
+    <div class="col-lg-6" >
+        <nb-card formGroupName="accountForm">
+            <nb-card-header>Basic Information</nb-card-header>
+            <nb-card-body>
+                <div class="row">
+                    <div class="col-12">
+                        <input type="text" placeholder="Customer Email" nbInput fullWidth [nbAutocomplete]="accountTemplate"
+                            formControlName="email" class="mb-3"/>
+                        <div class="alert alert-danger mt-1"
+                            *ngIf="accountForm.get('email').invalid && (accountForm.get('email').dirty || accountForm.get('email').touched)">
+                            <div *ngIf="accountForm.get('email').errors['notblank']">
+                                Customer Email is required
+                            </div>
+                            <div *ngIf="accountForm.get('email').errors['emailNotExists']">
+                                Customer Email does not exist
+                            </div>
+                        </div>
+                        <nb-autocomplete #accountTemplate>
+                            <nb-option *ngFor="let account of accountCompleter$ | async" 
+                                (click)="selectCustomer(account)">
+                                <div class="row">
+                                    <div class="col-3">
+                                        <img [src]="account.image !== null ? 
+                                            ('http://localhost:9090/assets/upload/account/' + account.image?.imageUrl) : 
+                                            'assets/images/no-image.jpg'"
+                                            class="d-block w-100" style="width: 100%; height: auto">
+                                    </div>
+                                    <div class="col-9 my-auto">
+                                        <p class="font-weight-bold">{{ account.email }}</p>
+                                        <p>Fullname: {{ account.fullName }}</p>
+                                        <p>Phone Number: {{ account.phoneNumber }}</p>
+                                    </div>
+                                </div>
+                            </nb-option>
+                        </nb-autocomplete>
+                    </div>
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <nb-radio-group status="success" formControlName="addressOption">
+                                    <nb-radio *ngFor="let option of addressOptions" [value]="option.value" [disabled]="option.disabled">
+                                        {{ option.label }}
+                                    </nb-radio>
+                                </nb-radio-group>
+                                <div class="alert alert-danger mt-1"
+                                    *ngIf="accountForm.get('addressOption').invalid && (accountForm.get('addressOption').dirty || accountForm.get('addressOption').touched)">
+                                    <div *ngIf="accountForm.get('addressOption').errors['required']">
+                                        Shipping Address is required
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12  mt-3">
+                                <ng-container *ngIf="accountForm.get('addressOption').value === 'new' && 
+                                        !accountForm.get('email').errors?.emailNotExisting">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <nb-select fullWidth placeholder="Province" formControlName="province"
+                                                (selectedChange)="loadDistricts($event)">
+                                                <nb-select-label>
+                                                    Province: {{ accountForm.get('province').value['name'] }}
+                                                </nb-select-label>
+                                                <nb-option *ngFor="let province of provinces"
+                                                    [value]="province">{{province.name}}</nb-option>
+                                            </nb-select>
+                                            <div class="alert alert-danger mt-1"
+                                                *ngIf="accountForm.get('province').invalid && (accountForm.get('province').dirty || accountForm.get('province').touched)">
+                                                <div *ngIf="accountForm.get('province').errors['required']">
+                                                    Province is required
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <nb-select fullWidth placeholder="District" formControlName="district"
+                                                (selectedChange)="loadWards($event)">
+                                                <nb-select-label>
+                                                    District: {{ accountForm.get('district').value['name'] }}
+                                                </nb-select-label>
+                                                <nb-option *ngFor="let district of districts"
+                                                    [value]="district">{{district.fullName}}</nb-option>
+                                            </nb-select>
+                                            <div class="alert alert-danger mt-1"
+                                                *ngIf="accountForm.get('district').invalid && (accountForm.get('district').dirty || accountForm.get('district').touched)">
+                                                <div *ngIf="accountForm.get('district').errors['required']">
+                                                    District is required
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6 mt-3">
+                                            <nb-select fullWidth placeholder="Ward" formControlName="ward">
+                                                <nb-select-label>
+                                                    Ward: {{ accountForm.get('ward').value['name'] }}
+                                                </nb-select-label>
+                                                <nb-option *ngFor="let ward of wards" [value]="ward">{{ward.fullName}}</nb-option>
+                                            </nb-select>
+                                            <div class="alert alert-danger mt-1"
+                                                *ngIf="accountForm.get('ward').invalid && (accountForm.get('ward').dirty || accountForm.get('ward').touched)">
+                                                <div *ngIf="accountForm.get('ward').errors['required']">
+                                                    Ward is required
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6 mt-3">
+                                            <input type="text" placeholder="Address" nbInput fullWidth formControlName="roadName" />
+                                            <div class="alert alert-danger mt-1"
+                                                *ngIf="accountForm.get('roadName').invalid && (accountForm.get('roadName').dirty || accountForm.get('roadName').touched)">
+                                                <div *ngIf="accountForm.get('roadName').errors['required']">
+                                                    Address is required
+                                                </div>
+                                                <div *ngIf="accountForm.get('roadName').errors['maxlength']">
+                                                    Address must be under 50 characters
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                
+                                <ng-container *ngIf="accountForm.get('addressOption').value === 'existing'">
+                                    <nb-select fullWidth placeholder="Address" formControlName="address">
+                                        <nb-select-label>
+                                            Address: {{ 
+                                                accountForm.get('address').value !== null ?
+                                                addressService.getAddressStringFormAddress(accountForm.get('address').value) :
+                                                null 
+                                            }}
+                                        </nb-select-label>
+                                        <nb-option *ngFor="let addr of existingAddresses"
+                                            [value]="addr">{{ addressService.getAddressStringFormAddress(addr) }}</nb-option>
+                                    </nb-select>
+                                    <div class="alert alert-danger mt-1"
+                                        *ngIf="accountForm.get('address').invalid && (accountForm.get('address').dirty || accountForm.get('address').touched)">
+                                        <div *ngIf="accountForm.get('address').errors['required']">
+                                            Address is required
+                                        </div>
+                                    </div>
+                                </ng-container>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="col-12 mt-3">
+                        <nb-select fullWidth placeholder="Payment Method" formControlName="paymentMethod">
+                            <nb-select-label>
+                                Payment Method: {{ accountForm.get('paymentMethod').value['methodName'] }}
+                            </nb-select-label>
+                            <nb-option *ngFor="let method of paymentMethods"
+                                [value]="method">{{method.methodName}}</nb-option>
+                        </nb-select>
+                        <div class="alert alert-danger mt-1"
+                            *ngIf="accountForm.get('paymentMethod').invalid && (accountForm.get('paymentMethod').dirty || accountForm.get('paymentMethod').touched)">
+                            <div *ngIf="accountForm.get('paymentMethod').errors['required']">
+                                Payment Method is required
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <nb-select fullWidth placeholder="Order Status" formControlName="orderStatus">
+                            <nb-select-label>
+                                Order Status: {{ accountForm.get('orderStatus').value['statusName'] }}
+                            </nb-select-label>
+                            <nb-option *ngFor="let status of orderStatuses"
+                                [value]="status">{{status.statusName}} - {{status.description}}</nb-option>
+                        </nb-select>
+                        <div class="alert alert-danger mt-1"
+                            *ngIf="accountForm.get('orderStatus').invalid && (accountForm.get('orderStatus').dirty || accountForm.get('orderStatus').touched)">
+                            <div *ngIf="accountForm.get('orderStatus').errors['required']">
+                                Order Status is required
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <div class="row d-flex align-items-center">
+                            <div class="col-lg-3">
+                                <nb-checkbox status="success" 
+                                    (checkedChange)="accountForm.get('applyCoupon').setValue($event)"
+                                    [checked]="accountForm.get('applyCoupon').value">Apply Coupon</nb-checkbox>
+                            </div>
+                            <ng-container *ngIf="accountForm.get('applyCoupon').value">
+                            <div class="col-lg-9">
+                                <input type="text" placeholder="Coupon" nbInput fullWidth formControlName="coupon" />
+                                
+                                <div class="alert alert-danger mt-1"
+                                    *ngIf="accountForm.get('coupon').invalid && (accountForm.get('coupon').dirty || accountForm.get('coupon').touched)">
+                                    <div *ngIf="accountForm.get('coupon').errors['required']">
+                                        Coupon Code does not exist
+                                    </div>
+                                    <div *ngIf="accountForm.get('coupon').errors['couponNotExist']">
+                                        Coupon Code does not exist
+                                    </div>
+                                    <div *ngIf="accountForm.get('coupon').errors['couponNotExist'] !== true &&
+                                        accountForm.get('coupon').errors['couponCantUse']">
+                                        Coupon Code cannot be used (it may have expired)
+                                    </div>
+                                </div>
+                            </div>
+                            </ng-container>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <div class="row">
+                            <div class="col-lg-6 font-weight-bold">Total Quantity: {{ accountForm.get('totalQuantity').value }}</div>
+                            <div class="col-lg-6 font-weight-bold">Total Price: {{ accountForm.get('totalPrice').value | currency:'USD'}}</div>
+                        </div>
+                    </div>
+                </div>
+            </nb-card-body>
+        </nb-card>
+    </div>
+
+    <div class="col-lg-6">
+        <nb-card formArrayName="products">
+            <nb-card-header>Order's Products</nb-card-header>
+            <nb-card-body>
+                <nb-accordion multi>
+                    <nb-accordion-item *ngFor="let productForm of products.controls; let i = index">
+                        <nb-accordion-item-header class="d-flex justify-content-between align-items-center">
+                            <p class="font-weight-bold">Product #{{i + 1}}</p>
+                            <ng-container *ngIf="i !== 0">
+                                <button nbButton [size]="'small'" [status]="'danger'" 
+                                    class="mr-5" (click)="removeProduct(i)">
+                                    <nb-icon icon="trash-outline"></nb-icon>
+                                </button>
+                            </ng-container>
+                            <ng-container *ngIf="i === 0">
+                                <button nbButton [size]="'small'" [status]="'danger'" 
+                                    class="mr-5" (click)="removeProduct(i)" style="visibility: hidden">
+                                <nb-icon icon="trash-outline"></nb-icon>
+                                </button>
+                            </ng-container>
+                        </nb-accordion-item-header>
+                        <nb-accordion-item-body [formGroup]="productForm">
+                            <input  type="text" placeholder="Product Name" formControlName="name"
+                                nbInput fullWidth [nbAutocomplete]="product" class="inputs-group"/>
+                            <div class="alert alert-danger mt-1" 
+                                *ngIf="productForm.get('name').invalid && (productForm.get('name').dirty || productForm.get('name').touched)">
+                                <div *ngIf="productForm.get('name').errors['notblank']">
+                                    Product name is required
+                                </div>
+                                <div *ngIf="productForm.get('name').errors['productNotExist']">
+                                    Product does not exist
+                                </div>
+                            </div> 
+                            <nb-autocomplete #product>
+                                <nb-option *ngFor="let product of productCompleter$ | async"
+                                    (click)="selectProduct(product, i)">
+                                    <div class="row">
+                                        <div class="col-3">
+                                            <img [src]="'http://localhost:9090/assets/upload/product/' + product.imageUrl" class="d-block w-100">
+                                        </div>
+                                        <div class="col-9 my-auto">
+                                            <p class="font-weight-bold">{{ product.productName }}</p>
+                                        </div>
+                                    </div>
+                                </nb-option>
+                            </nb-autocomplete>
+
+                            <nb-select fullWidth placeholder="Variant" class="inputs-group" formControlName="variant">
+                                <nb-select-label>
+                                    Variant: {{ productForm.get('variant').value !== null ?
+                                        getSizeStrFromVariant(productForm.get('variant').value) :
+                                        null }}
+                                </nb-select-label>
+                                <nb-option *ngFor="let vari of productForm.get('variants').value" [value]="vari">
+                                    {{ getSizeStrFromVariant(vari) }}
+                                </nb-option>
+                            </nb-select>
+                            <div class="alert alert-danger mt-1" 
+                                *ngIf="productForm.get('variant').invalid && (productForm.get('variant').dirty || productForm.get('variant').touched)">
+                                <div *ngIf="productForm.get('variant').errors['required']">
+                                    Product Variant is required
+                                </div>
+                            </div> 
+
+                            <input  type="number" placeholder="Price" nbInput fullWidth
+                                class="inputs-group" formControlName="price" disabled/>
+
+                            <input  type="number" placeholder="Quantity" nbInput fullWidth 
+                                class="inputs-group" formControlName="quantity"/>
+                            <div class="alert alert-danger mt-1" 
+                                *ngIf="productForm.get('quantity').invalid && (productForm.get('quantity').dirty || productForm.get('quantity').touched)">
+                                <div *ngIf="productForm.get('quantity').errors['required']">
+                                    Quantity is required
+                                </div>
+                                <div *ngIf="productForm.get('quantity').errors['min']">
+                                    The min quantity is 1
+                                </div>
+                                <div *ngIf="productForm.get('maxQuantity').value !== null">
+                                    <div *ngIf="productForm.get('quantity').errors['max']">
+                                        The maximum quantity is {{productForm.get('maxQuantity').value}}
+                                    </div>
+                                </div>
+                            </div> 
+                        </nb-accordion-item-body>
+                    </nb-accordion-item>
+                </nb-accordion>
+            </nb-card-body>
+            <nb-card-footer>
+                <button nbButton [status]="'success'" (click)="addProduct()">
+                    <nb-icon icon="plus-outline"></nb-icon>
+                </button>
+            </nb-card-footer>
+        </nb-card>
+    </div>
+</div>

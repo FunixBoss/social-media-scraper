@@ -1,0 +1,19 @@
+<nb-card>
+    <nb-card-body>
+        <nb-tabset fullWidth (changeTab)="changeTab($event)">
+            <nb-tab tabTitle="Basic Information" tabIcon="list-outline">
+                <ngx-product-detail-basic *ngIf="loaded" [product]="product"></ngx-product-detail-basic>
+                <nb-card *ngIf="!loaded" [size]="'large'" [nbSpinner]="true" 
+                    nbSpinnerSize="large" nbSpinnerStatus="primary" >
+                </nb-card>
+            </nb-tab>
+            <nb-tab tabTitle="Care Guide" tabIcon="calendar-outline">
+                <ngx-product-detail-care-guide *ngIf="loaded" [careGuide]="product.productCareGuide" ></ngx-product-detail-care-guide>
+            </nb-tab>
+            <nb-tab tabTitle="Comments" tabIcon="message-square-outline"
+                [badgeText]="numberOfComments" badgeStatus="success">
+                <ngx-product-detail-comments *ngIf="comments" [comments]="comments"></ngx-product-detail-comments>
+            </nb-tab>
+        </nb-tabset>
+    </nb-card-body>
+</nb-card>

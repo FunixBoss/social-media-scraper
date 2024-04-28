@@ -1,4 +1,4 @@
-export interface FindAllKeywordDTO {
+export default interface FindAllKeywordDTO {
     name: string;
     priority: string;
     total_channels: number;

@@ -1,11 +1,11 @@
-import { Channel } from "src/instagram/entity/channel.entity";
-import { Hashtag } from "src/instagram/entity/hashtag.entity";
+import FindAllChannelDTO from "src/instagram/channel/dto/findall-channel.dto";
+import FindAllHashtagDTO from "src/instagram/hashtag/dto/findall-hashtag.dto";
 
-export interface FindOneKeywordDTO {
+export default interface FindOneKeywordDTO {
     name?: string;
     priority?: string;
     total_channels?: number;
     total_hashtags?: number;
-    channels?: Channel[]
-    hashtags?: Hashtag[]
+    channels?: FindAllChannelDTO[]
+    hashtags?: FindAllHashtagDTO[]
 }

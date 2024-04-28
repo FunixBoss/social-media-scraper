@@ -15,10 +15,10 @@ export class Hashtag {
     @Column({ length: 200, nullable: true })
     category?: string;
 
-    @Column({ type: 'bool', default: false })
+    @Column({ type: 'bool', nullable: true, default: false })
     is_self_adding?: boolean;
 
-    @Column({ type: 'bool', default: false })
+    @Column({ type: 'bool', nullable: true, default: false })
     is_bot_scanning?: boolean;
 
     @Column({ length: 50, default: 'MEDIUM' })

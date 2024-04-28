@@ -1,4 +1,4 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, StreamableFile } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiResponse } from './ApiResponse';
@@ -10,14 +10,16 @@ export class ApiResponseInterceptor implements NestInterceptor {
         return next.handle().pipe(
             map(data => {
                 const handlerTime = Date.now() - start;
+                if (data instanceof StreamableFile) {
+                    return data;
+                }
                 if (data instanceof ApiResponse) {
                     return {
                         ...data,
                         handlerTime,
                     };
-                } else {
-                    return new ApiResponse(data, 'Success', 200, handlerTime);
                 }
+                return new ApiResponse(data, 'Success', 200, handlerTime);
             }),
         );
     }

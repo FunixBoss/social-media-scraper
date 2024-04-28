@@ -25,7 +25,7 @@ import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
         password: configService.get<string>('INS_DB_PASSWORD'),
         database: configService.get<string>('INS_DB_NAME'),
         entities: [__dirname + '/entity/*.entity{.ts,.js}'],
-        synchronize: true,
+        // synchronize: true,
       }),
       inject: [ConfigService],
     }),

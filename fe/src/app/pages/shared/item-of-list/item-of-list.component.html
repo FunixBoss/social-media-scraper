@@ -1,0 +1,7 @@
+<nb-select [placeholder]="'Items Per Page'" 
+    (selectedChange)="numberOfItemsChange($event)">
+    <nb-select-label>
+        Number Of Item: {{ chosenOpt }}
+    </nb-select-label>
+    <nb-option *ngFor="let opt of options" [value]="opt">{{opt}}</nb-option>
+</nb-select>

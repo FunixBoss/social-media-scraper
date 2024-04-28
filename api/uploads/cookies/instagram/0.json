@@ -14,7 +14,7 @@
     },
     {
         "domain": ".instagram.com",
-        "expirationDate": 1745636533,
+        "expirationDate": 1745772105,
         "hostOnly": false,
         "httpOnly": false,
         "name": "fbm_124024574287414",
@@ -66,7 +66,7 @@
     },
     {
         "domain": ".instagram.com",
-        "expirationDate": 1721876534.46038,
+        "expirationDate": 1722012878.165683,
         "hostOnly": false,
         "httpOnly": false,
         "name": "ds_user_id",
@@ -118,7 +118,7 @@
     },
     {
         "domain": ".instagram.com",
-        "expirationDate": 1745550134.460255,
+        "expirationDate": 1745686478.165568,
         "hostOnly": false,
         "httpOnly": false,
         "name": "csrftoken",
@@ -144,7 +144,7 @@
     },
     {
         "domain": ".instagram.com",
-        "expirationDate": 1714540942.104641,
+        "expirationDate": 1714802014.740407,
         "hostOnly": false,
         "httpOnly": true,
         "name": "shbid",
@@ -153,11 +153,11 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "\"7521\\0546655818517\\0541745472141:01f7ddbc3fbc86464f9dee484d2fd13cde88a1bcf252c401416afc2382af09a5b2349b52\""
+        "value": "\"7521\\0546655818517\\0541745733215:01f7a057d632378368a0afb919d19c2e0712a0add9c226c09bc30c05b9e5216cfc319aba\""
     },
     {
         "domain": ".instagram.com",
-        "expirationDate": 1714540942.104661,
+        "expirationDate": 1714802014.740431,
         "hostOnly": false,
         "httpOnly": true,
         "name": "shbts",
@@ -166,7 +166,32 @@
         "secure": true,
         "session": false,
         "storeId": "0",
-        "value": "\"1713936141\\0546655818517\\0541745472141:01f7204e52fa7a5ac5db4aed5815df23860e0014252964e53de7eb88d215bbb882d36cb9\""
+        "value": "\"1714197215\\0546655818517\\0541745733215:01f7389b216d5d69eef17526e1abeda1cb753d6c8a7bb47ca502e30e38948dda494d3a39\""
+    },
+    {
+        "domain": ".instagram.com",
+        "expirationDate": 1745770471.355517,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "sessionid",
+        "path": "/",
+        "sameSite": "unspecified",
+        "secure": true,
+        "session": false,
+        "storeId": "0",
+        "value": "6655818517%3A4hKuxtIEs9i42u%3A9%3AAYcUYuQL12ZhnZ7yKMAJc-gEcbo8v_sUfwrcg8HCng"
+    },
+    {
+        "domain": "www.instagram.com",
+        "hostOnly": true,
+        "httpOnly": false,
+        "name": "fbsr_124024574287414",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": true,
+        "storeId": "0",
+        "value": "rRxBcBsjKPBReZvh1kUO-nokCWYD0Tl3rtj0xdT0-x4.eyJ1c2VyX2lkIjoiMTAwMDE2MTUzODcxNzg0IiwiY29kZSI6IkFRQkNiZTFYemZSUjIzdHVQLVR5Mkg3U2ZWWF9xZkNLMGRYWUZTWG9zX1FKTmdoUzVwRU5hZHNOdkdWLUJCeDRSRTljeXpnZGVIN2RyOEI3RjVLQWlqTF9CY19xSlA5Q1ZwR1p4SU4yRU1kdHFrbFR5QTE5WVhqUUJNaGRxWlBUbnQ2SFBCS3lxdXV5ZTF0RFctRFpKb0lobFVyenJIb1AwbXo2SHA1UVN2NmFnSE1ieHpXLWc0cktVUW9ITFp0aFNxZHFEcHhOZWl6aEljcXlGSUlySVU4TFBTSFg1WjF4NDNwTWNBMy1CN2hZWjBJc2t1UEdzY3RNdFBiR3k5c1lQZ1Y4cE5JUEJTNXl6cDBtaWRsblNYYTlLUmhSSzE3bzMtckhmbWtmdVVPMjQ0TGZsUE9RTmEyY3N5THNEdTZlV3pBIiwib2F1dGhfdG9rZW4iOiJFQUFCd3pMaXhuallCTzhVMDFUY1FjNXM4QlB6d1hLS1FLM0FIVGxRMEdQSWFvTVA2bVpDZG43WVdvWkFGY3EzRnZ2VzFiWDkza2NuNEhJUVJzdjJxZHBHWWxFZ3ZMMUVaQk44OExtTmVaQk9zaFRKYWNGZ1pDTWozSnRsMEpHUUJ0bVNtSW5LZlpDRFRaQ1lERGV4YVMxYzMyVVJsMXdBRG4yeWljQjhqNEliWkN6Rlk5OE92Z1ZRVlFBczBmb0VCTDVya3JWWkNTTE95QWRBWkRaRCIsImFsZ29yaXRobSI6IkhNQUMtU0hBMjU2IiwiaXNzdWVkX2F0IjoxNzE0MjM0NDcwfQ"
     },
     {
         "domain": ".instagram.com",
@@ -178,20 +203,7 @@
         "secure": true,
         "session": true,
         "storeId": "0",
-        "value": "3Fh6mxtjn5MUwJI2mkSypZ__rC8-DWDk1d7rkEgpLgg.eyJ1c2VyX2lkIjoiMTAwMDE2MTUzODcxNzg0IiwiY29kZSI6IkFRRE56TkJCZkd0Vi1CNW90MnFhaXo2ZVI5Vzh5WXBrd0NZWnhVTzNKamc0R2o4WVFQem5kczNyZEdiR0xuMVBNOXV3X0FxS2NQTmR6aXBqdmliVWtYQlY3eXUtMU5YNmU1TnA0LUpOWkd2TUJtYWUwZlc5aWlndTEydHJXaDlQNWJzV2hRS2Y4WXdiSjJyQzVhSDMzMXVsT3VYOFBfY0xzV19uRzBuREp5UTBnRWE1NllKaTN3c0lidEN4aFQ2MVZ0VFlxM3ZHN1NJbDJJTkJodGJNSVFOU1duUE5hNHZRRG5kUFlVYi1zbWpLbzhEdTJQM3N6bkRLOVFkdzVHWXNTV21lMTA2Y3d6Vko1UGJnNmFRZ1EyaDNkbjcxUzdmbDFvdWhaVFRseVVSM0dBMjFEb1BvR0NObUZGZllsZlZ1dlNJWkRjUkVYeDBhNFpGOEx5emFyZGw3Iiwib2F1dGhfdG9rZW4iOiJFQUFCd3pMaXhuallCTzR4cU5mZUdLNGJXMjRZNGlueEJhMzRZNHJvOVpBVklaQ3NkdDlGMzg1RzJQQ1lXVHF6SnVmalY3bEtWVlFBeTE3Sng4YU9hUnNtQXNXdkRrRXNRTjAzNVg2S0lBa1pDWkFkU3VLUjlKMWFMdHpHc2dSZ2RPNWRpdkYycFpBRWFDRUE3QzI0OHNXWWNaQWxyQmF6NFRZNDNqTEZRZXBqU1laQk0wOVdRYjNMRWs5UTZaQmpwT044bllUcENOUVFiME9KRVZRbjZkdXNaRCIsImFsZ29yaXRobSI6IkhNQUMtU0hBMjU2IiwiaXNzdWVkX2F0IjoxNzE0MTAwNTMzfQ"
-    },
-    {
-        "domain": ".instagram.com",
-        "expirationDate": 1745636533.307033,
-        "hostOnly": false,
-        "httpOnly": true,
-        "name": "sessionid",
-        "path": "/",
-        "sameSite": "unspecified",
-        "secure": true,
-        "session": false,
-        "storeId": "0",
-        "value": "6655818517%3A4hKuxtIEs9i42u%3A9%3AAYdZtjUvRukBgXL7n5NM-MvKeoOsnPFC9hW8QJU4ow"
+        "value": "ykVFHw5hhH-L1K8qFtJfPD_OQEKDX2r7xd3ZrLscKJc.eyJ1c2VyX2lkIjoiMTAwMDE2MTUzODcxNzg0IiwiY29kZSI6IkFRQmRqdXJ6V3hQT0E4QnA0WjBFZFNXUHVscFgxcV9XSWduYzVqckpRTUhXam84WHozVm91U0RDc0xfYjF3aFRWU2NGZUNPYjk4QmhZRkhiRmQyWnFWcHBvRmtmakdHTGt3X0pudDN1SmZOam9xOXZVTEtzWEw2a0RRZWVaSFgtcWtFZVBPblRHQlBscHFsem5tRUNQWC1Td012eVFUS3V2UE42R0xWT01qTk1rRkI4azRvbVEtWTVtcXMwRDhuTDhWZTFqeFFfRV95T2hyRi1PelYtNWZGWGo2Z0xUMTFERDZRRWtGMWNxM0xIV3BJZUhYT2g2cG5QeUpHVElwMlllZ0g2Q2l6a08wYkxHb0lTbXNXcEpqYlBIbmpoQkhhNVZ0bDMydnd4TmVJcWVIUEM3d3BzVl9pT1c2Y1JmT2ljdXFvIiwib2F1dGhfdG9rZW4iOiJFQUFCd3pMaXhuallCT3pVSW1QUUFobEhOQlpDZE9XWXh4RjdOZzhRSVlxVEZ1SFJWWkNvclpCQVY3aVRkNUVwRzgwN3ZoRkJqVzdQcUhzRkZRUFpBM2k4N1FoV2x6ZFR1UFpCRWNWN1pDVlFSOEZobkpHcHNrVXduS0hqNDhnQTdpWkFrdjdMTDY0RGhWaEszUXhKNlhyUmZvQWowaDBGczJJYlpCRFpBV1pBTmpnYlJIeGp2SVpDdUdaQkowa0JaQzVCQmhTMUJEUGxZN1hFQmd0cHJ1T3Jid3dERVpEIiwiYWxnb3JpdGhtIjoiSE1BQy1TSEEyNTYiLCJpc3N1ZWRfYXQiOjE3MTQyMzY4NzV9"
     },
     {
         "domain": ".instagram.com",
@@ -203,6 +215,6 @@
         "secure": true,
         "session": true,
         "storeId": "0",
-        "value": "\"VLL\\0546655818517\\0541745636534:01f7af9329980fb555e31fb64240f2c4a64304d694919214d43a4f38294054ccd4c62402\""
+        "value": "\"EAG\\0546655818517\\0541745772878:01f7ec9c4d5a95de8ff85b0d1623a5edc7e2c6e0d1f43cae06634027242861982d5b0518\""
     }
 ]

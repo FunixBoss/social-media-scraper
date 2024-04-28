@@ -2,13 +2,12 @@ import { Controller, Get, Param, Query, Res, StreamableFile } from '@nestjs/comm
 import { ChannelService, ReadStreamDTO } from './channel.service';
 import { IsEmpty, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
-import InsUser from 'src/pptr-crawler/types/ins/InsUser';
-import { Channel } from '../entity/channel.entity';
-import { ChannelFriendship } from '../entity/channel-friendship.entity';
-import { ChannelPost } from '../entity/channel-post.entity';
-import { ChannelReel } from '../entity/channel-reel.entity';
 import type { Response } from 'express';
-import { FindAllChannelDTO } from './dto/findall-channel.dto';
+import FindAllChannelDTO from './dto/findall-channel.dto';
+import ChannelPostDTO from './dto/channel-post.dto';
+import ChannelFriendshipDTO from './dto/channel-friendship.dto';
+import ChannelReelDTO from './dto/channel-reel.dto';
+import FindOneChannelDTO from './dto/findone-channel.dto';
 
 export type ScrapeInfo = 'all' | 'profile' | 'friendships' | 'posts' | 'reels'
 class GetUserScrapeInfosDto {
@@ -81,7 +80,7 @@ export class ChannelController {
   @Get('export')
   async exportChannels(@Res({ passthrough: true }) res: Response, @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
     const file: ReadStreamDTO = await this.channelService.exportChannels(queries.type);
-    if(queries.type == 'excep') {
+    if(queries.type == 'excel') {
       res.set({
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${file.fileName}"`,
@@ -96,12 +95,12 @@ export class ChannelController {
   }
 
   @Get(':username')
-  async fetchUser(@Param() params: GetUserParamsDto, @Query() queries: GetUserScrapeInfosDto): Promise<InsUser> {
+  async fetchUser(@Param() params: GetUserParamsDto, @Query() queries: GetUserScrapeInfosDto): Promise<FindOneChannelDTO> {
     return await this.channelService.fetchUser(params.username, queries.infos);
   }
 
   @Get(':username/profile')
-  async fetchProfile(@Param() params: GetUserParamsDto): Promise<Channel> {
+  async fetchProfile(@Param() params: GetUserParamsDto): Promise<FindAllChannelDTO> {
     try {
       return await this.channelService.fetchUserProfile(params.username);
     } catch (error) {
@@ -110,19 +109,22 @@ export class ChannelController {
   }
 
   @Get(':username/friendships')
-  async fetchFriendships(@Param() params: GetUserParamsDto): Promise<ChannelFriendship[]> {
+  async fetchFriendships(@Param() params: GetUserParamsDto): Promise<ChannelFriendshipDTO[]> {
     return await this.channelService.fetchFriendships(params.username);
   }
 
   @Get(':username/posts')
-  async fetchPosts(@Param() params: GetUserParamsDto): Promise<ChannelPost[]> {
+  async fetchPosts(@Param() params: GetUserParamsDto): Promise<ChannelPostDTO[]> {
     return await this.channelService.fetchPosts(params.username)
   }
 
   @Get(':username/reels')
-  async fetchReels(@Param() params: GetUserParamsDto): Promise<ChannelReel[]> {
+  async fetchReels(@Param() params: GetUserParamsDto): Promise<ChannelReelDTO[]> {
     return await this.channelService.fetchReels(params.username);
   }
 
-
-}
+  @Get('download/:username/reels')
+  async downloadReels(@Param() params: GetUserParamsDto): Promise<any[]> {
+    return await this.channelService.downloadReels(params.username);
+  }
+} 

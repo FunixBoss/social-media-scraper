@@ -1,0 +1,12 @@
+@import "../../../@theme/styles/themes";
+
+@include nb-install-component() {
+    nb-card-body {
+        overflow: visible;
+        padding-top: 0;
+
+        > * {
+            margin: .8rem 0;
+        }
+    }
+}
