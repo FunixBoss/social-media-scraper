@@ -18,21 +18,12 @@ import { CrawlingType, TCrawlingType } from '../entity/crawling-type.entity';
 import { ChannelCrawlingHistory } from '../entity/channel-crawling-history.entity';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
 import { ChannelPost } from '../entity/channel-post.entity';
-import { Workbook } from 'exceljs'
-import { format } from 'date-fns';
-import { createReadStream, createWriteStream, promises, ReadStream, writeFileSync } from 'fs';
-import { join } from 'path';
 import FindAllChannelDTO from './dto/findall-channel.dto';
-import axios from 'axios';
 import ChannelPostDTO from './dto/channel-post.dto';
 import ChannelFriendshipDTO from './dto/channel-friendship.dto';
 import ChannelReelDTO from './dto/channel-reel.dto';
 import FindOneChannelDTO from './dto/findone-channel.dto';
 
-export type ReadStreamDTO = {
-  readStream: ReadStream;
-  fileName: string;
-}
 @Injectable()
 export class ChannelService {
   private baseUrl = 'https://instagram.com'
@@ -62,6 +53,10 @@ export class ChannelService {
     )
   }
 
+  async findOne(username: string): Promise<FindAllChannelDTO> {
+    return this.mapToFindAllChannelDTO(await this.channelRepository.findOne({ where: { username } }))
+  }
+
   async mapToFindAllChannelDTO(channel: Channel): Promise<FindAllChannelDTO> {
     let crawled: string[] = channel.crawlingHistory.map(c => c.crawling_type_name)
     channel.crawlingHistory = undefined;
@@ -74,18 +69,38 @@ export class ChannelService {
 
   async mapToChannelPostDTOs(posts: ChannelPost[]): Promise<ChannelPostDTO[]> {
     return posts.map(post => {
+      const { code, caption_text, like_count, channel_post_numerical_order, carousel_media_count, video_url, video_type, comment_count, product_type } = post
+      const image_urls: string[] = post.images.map(img => img.image_url)
       return {
-        ...post,
+        code,
         url: `${this.baseUrl}/p/${post.code}/`,
+        caption_text,
+        channel_post_numerical_order,
+        carousel_media_count,
+        image_urls,
+        video_url,
+        video_type,
+        like_count,
+        comment_count,
+        product_type
       }
     })
   }
 
   async mapToChannelReelDTOs(reels: ChannelReel[]): Promise<ChannelReelDTO[]> {
     return reels.map(reel => {
+      const { code, channel_reel_numerical_order, comment_count, image_url, like_count, media_type, play_count, product_type, video_url } = reel
       return {
-        ...reel,
+        code,
         url: `${this.baseUrl}/reel/${reel.code}/`,
+        channel_reel_numerical_order,
+        comment_count,
+        image_url,
+        like_count,
+        media_type,
+        play_count,
+        product_type,
+        video_url,
         channel_username: reel.channel?.username
       }
     })
@@ -98,17 +113,27 @@ export class ChannelService {
         profile_pic_url,
         username,
         full_name,
-        channel_username: f.channel?.username
+        url: `${this.baseUrl}/${username}`,
+        channel_username: f.channel ? f.channel.username : undefined
       }
     })
+  }
+
+  async mapToFindOneChannelDTOfromOrigin(channel: FindAllChannelDTO, friendships?: ChannelFriendshipDTO[], posts?: ChannelPostDTO[], reels?: ChannelReelDTO[]): Promise<FindOneChannelDTO> {
+    return {
+      ...channel,
+      friendships,
+      posts,
+      reels
+    }
   }
 
   async mapToFindOneChannel(channel: Channel, friendships?: ChannelFriendship[], posts?: ChannelPost[], reels?: ChannelReel[]): Promise<FindOneChannelDTO> {
     return {
       ...(await this.mapToFindAllChannelDTO(channel)),
-      friendships: friendships ? await this.mapToChannelFriendshipDTOs(friendships) : friendships,
-      posts: posts ? await this.mapToChannelPostDTOs(posts) : posts,
-      reels: reels ? await this.mapToChannelReelDTOs(reels) : reels
+      friendships: friendships ? await this.mapToChannelFriendshipDTOs(friendships) : undefined,
+      posts: posts ? await this.mapToChannelPostDTOs(posts) : undefined,
+      reels: reels ? await this.mapToChannelReelDTOs(reels) : undefined
     }
   }
 
@@ -139,121 +164,23 @@ export class ChannelService {
     )
   }
 
-  private async isCrawledContent(username: string, crawledType: TCrawlingType): Promise<boolean> {
+  async isCrawledContent(username: string, crawledType: TCrawlingType): Promise<boolean> {
     return !!(await this.channelCrawlRepository.findOneBy({
       channel_username: username,
       crawling_type_name: crawledType
     }))
   }
 
-  private async getCrawledHistory(username): Promise<TCrawlingType[]> {
+  async getCrawledHistory(username): Promise<TCrawlingType[]> {
     const histories: ChannelCrawlingHistory[] = await this.channelCrawlRepository.findBy({
       channel_username: username,
     })
     return histories.map(h => h.crawlingType.name) as TCrawlingType[]
   }
 
-  private async isExists(username: string): Promise<boolean> {
+  async isExists(username: string): Promise<boolean> {
     return !!await this.channelRepository.findOneBy({ username });
   }
-
-  async exportChannels(exportType: string | "json" | "excel"): Promise<ReadStreamDTO> {
-    if (exportType == 'excel') return await this.exportChannelsExcel();
-    if (exportType == 'json') return await this.exportChannelsJson();
-  }
-
-  private async exportChannelsExcel(): Promise<ReadStreamDTO> {
-    const workbook = new Workbook();
-    const worksheet = workbook.addWorksheet('Channels');
-
-    // Define headers
-    worksheet.columns = [
-      { header: 'Username', key: 'username', width: 20 },
-      { header: 'Full Name', key: 'full_name', width: 25 },
-      { header: 'Category', key: 'category', width: 20 },
-      { header: 'Follower Count', key: 'follower_count', width: 15 },
-      { header: 'Following Count', key: 'following_count', width: 15 },
-      { header: 'Total Posts', key: 'total_posts', width: 12 },
-      { header: 'Total Reels', key: 'total_reels', width: 12 },
-      { header: 'Total Friendships', key: 'total_friendships', width: 17 },
-      { header: 'Priority', key: 'priority', width: 10 },
-      { header: 'Biography', key: 'biography', width: 100 },
-      { header: 'Bio Link URL', key: 'bio_link_url', width: 30 },
-      { header: 'External URL', key: 'external_url', width: 30 },
-      { header: 'Profile Pic URL', key: 'profile_pic_url', width: 30 },
-      { header: 'Is Bot Scanning', key: 'is_bot_scanning', width: 15 },
-    ];
-
-    // Add rows using the mock data
-    (await this.channelRepository.find()).forEach((channel) => {
-      worksheet.addRow(channel);
-    });
-
-    // Write to file
-    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-    const downloadPath = 'downloads/instagram/channels'
-    const fileName = `channels-${currentDate}.xlsx`
-    await workbook.xlsx.writeFile(`${downloadPath}/${fileName}`);
-    console.log('Excel file was written successfully.');
-    return {
-      readStream: createReadStream(join(process.cwd(), `${downloadPath}/${fileName}`)),
-      fileName
-    }
-  }
-
-  private async exportChannelsJson(): Promise<ReadStreamDTO> {
-    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-    const downloadPath = 'downloads/instagram/channels'
-    const fileName = `channels-${currentDate}.json`
-    writeFileSync(`${downloadPath}/${fileName}`, JSON.stringify(await this.channelRepository.find()), 'utf-8')
-    return {
-      readStream: createReadStream(join(process.cwd(), `${downloadPath}/${fileName}`)),
-      fileName
-    }
-  }
-
-  async downloadReels(username: string): Promise<any[]> {
-    if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
-    let reels: ChannelReelDTO[] = [];
-    if (await this.isCrawledContent(username, "CHANNEL_REELS")) {
-      reels = await this.mapToChannelReelDTOs(await this.channelReelRepository.find({
-        where: { channel: { username } }
-      }))
-    } else {
-      reels = await this.fetchReels(username)
-    }
-    let reelsLen = reels.length;
-    if (reelsLen == 0) return [];
-
-    const DOWNLOAD_PATH = `downloads/instagram/channel/${username}`
-    await createAndAccessFolder(DOWNLOAD_PATH);
-    const downloadPromises = reels.map(reel => this.downloadVideo(reel, DOWNLOAD_PATH));
-    return await Promise.all(downloadPromises);
-  }
-
-  async downloadVideo(reel: ChannelReelDTO, downloadPath: string): Promise<string> {
-    const { video_url, channel_reel_numerical_order, code } = reel;
-    const videoName = `${channel_reel_numerical_order}-${code}.mp4`;
-    const filePath = `${downloadPath}/${videoName}`;
-    console.log(`Downloading: ${videoName}`)
-    try {
-      const response = await axios(video_url, { method: 'GET', responseType: 'stream' });
-      const writer = createWriteStream(filePath);
-      response.data.pipe(writer);
-      return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve(filePath));
-        writer.on('error', (err) => {
-          console.error(`Error writing file at ${filePath}:`, err);
-          writer.close();
-          reject(err);
-        });
-      });
-    } catch (error) {
-      console.error(`Error downloading video from ${video_url} to ${filePath}:`, error["name"]);
-      throw error;
-    }
-  }
-
 
   async fetchUser(username: string, infos: ScrapeInfo[]): Promise<FindOneChannelDTO> {
     let scanned: TCrawlingType[] = (await this.getCrawledHistory(username)).sort()
@@ -373,6 +300,9 @@ export class ChannelService {
             crawling_type_name: 'CHANNEL_PROFILE',
             date: new Date()
           })
+          if(scanning.includes("CHANNEL_REELS")) {
+            profile.total_reels = reelLen;
+          }
           await this.channelRepository.save(profile)
         }
         profile = await this.channelRepository.findOne({ where: { username } })
@@ -382,6 +312,7 @@ export class ChannelService {
             crawling_type_name: 'CHANNEL_FRIENDSHIP',
             date: new Date()
           })
+          friendshipUsers.forEach(f => f.channel = { username: username })
           await this.channelFriendRepository.save(friendshipUsers)
         }
 
@@ -481,9 +412,9 @@ export class ChannelService {
   async fetchFriendships(username: string): Promise<ChannelFriendshipDTO[]> {
     if (!(await this.isExists(username))) throw new EntityNotExists('Channel', username);
     if (await this.isCrawledContent(username, "CHANNEL_FRIENDSHIP")) {
-      return this.channelFriendRepository.find({
+      return await this.mapToChannelFriendshipDTOs(await this.channelFriendRepository.find({
         where: { channel: { username } }
-      })
+      }))
     }
 
     let friendshipUsers: ChannelFriendship[] = [];
@@ -519,7 +450,7 @@ export class ChannelService {
       await this.channelFriendRepository.save(friendshipUsers)
       await this.channelCrawlingHistoryRepository.save(channelCrawling);
     })
-    return friendshipUsers;
+    return this.mapToChannelFriendshipDTOs(friendshipUsers);
   }
 
   async fetchPosts(username: string): Promise<ChannelPostDTO[]> {
@@ -573,7 +504,7 @@ export class ChannelService {
       await this.channelPostRepository.save(posts)
     })
     await sleep(1);
-    return posts;
+    return this.mapToChannelPostDTOs(posts);
   }
 
   async fetchReels(username: string): Promise<ChannelReelDTO[]> {
@@ -652,15 +583,5 @@ async function scrollToBottom(page: Page) {
     }
     previousHeight = currentHeight;
     await sleep(1);
-  }
-}
-
-async function createAndAccessFolder(path: string): Promise<void> {
-  try {
-    await promises.mkdir(path, { recursive: true });
-    console.log(`Directory created at ${path}`);
-  } catch (error) {
-    console.error(`Error creating directory at ${path}:`, error);
-    throw error; // Rethrow to handle it in the calling function
   }
 }

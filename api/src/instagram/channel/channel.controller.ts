@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, Res, StreamableFile } from '@nestjs/common';
-import { ChannelService, ReadStreamDTO } from './channel.service';
+import { ChannelService } from './channel.service';
 import { IsEmpty, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import type { Response } from 'express';
@@ -8,6 +8,8 @@ import ChannelPostDTO from './dto/channel-post.dto';
 import ChannelFriendshipDTO from './dto/channel-friendship.dto';
 import ChannelReelDTO from './dto/channel-reel.dto';
 import FindOneChannelDTO from './dto/findone-channel.dto';
+import { ChannelExportService, ReadStreamDTO } from './channel-export.service';
+import { ChannelDownloadService } from './channel-download.service';
 
 export type ScrapeInfo = 'all' | 'profile' | 'friendships' | 'posts' | 'reels'
 class GetUserScrapeInfosDto {
@@ -70,6 +72,8 @@ export class ChannelController {
 
   constructor(
     private readonly channelService: ChannelService,
+    private readonly channelExportService: ChannelExportService,
+    private readonly channelDownloadService: ChannelDownloadService,
   ) { }
 
   @Get('')
@@ -79,8 +83,28 @@ export class ChannelController {
 
   @Get('export')
   async exportChannels(@Res({ passthrough: true }) res: Response, @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
-    const file: ReadStreamDTO = await this.channelService.exportChannels(queries.type);
-    if(queries.type == 'excel') {
+    const file: ReadStreamDTO = await this.channelExportService.exportChannels(queries.type);
+    if (queries.type == 'excel') {
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${file.fileName}"`,
+      });
+    } else {
+      res.set({
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="${file.fileName}"`,
+      });
+    }
+    return new StreamableFile(file.readStream);
+  }
+
+  @Get('export/:username')
+  async exportChannel(
+    @Res({ passthrough: true }) res: Response,
+    @Param() params: GetUserParamsDto,
+    @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
+    const file: ReadStreamDTO = await this.channelExportService.exportChannel(params.username, queries.type);
+    if (queries.type == 'excel') {
       res.set({
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${file.fileName}"`,
@@ -125,6 +149,6 @@ export class ChannelController {
 
   @Get('download/:username/reels')
   async downloadReels(@Param() params: GetUserParamsDto): Promise<any[]> {
-    return await this.channelService.downloadReels(params.username);
+    return await this.channelDownloadService.downloadReels(params.username);
   }
 } 

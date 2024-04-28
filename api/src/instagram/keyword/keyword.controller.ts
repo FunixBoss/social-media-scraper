@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { KeywordService } from './keyword.service';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { Channel } from '../entity/channel.entity';
 import FindOneKeywordDTO from './dto/findone-keyword.dto';
 import FindAllKeywordDTO from './dto/findall-keyword.dto';
 import FindAllHashtagDTO from '../hashtag/dto/findall-hashtag.dto';

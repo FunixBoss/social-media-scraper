@@ -282,6 +282,7 @@ export async function mapInsPosts(posts: InsPostsFull): Promise<ChannelPost[]> {
         caption_text: node.caption ? node.caption.text : '',
         carousel_media_count: node.carousel_media_count,
         images: images,
+        like_count: node.like_count,
         original_height: node.original_height,
         original_width: node.original_width,
         video_height: node.video_versions && node.video_versions.length > 0 ? node.video_versions[0].height : null,

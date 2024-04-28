@@ -15,6 +15,8 @@ import { Keyword } from '../entity/keyword.entity';
 import { Priority } from '../entity/priority.entity';
 import { ChannelCrawlingHistory } from '../entity/channel-crawling-history.entity';
 import { ChannelPost } from '../entity/channel-post.entity';
+import { ChannelExportService } from './channel-export.service';
+import { ChannelDownloadService } from './channel-download.service';
 
 @Module({
   imports: [
@@ -29,9 +31,13 @@ import { ChannelPost } from '../entity/channel-post.entity';
   controllers: [ChannelController],
   providers: [
     ChannelService,
+    ChannelExportService,
+    ChannelDownloadService
   ],
   exports: [
     ChannelService,
+    ChannelExportService,
+    ChannelDownloadService
   ]
 })
 export class ChannelModule { }

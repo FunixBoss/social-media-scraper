@@ -35,6 +35,9 @@ export class ChannelPost {
     video_type?: number;
 
     @Column({ type: 'int', nullable: true })
+    like_count?: number;
+
+    @Column({ type: 'int', nullable: true })
     comment_count?: number;
 
     @Column({ length: 200, nullable: true })
