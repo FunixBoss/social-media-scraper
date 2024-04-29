@@ -12,6 +12,17 @@ export const MENU_ITEMS_AUTHORIZED: NbMenuItem[] = [
     group: true,
   },
   {
+    title: 'Keywords',
+    icon: 'grid-outline',
+    expanded: true,
+    children: [
+      {
+        title: 'Keyword List',
+        link: '/admin/keywords/list',
+      },
+    ],
+  },
+  {
     title: 'Products',
     icon: 'grid-outline',
     expanded: true,

@@ -1,0 +1,31 @@
+<nb-card [formGroup]="addKeywordFormGroup" [nbSpinner]="createLoading">
+    <nb-card-header>
+        Add Keyword
+    </nb-card-header>
+    <nb-card-body>
+        <div class="row">
+            <div class="col-12 no-gutters px-0">
+                <input type="text" nbInput fullWidth placeholder="Keyword Name" formControlName="name" class="mb-1">
+                <div class="alert alert-danger mt-0 mb-3"
+                    *ngIf="addKeywordFormGroup.get('name').invalid && (addKeywordFormGroup.get('name').dirty || addKeywordFormGroup.get('name').touched)">
+                    <div *ngIf="addKeywordFormGroup.get('name').errors['notblank']">
+                        Keyword Name is required
+                    </div>
+                    <div *ngIf="addKeywordFormGroup.get('name').errors['maxlength']">
+                        Keyword Name must not exceed 100 characters
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 no-gutters px-0 mt-3">
+                <nb-select fullWidth placeholder="Priority" formControlName="priority">
+                    <nb-option *ngFor="let pri of priories"  [value]="pri">{{pri}}</nb-option>
+                </nb-select>
+            </div>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="d-flex justify-content-between">
+            <button nbButton status="success" (click)="createKeyword()">Create</button>
+        </div>
+    </nb-card-footer>
+</nb-card>

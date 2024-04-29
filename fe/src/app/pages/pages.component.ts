@@ -35,11 +35,11 @@ export class PagesComponent {
   }
 
   loadMenu() {
-    if (this.authService.isLoggedIn()) {
-      this.menu = MENU_ITEMS_AUTHORIZED
-    } else {
-      this.menu = MENU_ITEMS_UNAUTHORIZED
-    }
+    this.menu = MENU_ITEMS_AUTHORIZED
+    // if (this.authService.isLoggedIn()) {
+    // } else {
+    //   this.menu = MENU_ITEMS_UNAUTHORIZED
+    // }
   }
 
 
