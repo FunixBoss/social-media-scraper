@@ -27,6 +27,21 @@ export const MENU_ITEMS_AUTHORIZED: NbMenuItem[] = [
     ],
   },
   {
+    title: 'Channels',
+    icon: 'grid-outline',
+    expanded: true,
+    children: [
+      {
+        title: 'Channel List',
+        link: '/admin/channels/list',
+      },
+      {
+        title: 'Scrape Channels',
+        link: '/admin/channels/scrape',
+      },
+    ],
+  },
+  {
     title: 'Products',
     icon: 'grid-outline',
     expanded: true,

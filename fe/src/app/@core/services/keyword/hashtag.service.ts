@@ -24,7 +24,7 @@ export class HashtagService {
   get hashtagChange$(): Observable<void> {
     return this.hashtagChangeSubject.asObservable();
   }
-  notifyHashtagChange(): void {
+  notifyHashtagChange(): void { 
     this.hashtagChangeSubject.next();
   }
 
@@ -34,7 +34,7 @@ export class HashtagService {
   ) { }
 
   findAll(keyword?: string): Observable<ApiResponse<FindAllHashtagDTO[]>> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag`
     console.log(`${keyword} in service`);
     
     let params = new HttpParams();
@@ -45,27 +45,27 @@ export class HashtagService {
   }
 
   findByKeyword(keyword: string): Observable<ApiResponse<FindAllHashtagDTO[]>> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag/${keyword}`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag/${keyword}`
     return this.httpClient.get<ApiResponse<FindAllHashtagDTO[]>>(url)
   }
 
   findByHashtag(hashtag: string): Observable<ApiResponse<FindOneChannelDTO>> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag/${hashtag}`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag/${hashtag}`
     return this.httpClient.get<ApiResponse<FindOneChannelDTO>>(url)
   }
 
   insert(hashtag: CreateHashtagDto): Observable<ApiResponse<FindOneChannelDTO>> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag`
     return this.httpClient.post<ApiResponse<FindOneChannelDTO>>(url, hashtag);
   }
 
   delete(hashtag: string): Observable<ApiResponse<void>> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag/${hashtag}`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag/${hashtag}`
     return this.httpClient.delete<ApiResponse<void>>(url);
   }
 
   deleteHashtags(hashtags: FindAllHashtagDTO[]): Observable<void> {
-    const url: string = `${this.baseUrlService.insURL}/hashtag/delete-hashtags`
+    const url: string = `${this.baseUrlService.baseURL}/hashtag/delete-hashtags`
     return this.httpClient.post<void>(url, hashtags);
   }
 }

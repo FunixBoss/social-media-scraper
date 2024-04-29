@@ -20,6 +20,12 @@
                 <nb-select fullWidth placeholder="Priority" formControlName="priority">
                     <nb-option *ngFor="let pri of priories"  [value]="pri">{{pri}}</nb-option>
                 </nb-select>
+                <div class="alert alert-danger mt-0 mb-3"
+                    *ngIf="addKeywordFormGroup.get('priority').invalid && (addKeywordFormGroup.get('priority').dirty || addKeywordFormGroup.get('priority').touched)">
+                    <div *ngIf="addKeywordFormGroup.get('priority').errors['notblank']">
+                        Keyword priority is required
+                    </div>
+                </div>
             </div>
         </div>
     </nb-card-body>

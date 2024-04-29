@@ -35,32 +35,32 @@ export class KeywordService {
   ) { }
 
   findAll(): Observable<ApiResponse<FindAllKeywordDTO[]>> {
-    const url: string = `${this.baseUrlService.insURL}/keyword`
+    const url: string = `${this.baseUrlService.baseURL}/keyword`
     return this.httpClient.get<ApiResponse<FindAllKeywordDTO[]>>(url)
   }
 
   findByKeyword(keyword: string): Observable<ApiResponse<FindOneChannelDTO>> {
-    const url: string = `${this.baseUrlService.insURL}/keyword/${keyword}`
+    const url: string = `${this.baseUrlService.baseURL}/keyword/${keyword}`
     return this.httpClient.get<ApiResponse<FindOneChannelDTO>>(url)
   }
 
   insert(keyword: CreateKeywordDto): Observable<ApiResponse<FindOneChannelDTO>> {
-    const url: string = `${this.baseUrlService.insURL}/keyword`
+    const url: string = `${this.baseUrlService.baseURL}/keyword`
     return this.httpClient.post<ApiResponse<FindOneChannelDTO>>(url, keyword);
   }
 
   delete(keyword: string): Observable<ApiResponse<void>> {
-    const url: string = `${this.baseUrlService.insURL}/keyword/${keyword}`
+    const url: string = `${this.baseUrlService.baseURL}/keyword/${keyword}`
     return this.httpClient.delete<ApiResponse<void>>(url);
   }
 
   deleteKeywords(keywords: FindAllKeywordDTO[]): Observable<void> {
-    const url: string = `${this.baseUrlService.insURL}/keyword/delete-keywords`
+    const url: string = `${this.baseUrlService.baseURL}/keyword/delete-keywords`
     return this.httpClient.post<void>(url, keywords);
   }
 
   findHashtags(keyword: string): Observable<ApiResponse<FindAllHashtagDTO[]>> {
-    const url: string = `${this.baseUrlService.insURL}/keyword/${keyword}/hashtags`
+    const url: string = `${this.baseUrlService.baseURL}/keyword/${keyword}/hashtags`
     return this.httpClient.get<ApiResponse<FindAllKeywordDTO[]>>(url)
   }
 }

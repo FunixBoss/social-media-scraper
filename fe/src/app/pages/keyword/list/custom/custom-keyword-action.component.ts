@@ -8,17 +8,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'ngx-keyword-custom-action',
     template: `
-        <div class="row no-gutters justify-content-between">
-            <div class="col-3 d-flex justify-content-center">
-                <button nbButton status="info" (click)="loadHashtags()">
-                    H
-                </button>
-            </div>
-            <div class="col-3 d-flex justify-content-center">
-                <button nbButton status="info" (click)="loadChannels()">
-                    C
-                </button>
-            </div>
+        <div class="row no-gutters justify-content-center">
             <div class="col-3 d-flex justify-content-center">
                 <button nbButton status="danger" (click)="onDelete()">
                     <nb-icon icon="trash-outline"></nb-icon>
@@ -57,22 +47,6 @@ export class CustomKeywordActionComponent implements ViewCell, OnInit {
 
     ngOnInit(): void {
         console.log();
-    }
-
-    loadHashtags() {
-        this.router.navigate(['/admin/hashtags', 'list'], {
-            queryParams: {
-                keyword: this.rowData.name
-            }
-        })
-    }
-
-    loadChannels() {
-        this.router.navigate(['/admin/channels', 'list'], {
-            queryParams: {
-                keyword: this.rowData.name
-            }
-        })
     }
 
     onDelete() {

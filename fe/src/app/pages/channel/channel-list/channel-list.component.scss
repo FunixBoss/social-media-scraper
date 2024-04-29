@@ -1,0 +1,9 @@
+::ng-deep ng2-smart-table .ng2-smart-actions a.ng2-smart-action {
+  font-size: 2rem !important;
+  color: #1E6BB8 !important;
+  display: block !important
+}
+
+::ng-deep input[type=checkbox].form-control {
+  height: 1rem;
+}

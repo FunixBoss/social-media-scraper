@@ -14,6 +14,7 @@ import { CustomKeywordActionComponent } from './list/custom/custom-keyword-actio
 import { CustomKeywordFilterActionsComponent } from './list/custom/custom-keyword-filter-actions.component';
 import { KeywordsRoutingModule } from './keyword-routing.module';
 import { CustomKeywordPriorityComponent } from './list/custom/custom-keyword-priority.component';
+import { CustomHashtagLinkComponent } from './list/custom/custom-hashtag-link.component';
 
 
 
@@ -24,7 +25,8 @@ import { CustomKeywordPriorityComponent } from './list/custom/custom-keyword-pri
     KeywordAddComponent,
     CustomKeywordActionComponent,
     CustomKeywordFilterActionsComponent,
-    CustomKeywordPriorityComponent
+    CustomKeywordPriorityComponent,
+    CustomHashtagLinkComponent
   ],
   imports: [
     RouterModule,

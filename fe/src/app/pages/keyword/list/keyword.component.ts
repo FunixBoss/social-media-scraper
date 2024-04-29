@@ -9,6 +9,8 @@ import { CustomKeywordActionComponent } from './custom/custom-keyword-action.com
 import { KeywordService } from '../../../@core/services/keyword/keyword.service';
 import FindAllKeywordDTO from '../../../@core/models/keyword/findall-keyword.dto';
 import { CustomKeywordPriorityComponent } from "./custom/custom-keyword-priority.component";
+import { CustomHashtagLinkComponent } from "./custom/custom-hashtag-link.component";
+import { CustomChannelLinkComponent } from "./custom/custom-channel-link.component copy";
 
 @Component({
   selector: "ngx-keyword",
@@ -17,7 +19,6 @@ import { CustomKeywordPriorityComponent } from "./custom/custom-keyword-priority
 })
 export class KeywordListComponent implements OnInit {
   private unsubscribe = new Subject<void>();
-  state: string = "add"; // default
   loadedKeywords: boolean = false;
 
   // for deleting multi coupon
@@ -45,11 +46,13 @@ export class KeywordListComponent implements OnInit {
       },
       total_channels: {
         title: "Total Channels",
-        type: "string",
+        type: "custom",
+        renderComponent: CustomChannelLinkComponent
       },
       total_hashtags: {
         title: "Total Hashtags",
-        type: "string",
+        type: "custom",
+        renderComponent: CustomHashtagLinkComponent
       },
       priority: {
         title: "Priority",
@@ -86,10 +89,6 @@ export class KeywordListComponent implements OnInit {
         this.loadKeywords();
       });
     this.loadKeywords()
-
-    this.keywordService.state$.subscribe((state) => {
-      this.state = state;
-    });
   }
 
   loadKeywords() {

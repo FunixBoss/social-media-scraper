@@ -25,7 +25,7 @@ export class KeywordAddComponent {
   ) {
     this.addKeywordFormGroup = this.formBuilder.group({
       name: ['', [CustomValidator.notBlank, Validators.maxLength(100)]],
-      priority: ['', [CustomValidator.notBlank, Validators.maxLength(500)]],
+      priority: ['', [CustomValidator.notBlank]],
     })
   }
 

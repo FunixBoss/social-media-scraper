@@ -24,6 +24,11 @@ const routes: Routes = [
           import("./hashtag/hashtag.module").then((m) => m.HashtagModule),
       },
       {
+        path: "channels",
+        loadChildren: () =>
+          import("./channel/channel.module").then((m) => m.ChannelsModule),
+      },
+      {
         path: "products",
         loadChildren: () =>
           import("./products/products.module").then((m) => m.ProductsModule),

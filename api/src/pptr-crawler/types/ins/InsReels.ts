@@ -55,29 +55,29 @@ export function mapInsReels(reels: InsReelsFull): ChannelReel[] {
 
     if (
         !reels ||
-        !reels.xdt_api__v1__clips__user__connection_v2 ||
-        !reels.xdt_api__v1__clips__user__connection_v2.edges
+        !reels.xdt_api__v1__clips__user__connection_v2
     ) {
         throw new Error('Invalid input data');
     }
 
     for (const edge of reels.xdt_api__v1__clips__user__connection_v2.edges) {
-        const node = edge.node;
-
+        const media = edge.node.media;
         const mappedReel: ChannelReel = {
-            code: node.media.code,
-            comment_count: node.media.comment_count,
-            id: node.media.id,
-            image_height: node.media.original_height,
-            image_width: node.media.original_width,
-            image_url: node.media.image_versions2?.candidates[0]?.url ?? null,
-            like_count: node.media.like_count,
-            media_type: node.media.media_type,
-            pk: node.media.pk,
-            play_count: node.media.play_count,
-            product_type: node.media.product_type,
-            video_url: (node.media.video_versions?.[0]?.url) ?? '',
+            code: media.code,
+            comment_count: media.comment_count,
+            id: media.id,
+            image_height: media.original_height,
+            image_width: media.original_width,
+            image_url: media.image_versions2?.candidates[0]?.url ?? null,
+            like_count: media.like_count,
+            media_type: media.media_type,
+            pk: media.pk,
+            play_count: media.play_count,
+            product_type: media.product_type,
+            video_url: (media.video_versions?.[0]?.url) ?? '',
         };
+        console.log(`code: ${media.code} - play_count: ${media.play_count}`);
+        
         mappedReels.push(mappedReel);
     }
     return mappedReels;

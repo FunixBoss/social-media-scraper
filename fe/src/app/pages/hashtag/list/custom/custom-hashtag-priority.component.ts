@@ -30,6 +30,6 @@ export class CustomHashtagPriorityComponent implements ViewCell, OnInit {
     }
 
     ngOnInit(): void {
-        this.renderValue = this.value.toString()
+        this.renderValue = this.value? this.value.toString() : undefined
     }
 }

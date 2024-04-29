@@ -9,7 +9,10 @@
                     <ngx-item-of-list (selectNumberOfItem)="source.setPaging(1, $event)"></ngx-item-of-list>
                 </nb-card-header>
                 <nb-card-body>
-                    <ng2-smart-table [settings]="settings" [source]="source" [ngClass]="'smart-table'"
+                    <ng2-smart-table 
+                        [settings]="settings" 
+                        [source]="source" 
+                        [ngClass]="'smart-table'"
                         (userRowSelect)="onRowSelect($event)">
                     </ng2-smart-table>
                 </nb-card-body>
