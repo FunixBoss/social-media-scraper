@@ -3,6 +3,7 @@ import { Routes, RouterModule } from "@angular/router";
 import { KeywordComponent } from "./keyword.component";
 import { KeywordListComponent } from "./list/keyword.component";
 import { KeywordAddComponent } from "./list/keyword-add/keyword-add.component";
+import { HashtagListComponent } from "../hashtag/list/hashtag.component";
 
 const routes: Routes = [
     {
@@ -12,10 +13,6 @@ const routes: Routes = [
             {
                 path: "list",
                 component: KeywordListComponent,
-            },
-            {
-                path: "add",
-                component: KeywordAddComponent
             },
         ],
     },
@@ -28,6 +25,6 @@ const routes: Routes = [
 export class KeywordsRoutingModule { }
 
 export const routedComponents = [
-    KeywordAddComponent,
     KeywordListComponent,
+    HashtagListComponent
 ];

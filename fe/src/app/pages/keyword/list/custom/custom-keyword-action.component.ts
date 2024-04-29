@@ -3,17 +3,23 @@ import { Component, OnInit, Input, ViewChild, TemplateRef, OnChanges, SimpleChan
 import { NbWindowRef, NbWindowService } from "@nebular/theme";
 import { KeywordService } from '../../../../@core/services/keyword/keyword.service';
 import { ViewCell } from 'ng2-smart-table';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'ngx-keyword-custom-action',
     template: `
-        <div class="row no-gutters  d-flex justify-content-center">
-            <div class="col-lg-6  d-flex justify-content-center">
-                <button nbButton status="info" (click)="onDetail($event)">
-                    <nb-icon icon="edit-2-outline"></nb-icon>
+        <div class="row no-gutters justify-content-between">
+            <div class="col-3 d-flex justify-content-center">
+                <button nbButton status="info" (click)="loadHashtags()">
+                    H
                 </button>
             </div>
-            <div class="col-lg-6  d-flex justify-content-center">
+            <div class="col-3 d-flex justify-content-center">
+                <button nbButton status="info" (click)="loadChannels()">
+                    C
+                </button>
+            </div>
+            <div class="col-3 d-flex justify-content-center">
                 <button nbButton status="danger" (click)="onDelete()">
                     <nb-icon icon="trash-outline"></nb-icon>
                 </button>
@@ -44,15 +50,29 @@ export class CustomKeywordActionComponent implements ViewCell, OnInit {
     constructor(
         private keywordService: KeywordService,
         private windowService: NbWindowService,
-        private utilsService: UtilsService
+        private utilsService: UtilsService,
+        private router: Router,
+
     ) { }
 
     ngOnInit(): void {
         console.log();
     }
 
-    onDetail(event: MouseEvent) {
-        // this.keywordService.updateHandleAndRowData('edit', this.catalogId);
+    loadHashtags() {
+        this.router.navigate(['/admin/hashtags', 'list'], {
+            queryParams: {
+                keyword: this.rowData.name
+            }
+        })
+    }
+
+    loadChannels() {
+        this.router.navigate(['/admin/channels', 'list'], {
+            queryParams: {
+                keyword: this.rowData.name
+            }
+        })
     }
 
     onDelete() {

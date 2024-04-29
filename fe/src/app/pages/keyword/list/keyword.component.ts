@@ -25,7 +25,8 @@ export class KeywordListComponent implements OnInit {
   selectedKeywords: FindAllKeywordDTO[] = []
   deleteWindowRef: NbWindowRef;
 
-  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : 10; // default
+  defaultItems: number = 5;
+  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : this.defaultItems;
   source: LocalDataSource = new LocalDataSource();
   settings = {
     selectMode: 'multi',
@@ -52,7 +53,8 @@ export class KeywordListComponent implements OnInit {
       },
       priority: {
         title: "Priority",
-        type: "string",
+        type: "custom",
+        renderComponent: CustomKeywordPriorityComponent
       },
       actions: {
         title: 'Actions',
@@ -66,7 +68,7 @@ export class KeywordListComponent implements OnInit {
       }
     },
     pager: {
-      display: true,
+      display: false,
       perPage: this.numberOfItem
     },
   };
@@ -75,11 +77,24 @@ export class KeywordListComponent implements OnInit {
     private keywordService: KeywordService,
     private utilsService: UtilsService,
     private windowService: NbWindowService,
-  ) {}
+  ) { }
+
+  ngOnInit() {
+    this.keywordService.keywordChange$
+      .pipe(takeUntil(this.unsubscribe))
+      .subscribe(() => {
+        this.loadKeywords();
+      });
+    this.loadKeywords()
+
+    this.keywordService.state$.subscribe((state) => {
+      this.state = state;
+    });
+  }
 
   loadKeywords() {
-    this.keywordService.findAll().subscribe(
-      body => {
+    this.keywordService.findAll()
+      .subscribe(body => {
         const mappedKeywords = body.data.map((keyword) => {
           return {
             name: keyword.name,
@@ -89,21 +104,15 @@ export class KeywordListComponent implements OnInit {
           }
         })
         this.source.load(mappedKeywords)
+        this.settings = {
+          ...this.settings,
+          pager: {
+            display: true,
+            perPage: this.numberOfItem
+          }
+        }
         this.loadedKeywords = true
-      }
-    )
-  }
-
-  ngOnInit() {
-    this.keywordService.keywordChange$
-      .pipe(takeUntil(this.unsubscribe))
-      .subscribe(() => {
-        this.loadKeywords();
-      });
-    this.loadKeywords()
-    this.keywordService.state$.subscribe((state) => {
-      this.state = state;
-    });
+      })
   }
 
   onRowSelect(event: any): void {

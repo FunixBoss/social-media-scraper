@@ -20,6 +20,10 @@ export const MENU_ITEMS_AUTHORIZED: NbMenuItem[] = [
         title: 'Keyword List',
         link: '/admin/keywords/list',
       },
+      {
+        title: 'Hashtag List',
+        link: '/admin/hashtags/list',
+      },
     ],
   },
   {

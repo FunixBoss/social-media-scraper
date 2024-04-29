@@ -20,7 +20,7 @@ import { ViewCell } from "ng2-smart-table";
     `,
 })
 
-export class CustomKeywordPriorityComponent implements ViewCell, OnInit {
+export class CustomHashtagPriorityComponent implements ViewCell, OnInit {
     renderValue: string;
 
     @Input() value: string | number | any;

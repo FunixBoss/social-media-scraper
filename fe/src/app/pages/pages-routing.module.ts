@@ -19,6 +19,11 @@ const routes: Routes = [
           import("./keyword/keyword.module").then((m) => m.KeywordModule),
       },
       {
+        path: "hashtags",
+        loadChildren: () =>
+          import("./hashtag/hashtag.module").then((m) => m.HashtagModule),
+      },
+      {
         path: "products",
         loadChildren: () =>
           import("./products/products.module").then((m) => m.ProductsModule),

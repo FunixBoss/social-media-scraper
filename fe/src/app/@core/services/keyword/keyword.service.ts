@@ -7,6 +7,7 @@ import FindAllKeywordDTO from '../../models/keyword/findall-keyword.dto';
 import { ApiResponse } from '../../models/api-response-wrapper';
 import FindOneChannelDTO from '../../models/channel/findone-channel.dto';
 import { CreateKeywordDto } from '../../models/keyword/create-keyword.dto';
+import FindAllHashtagDTO from '../../models/hashtag/findall-hashtag.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -56,5 +57,10 @@ export class KeywordService {
   deleteKeywords(keywords: FindAllKeywordDTO[]): Observable<void> {
     const url: string = `${this.baseUrlService.insURL}/keyword/delete-keywords`
     return this.httpClient.post<void>(url, keywords);
+  }
+
+  findHashtags(keyword: string): Observable<ApiResponse<FindAllHashtagDTO[]>> {
+    const url: string = `${this.baseUrlService.insURL}/keyword/${keyword}/hashtags`
+    return this.httpClient.get<ApiResponse<FindAllKeywordDTO[]>>(url)
   }
 }

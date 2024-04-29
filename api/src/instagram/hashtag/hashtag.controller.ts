@@ -1,30 +1,33 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { HashtagService } from './hashtag.service';
 import { CreateHashtagDto } from './dto/create-hashtag.dto';
-import { UpdateHashtagDto } from './dto/update-hashtag.dto';
+import FindAllHashtagDTO from './dto/findall-hashtag.dto';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-@Controller('hashtag')
+export class GetHashtagParamsDto {
+  @IsOptional()
+  @MaxLength(200)
+  keyword: string;
+}
+
+@Controller('ins/hashtag')
 export class HashtagController {
   constructor(private readonly hashtagService: HashtagService) {}
 
+  
   @Post()
   create(@Body() createHashtagDto: CreateHashtagDto) {
     return this.hashtagService.create(createHashtagDto);
   }
 
   @Get()
-  findAll() {
-    return this.hashtagService.findAll();
+  async findAll(@Query() queries: GetHashtagParamsDto): Promise<FindAllHashtagDTO[]> {
+    return this.hashtagService.findAll(queries);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.hashtagService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateHashtagDto: UpdateHashtagDto) {
-    return this.hashtagService.update(+id, updateHashtagDto);
   }
 
   @Delete(':id')

@@ -7,29 +7,29 @@ import { Ng2CompleterModule } from 'ng2-completer';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ThemeModule } from '../../@theme/theme.module';
 import { SharedModule } from '../shared/shared.module';
-import { KeywordComponent } from './keyword.component';
-import { KeywordListComponent } from './list/keyword.component';
-import { KeywordAddComponent } from './list/keyword-add/keyword-add.component';
-import { CustomKeywordActionComponent } from './list/custom/custom-keyword-action.component';
-import { CustomKeywordFilterActionsComponent } from './list/custom/custom-keyword-filter-actions.component';
-import { KeywordsRoutingModule } from './keyword-routing.module';
-import { CustomKeywordPriorityComponent } from './list/custom/custom-keyword-priority.component';
+import { HashtagComponent } from './hashtag.component';
+import { HashtagListComponent } from './list/hashtag.component';
+import { HashtagAddComponent } from './list/hashtag-add/hashtag-add.component';
+import { CustomHashtagActionComponent } from './list/custom/custom-hashtag-action.component';
+import { HashtagsRoutingModule } from './hashtag-routing.module';
+import { CustomHashtagFilterActionsComponent } from './list/custom/custom-hashtag-filter-actions.component';
+import { CustomHashtagPriorityComponent } from './list/custom/custom-hashtag-priority.component';
 
 
 
 @NgModule({
   declarations: [
-    KeywordComponent,
-    KeywordListComponent,
-    KeywordAddComponent,
-    CustomKeywordActionComponent,
-    CustomKeywordFilterActionsComponent,
-    CustomKeywordPriorityComponent
+    HashtagComponent,
+    HashtagListComponent,
+    HashtagAddComponent,
+    CustomHashtagActionComponent,
+    CustomHashtagFilterActionsComponent,
+    CustomHashtagPriorityComponent
   ],
   imports: [
     RouterModule,
     CommonModule,
-    KeywordsRoutingModule,
+    HashtagsRoutingModule,
     NbCardModule,
     Ng2SmartTableModule,
     Ng2CompleterModule,
@@ -50,4 +50,4 @@ import { CustomKeywordPriorityComponent } from './list/custom/custom-keyword-pri
     NbSpinnerModule
   ]
 })
-export class KeywordModule { }
+export class HashtagModule { }

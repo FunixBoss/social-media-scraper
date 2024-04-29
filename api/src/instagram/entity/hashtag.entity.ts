@@ -29,7 +29,9 @@ export class Hashtag {
     // })
     // channelReels?: ChannelReel[];
 
-    @ManyToOne(() => Keyword, keyword => keyword.hashtags)
+    @ManyToOne(() => Keyword, keyword => keyword.hashtags, {
+        eager: true
+    })
     @JoinColumn({ name: 'keyword_name' })
     keyword?: Keyword;
 }

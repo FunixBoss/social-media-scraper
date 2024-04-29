@@ -1,4 +1,5 @@
-<nb-select [placeholder]="'Items Per Page'" 
+<nb-select [placeholder]="'Items Per Page'"
+    [selected]="chosenOpt"
     (selectedChange)="numberOfItemsChange($event)">
     <nb-select-label>
         Number Of Item: {{ chosenOpt }}
