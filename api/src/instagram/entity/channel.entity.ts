@@ -40,15 +40,6 @@ export class Channel {
     @Column({ length: 200, nullable: true })
     id?: string;
 
-    @Column({ type: 'int', nullable: true })
-    total_posts?: number;
-
-    @Column({ type: 'int', nullable: true })
-    total_reels?: number;
-
-    @Column({ type: 'int', nullable: true })
-    total_friendships?: number;
-
     @Column({ length: 200, nullable: true })
     pk?: string;
 

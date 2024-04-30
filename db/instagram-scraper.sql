@@ -12,6 +12,7 @@ create table `keyword`(
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name)
 );
+
 create table `channel`(
 	`username` varchar(200) primary key,
     `category` VARCHAR(200) DEFAULT NULL,
@@ -25,14 +26,24 @@ create table `channel`(
     profile_pic_url varchar(1000),
     hd_profile_pic_url_info varchar(1000),
     id varchar(200),
-    total_posts int,
-    total_reels int,
-    total_friendships int,
     pk varchar(200),
 	is_self_adding bool default false,
     is_bot_scanning bool default false,
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name)
+);
+
+create table `channel_download_history` (
+	id bigint auto_increment primary key,
+	channel_username varchar(200),
+    download_type varchar(200),
+    from_order int,
+    to_order int,
+    file_name varchar(200),
+    status varchar(200),
+    download_directory varchar(200),
+    date datetime,
+	foreign key(channel_username) references `channel`(username)
 );
 
 create table `crawling_type`(
@@ -72,8 +83,9 @@ CREATE TABLE `channel_post` (
     video_width INT,
     video_url VARCHAR(1000),
     video_type INT,
+    like_count INT,
     comment_count INT,
-    product_type NVARCHAR(200),
+    product_type VARCHAR(200),
 	channel_username varchar(200),
 	foreign key(channel_username) references `channel`(username)
 );
@@ -100,7 +112,7 @@ create table `channel_reel`(
     media_type int,
     pk varchar(200),
     play_count int,
-    product_type varchar(200),
+    product_type varchar(200), 
     video_url varchar(1000),
 	channel_username varchar(200),
 	foreign key(channel_username) references `channel`(username)

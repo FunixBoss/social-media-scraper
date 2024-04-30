@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ChannelService } from './channel.service';
+import { ChannelService } from './service/channel.service';
 import { ChannelController } from './channel.controller';
 import { HelperModule } from 'src/helper/helper.module';
 import { ScraperModule } from '../scraper/scraper.module';
@@ -15,8 +15,9 @@ import { Keyword } from '../entity/keyword.entity';
 import { Priority } from '../entity/priority.entity';
 import { ChannelCrawlingHistory } from '../entity/channel-crawling-history.entity';
 import { ChannelPost } from '../entity/channel-post.entity';
-import { ChannelExportService } from './channel-export.service';
-import { ChannelDownloadService } from './channel-download.service';
+import { ChannelExportService } from './service/channel-export.service';
+import { ChannelDownloadService } from './service/channel-download.service';
+import { ChannelDownloadHistory } from '../entity/channel-download-history.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { ChannelDownloadService } from './channel-download.service';
     PptrCrawlerModule,
     TypeOrmModule.forFeature([
       Channel, ChannelFriendship, ChannelReel, ChannelReelHashtag, CrawlingType, Hashtag, Keyword, Priority,
-      ChannelCrawlingHistory, ChannelPost
+      ChannelCrawlingHistory, ChannelPost, ChannelDownloadHistory
     ])
   ],
   controllers: [ChannelController],

@@ -4,6 +4,10 @@ import { NbDataRowOutletDirective, NbWindowRef, NbWindowService } from "@nebular
 import { ViewCell } from "ng2-smart-table";
 import { ProductService } from "../../../../@core/services/product/product.service";
 import { ToastState, UtilsService } from "../../../../@core/services/utils.service";
+import { ChannelService } from "../../../../@core/services/channel/channel.service";
+import { FormBuilder, FormGroup } from "@angular/forms";
+import { CustomValidator } from "../../../../@core/validators/custom-validator";
+import { Observable } from "rxjs";
 
 @Component({
     selector: 'ngx-custom-channel-action',
@@ -19,64 +23,105 @@ import { ToastState, UtilsService } from "../../../../@core/services/utils.servi
         `
     ]
 })
-export class CustomChannelActionComponent implements ViewCell, OnInit {
-    renderValue: string;
 
+export class CustomChannelActionComponent implements ViewCell, OnInit {
+    username: string;
+    renderValue: string;
     @Input() value: string | number;
     @Input() rowData: any;
+    isCrawling: boolean = false;
 
-    productId: number;
-
-    @ViewChild('onHideTemplate') hideWindow: TemplateRef<any>;
-    hideWindowRef: NbWindowRef;
-
-    @ViewChild('onDeleteTemplate') deleteWindow: TemplateRef<any>;
-    deleteWindowRef: NbWindowRef;
-
+    @ViewChild('onCrawlTemplate') crawlWindow: TemplateRef<any>;
+    crawlWindowRef: NbWindowRef;
+    crawlFormGroup: FormGroup
+    crawlContents: string[] = ["PROFILE", "FRIENDSHIPS", "POSTS", "REELS", "ALL"]
     constructor(
-        private router: Router,
         private windowService: NbWindowService,
-        private productService: ProductService,
-        private utilsService: UtilsService
-    ) {
-        
-    }
-    
+        private channelService: ChannelService,
+        private utilsService: UtilsService,
+        private formBuilder: FormBuilder,
+        private router: Router
+    ) { }
+
     ngOnInit(): void {
-        this.productId = this.rowData.productId
+        this.crawlFormGroup = this.formBuilder.group({
+            crawl: ['PROFILE', [CustomValidator.notBlank]],
+        })
+        this.username = this.rowData.username;
     }
 
-    isHide(): boolean {
-        return this.rowData.isHide === 1;
+    onCrawl(event: any) {
+        this.crawlWindowRef = this.windowService
+            .open(this.crawlWindow, { title: `Crawl Channel` });
     }
 
-    onGetDetail() {
-        this.router.navigate(['/admin/products', 'detail', this.rowData.productId])
+    crawlChannel() {
+        if (this.crawlFormGroup.invalid) {
+            this.crawlFormGroup.markAllAsTouched();
+            this.utilsService.updateToastState(new ToastState('Crawl Channel Failed!', "danger"));
+            return;
+        }
+
+        const crawlContent: string = this.crawlFormGroup.get("crawl").value;
+        this.utilsService.updateToastState(new ToastState(`Crawling ${crawlContent} of ${this.username}`, "info"));
+        const crawlActions = {
+            'PROFILE': () => this.channelService.crawlProfile(this.username),
+            'FRIENDSHIPS': () => this.channelService.crawlFriendships(this.username),
+            'POSTS': () => this.channelService.crawlPosts(this.username),
+            'REELS': () => this.channelService.crawlReels(this.username),
+            'ALL': () => this.channelService.crawlFull(this.rowData.username)
+        };
+        this.executeCrawl(crawlContent, crawlActions[crawlContent]);
+        this.crawlWindowRef.close();
     }
 
-    onEdit() {
-        this.router.navigate(['/admin/products', 'edit', this.rowData.productId])
-    }
-
-    onDelete(event: any) {
-        this.deleteWindowRef = this.windowService
-            .open(this.deleteWindow, { title: `Delete Product` }); 
-    }
-
-    deleteProduct() {
-        this.productService.delete(this.productId).subscribe(
-            data => {
-                if (data) {
-                    this.utilsService.updateToastState(new ToastState('Delete Product Successfully!', "success"))
-                    this.deleteWindowRef.close()
-                    this.productService.notifyProductChange();
-                } else {
-                    this.utilsService.updateToastState(new ToastState('Delete Product Failed!', "danger"))
+    private executeCrawl(crawlContent: string, crawlFunction: () => Observable<any>) {
+        crawlFunction().subscribe(
+            body => {
+                if (body && (body.statusCode === 200 || body.data === null)) {
+                    this.isCrawling = false;
+                    this.channelService.notifyChannelChange();
+                    this.utilsService.updateToastState(new ToastState(`Crawled ${crawlContent} of ${this.username} completely in ${body.handlerTime}ms`, "success"));
                 }
-            }, 
+            },
             error => {
-                this.utilsService.updateToastState(new ToastState('Delete Product Failed!', "danger"))
+                this.isCrawling = false;
+                console.error(error);
+                this.utilsService.updateToastState(new ToastState(`Error crawling ${crawlContent} of ${this.username}`, "danger"));
             }
-        )
+        );
+    }
+    onExportExcel() {
+        this.utilsService.updateToastState(new ToastState(`Exporting Excel of ${this.username}`, "info"));
+        this.channelService.exportExcel(this.username).subscribe({
+            next: (data) => {
+                this.downloadFile(data, `${this.username}.xlsx`);
+                this.utilsService.updateToastState(new ToastState(`Export Excel of ${this.username} completed successfully`, "success"));
+            },
+            error: (error) => {
+                console.error('Error downloading the file', error);
+                this.utilsService.updateToastState(new ToastState('Failed to download Excel file', "danger"));
+            }
+        });
+    }
+
+    private downloadFile(data: Blob, filename: string) {
+        const a = document.createElement('a');
+        const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }, 0);
+    }
+
+    onDownload() {
+        this.router.navigate(['/admin/channels/downloads', this.rowData.username])
     }
 }

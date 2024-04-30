@@ -1,5 +1,6 @@
+import { ChannelDownloadHistoryDTO } from './dto/channel-download-history.dto';
 import { Controller, Get, Param, Query, Res, StreamableFile } from '@nestjs/common';
-import { ChannelService } from './channel.service';
+import { ChannelService } from './service/channel.service';
 import { IsEmpty, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import type { Response } from 'express';
@@ -8,8 +9,9 @@ import ChannelPostDTO from './dto/channel-post.dto';
 import ChannelFriendshipDTO from './dto/channel-friendship.dto';
 import ChannelReelDTO from './dto/channel-reel.dto';
 import FindOneChannelDTO from './dto/findone-channel.dto';
-import { ChannelExportService, ReadStreamDTO } from './channel-export.service';
-import { ChannelDownloadService } from './channel-download.service';
+import { ChannelExportService, ReadStreamDTO } from './service/channel-export.service';
+import { ChannelDownloadService } from './service/channel-download.service';
+import { Type } from 'class-transformer';
 
 export type ScrapeInfo = 'all' | 'profile' | 'friendships' | 'posts' | 'reels'
 class GetUserScrapeInfosDto {
@@ -20,14 +22,33 @@ class GetUserScrapeInfosDto {
 
 
 export class GetDownloadTypeDto {
-  @IsIn([undefined, "posts", "reels"])
+  @IsIn(["posts", "reels"])
   type: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  from_order: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  to_order: number;
 }
 export class GetExportTypeDto {
   @IsIn(["excel", "json"])
   type: string;
 }
 
+export class GetUserNIdParamsDto {
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(200)
+  username: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  id: number;
+}
 export class GetUserParamsDto {
   @IsNotEmpty()
   @IsString()
@@ -86,14 +107,36 @@ export class ChannelController {
     return await this.channelService.findAll(queries);
   }
 
-  @Get('download/:username')
-  async downloadReels(@Param('username') username: string, @Query() queries: GetDownloadTypeDto, @Res() res: Response) {
+  @Get('download/:username/findall')
+  async findAllDownloads(@Param() params: GetUserParamsDto): Promise<ChannelDownloadHistoryDTO[]> {
+    return await this.channelDownloadService.findAllDownloadHistories(params.username);
+  }
+
+  @Get('download/:username/:id')
+  async downloadReelsWithId(@Param() params: GetUserNIdParamsDto, @Res() res: Response) {
     try {
-      const { readStream, fileName } = await this.channelDownloadService.download(username, queries.type);
+      const { readStream, fileName } = await this.channelDownloadService.downloadById(params.username, params.id);
       res.set({
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${fileName}"`,
-      }); 
+      });
+      readStream.pipe(res);
+    } catch (error) {
+      console.error('Error:', error.message);
+      if (!res.headersSent) {
+        res.status(404).send(error.message);
+      }
+    }
+  }
+
+  @Get('download/:username')
+  async download(@Param() params: GetUserParamsDto, @Query() queries: GetDownloadTypeDto, @Res() res: Response) {
+    try {
+      const { readStream, fileName } = await this.channelDownloadService.download(params.username, queries.type, queries.from_order, queries.to_order);
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      });
       readStream.pipe(res);
     } catch (error) {
       console.error('Error:', error.message);
@@ -145,13 +188,19 @@ export class ChannelController {
     return await this.channelService.fetchUser(params.username, queries.infos);
   }
 
+  @Get(":username/exists")
+  async isChannelExist(@Param() params: GetUserParamsDto): Promise<boolean> {
+    try {
+      await this.channelService.fetchUserProfile(params.username);
+      return true;
+    } catch (error) {
+      return false
+    }
+  }
+
   @Get(':username/profile')
   async fetchProfile(@Param() params: GetUserParamsDto): Promise<FindAllChannelDTO> {
-    try {
-      return await this.channelService.fetchUserProfile(params.username);
-    } catch (error) {
-      console.log(error);
-    }
+    return await this.channelService.fetchUserProfile(params.username);
   }
 
   @Get(':username/friendships')

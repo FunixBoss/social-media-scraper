@@ -6,7 +6,10 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: "*"
+    origin: "*",
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    exposedHeaders: 'Content-Disposition',
   });
   app.setGlobalPrefix('api'); // Set global prefix for the entire application
   const config = new DocumentBuilder()

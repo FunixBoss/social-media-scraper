@@ -1,0 +1,49 @@
+<nb-card [formGroup]="addDownloadFormGroup" [nbSpinner]="createLoading">
+    <nb-card-header>
+        Download
+    </nb-card-header>
+    <nb-card-body>
+        <div class="row">
+            <div class="col-12 no-gutters px-0 mb-3">
+                <nb-select fullWidth placeholder="Download Type" formControlName="download_type">
+                    <nb-option *ngFor="let pri of downloadTypes" [value]="pri">{{pri}}</nb-option>
+                </nb-select>
+                <div class="alert alert-danger mt-0 mb-3"
+                    *ngIf="addDownloadFormGroup.get('download_type').invalid && (addDownloadFormGroup.get('download_type').dirty || addDownloadFormGroup.get('download_type').touched)">
+                    <div *ngIf="addDownloadFormGroup.get('download_type').errors['notblank']">
+                        Download Type is required
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 no-gutters px-0 mb-3">
+                <input type="text" nbInput fullWidth placeholder="From Order" formControlName="from_order" class="mb-1">
+                <div class="alert alert-danger mt-0 mb-3"
+                    *ngIf="addDownloadFormGroup.get('from_order').invalid && (addDownloadFormGroup.get('from_order').dirty || addDownloadFormGroup.get('from_order').touched)">
+                    <div *ngIf="addDownloadFormGroup.get('from_order').errors['notblank']">
+                        From order is required
+                    </div>
+                    <div *ngIf="addDownloadFormGroup.get('from_order').errors['min']">
+                        From order min is 1
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 no-gutters px-0 mb-3">
+                <input type="text" nbInput fullWidth placeholder="To Order" formControlName="to_order" class="mb-1">
+                <div class="alert alert-danger mt-0 mb-3"
+                    *ngIf="addDownloadFormGroup.get('to_order').invalid && (addDownloadFormGroup.get('to_order').dirty || addDownloadFormGroup.get('to_order').touched)">
+                    <div *ngIf="addDownloadFormGroup.get('to_order').errors['notblank']">
+                        To order is required
+                    </div>
+                    <div *ngIf="addDownloadFormGroup.get('to_order').errors['min']">
+                        To order min is 1
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="d-flex justify-content-between">
+            <button nbButton status="success" (click)="createDownload()">Start Download</button>
+        </div>
+    </nb-card-footer>
+</nb-card>

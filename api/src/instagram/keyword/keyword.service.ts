@@ -18,7 +18,7 @@ import FindOneKeywordDTO from './dto/findone-keyword.dto';
 import FindAllKeywordDTO from './dto/findall-keyword.dto';
 import FindAllHashtagDTO from '../hashtag/dto/findall-hashtag.dto';
 import FindAllChannelDTO from '../channel/dto/findall-channel.dto';
-import { ChannelService } from '../channel/channel.service';
+import { ChannelService } from '../channel/service/channel.service';
 
 @Injectable()
 export class KeywordService {

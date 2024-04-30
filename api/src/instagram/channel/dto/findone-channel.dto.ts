@@ -15,9 +15,9 @@ export default interface FindOneChannelDTO {
     hd_profile_pic_url_info?: string;
     profile_pic_url?: string;
     id?: string;
-    total_posts?: number;
-    total_reels?: number;
-    total_friendships?: number;
+    total_posts: number;
+    total_reels: number;
+    total_friendships: number;
     pk?: string;
     priority?: string;
     is_self_adding?: boolean;

@@ -12,7 +12,7 @@ import { CustomChannelPostLinkComponent } from './custom/custom-channel-post-lin
 import { CustomPriorityComponent } from '../shared/custom-priority.component';
 import { CustomChannelFriendshipLinkComponent } from './custom/custom-channel-friend-link.component';
 
-@Component({ 
+@Component({
   selector: 'ngx-channel-list',
   templateUrl: './channel-list.component.html',
   styleUrls: ['./channel-list.component.scss']
@@ -29,7 +29,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
   selectedChannels: any[] = []
   settings = {
     selectMode: 'multi',
-    actions: { 
+    actions: {
       position: 'right',
       edit: false,
       delete: false,
@@ -137,15 +137,15 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         this.loadChannels();
       });
     this.loadChannels();
-    this.loadedList = true
   }
 
   loadChannels() {
+    this.loadedList = false
     this.channelService.findAll()
       .subscribe(body => {
         if (body) {
           const mappedChannels: any[] = body.data.reverse().map(channel => {
-            const {username, profile_pic_url, full_name, category, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled} = channel;
+            const { username, profile_pic_url, full_name, category, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled } = channel;
             return {
               username,
               full_name,
@@ -153,7 +153,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
               follower_count,
               total_posts,
               total_reels,
-              total_friendships, 
+              total_friendships,
               priority,
               url,
               profile_pic_url,
@@ -161,9 +161,12 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
             }
           })
           this.source.load(mappedChannels)
+          this.loadedList = true
         }
       })
   }
+
+
 
   ngAfterViewInit() {
     const pager = document.querySelector('ng2-smart-table-pager');

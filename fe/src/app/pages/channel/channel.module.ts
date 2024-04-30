@@ -20,6 +20,10 @@ import { CustomInstaPostLinkComponent } from './channel-posts/custom/custom-inst
 import { CustomChannelPostLinkComponent } from './channel-list/custom/custom-channel-post-link.component';
 import { CustomPriorityComponent } from './shared/custom-priority.component';
 import { CustomChannelFriendshipLinkComponent } from './channel-list/custom/custom-channel-friend-link.component';
+import { ChannelDownloadAddComponent } from './channel-download/channel-download-add/channel-download-add.component';
+import { CustomChannelDownloadActionComponent } from './channel-download/custom/custom-channel-download-action.component';
+import { CustomChannelDownloadFilterActionsComponent } from './channel-download/custom/custom-channel-download-filter-actions.component';
+import { CustomChannelDownloadPriorityComponent } from './channel-download/custom/custom-channel-download-priority.component';
 
 @NgModule({
   imports: [
@@ -65,7 +69,12 @@ import { CustomChannelFriendshipLinkComponent } from './channel-list/custom/cust
     CustomInstaReelLinkComponent,
     CustomInstaPostLinkComponent,
     CustomChannelPostLinkComponent,
-    CustomChannelFriendshipLinkComponent
+    CustomChannelFriendshipLinkComponent,
+
+    ChannelDownloadAddComponent,
+    CustomChannelDownloadActionComponent,
+    CustomChannelDownloadFilterActionsComponent,
+    CustomChannelDownloadPriorityComponent
     // ImagesCarouselComponent,,
     // CustomProductActionComponent,
     // CustomProductFilterActionsComponent,

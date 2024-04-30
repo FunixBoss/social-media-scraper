@@ -5,6 +5,8 @@ import { ChannelReelsListComponent } from './channel-reels/channel-reels.compone
 import { ChannelListComponent } from './channel-list/channel-list.component';
 import { ChannelPostsListComponent } from './channel-posts/channel-posts.component';
 import { ChannelFriendshipsComponent } from './channel-friendships/channel-friendships.component';
+import { ChannelScrapeComponent } from './channel-scrape/channel-scrape.component';
+import { ChannelDownloadListComponent } from './channel-download/channel-download.component';
 
 const routes: Routes = [{
   path: '',
@@ -14,10 +16,10 @@ const routes: Routes = [{
       path: 'list',
       component: ChannelListComponent,
     },
-    // {
-    //   path: 'add',
-    //   component: ChannelAddComponent,
-    // },
+    {
+      path: 'scrape',
+      component: ChannelScrapeComponent,
+    },
     {
       path: 'posts/:username',
       component: ChannelPostsListComponent,
@@ -29,6 +31,10 @@ const routes: Routes = [{
     {
       path: 'friendships/:username',
       component: ChannelFriendshipsComponent,
+    },
+    {
+      path: 'downloads/:username',
+      component: ChannelDownloadListComponent,
     }, 
   ],
 }];
@@ -44,5 +50,7 @@ export const routedComponents = [
   ChannelListComponent,
   ChannelPostsListComponent,
   ChannelReelsListComponent,
-  ChannelFriendshipsComponent
+  ChannelFriendshipsComponent,
+  ChannelScrapeComponent,
+  ChannelDownloadListComponent
 ];
