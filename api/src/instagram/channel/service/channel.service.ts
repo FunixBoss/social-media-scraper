@@ -44,7 +44,7 @@ export class ChannelService {
 
   async setUpPageInterceptors(): Promise<void> {
     this.interceptManager = new RequestInterceptionManager(
-      await this.page.target().createCDPSession(),
+      await this.page.target().createCDPSession() as any,
       {
         onError: (error) => {
           console.error('Request interception error:', error)
