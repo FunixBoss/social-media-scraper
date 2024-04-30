@@ -124,8 +124,6 @@ export class ChannelDownloadService {
         const downloadPromises = [];
         for (const post of filteredPosts) {
             if (post.image_urls && post.image_urls.length > 0) {
-                console.log("run");
-                
                 for (const [index, imageUrl] of post.image_urls.entries()) {
                     const imagePath = `${downloadPath}/${post.channel_post_numerical_order}.${index + 1}-${post.code}.jpg`;
                     downloadPromises.push(
