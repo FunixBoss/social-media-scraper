@@ -58,8 +58,8 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
                 ? "new"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            userDataDir: this.configService.get<string>("PROFILE_PATH"),
-            devtools: this.configService.get<boolean>("DEVTOOLS"),
+            // userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            // devtools: this.configService.get<boolean>("DEVTOOLS"),
         };
     }
 }
