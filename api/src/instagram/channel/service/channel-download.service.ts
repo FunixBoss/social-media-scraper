@@ -48,7 +48,9 @@ export class ChannelDownloadService {
         if (type == "posts") await this.downloadPosts(username, downloadPath, from_order, to_order);
         else if (type == "reels") await this.downloadReels(username, downloadPath, from_order, to_order);
 
-        await this.createZipFile(downloadPath, outputPath);
+        await this.createZipFile(downloadPath, outputPath)
+            .then(() => console.log(`Zip folder ${outputPath} Successfully`))
+            .catch(err => { throw err });
         let channelDownload: ChannelDownloadHistory = {
             channel_username: username,
             date: new Date(),
@@ -66,6 +68,8 @@ export class ChannelDownloadService {
     }
 
     private async createZipFile(sourceDir: string, outPath: string): Promise<void> {
+        console.log("Zipping Folder: " + outPath);
+
         const archive = archiver('zip', { zlib: { level: 9 } });
         const output = createWriteStream(outPath);
 
@@ -75,10 +79,15 @@ export class ChannelDownloadService {
                 .on('error', err => reject(err))
                 .pipe(output);
 
-            output.on('close', () => resolve());
+            output.on('close', () => {
+                console.log('\nFinished zipping.');
+                resolve();
+            });
+
             archive.finalize();
         });
     }
+
 
     async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<any[]> {
         let reels: ChannelReelDTO[] = await this.channelService.fetchReels(username)
@@ -95,26 +104,30 @@ export class ChannelDownloadService {
         const { video_url, channel_reel_numerical_order, code } = reel;
         const videoName = `${channel_reel_numerical_order}-${code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
-        console.log(`Downloading: ${videoName}`)
         try {
             const response = await axios(video_url, { method: 'GET', responseType: 'stream' });
             const writer = createWriteStream(filePath);
             response.data.pipe(writer);
             return new Promise((resolve, reject) => {
-                writer.on('finish', () => resolve(filePath));
+                writer.on('finish', () => {
+                    console.log(`Downloaded video: ${videoName} successfully`);
+                    resolve(filePath)
+                });
                 writer.on('error', (err) => {
-                    console.error(`Error writing file at ${filePath}:`, err);
+                    console.error(`Error downloading video at ${filePath}:`, `Error: ${err["name"]} - ${err["message"]}`);
                     writer.close();
                     reject(err);
                 });
             });
         } catch (error) {
-            console.error(`Error downloading video ${reel.channel_reel_numerical_order}-${reel.code} to ${filePath}:`, error);
+            console.error(`Error downloading video ${reel.channel_reel_numerical_order}-${reel.code} to ${filePath}:`, `Error: ${error["name"]} - ${error["message"]}`);
         }
     }
 
     async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
         let posts: ChannelPostDTO[] = await this.channelService.fetchPosts(username);
+        to_order = (to_order > posts.length) ? posts.length : to_order;
+        
         let filteredPosts: ChannelPostDTO[] = posts.filter(post => post.channel_post_numerical_order >= from_order &&
             post.channel_post_numerical_order <= to_order)
 
@@ -126,10 +139,19 @@ export class ChannelDownloadService {
             if (post.image_urls && post.image_urls.length > 0) {
                 for (const [index, imageUrl] of post.image_urls.entries()) {
                     const imagePath = `${downloadPath}/${post.channel_post_numerical_order}.${index + 1}-${post.code}.jpg`;
-                    downloadPromises.push(
-                        this.downloadImage(imageUrl, imagePath).then(() => {
-                            console.log("Downloaded Image: " + imagePath);
-                        }));
+                    try {
+                        downloadPromises.push(
+                            this.downloadImage(imageUrl, imagePath)
+                                .then(() => {
+                                    console.log("Downloaded Image: " + imagePath);
+                                })
+                                .catch(err => {
+                                    console.log(`Error Download Image: ${imagePath}, Error: : ${err["name"]} - ${err["message"]}`);
+                                })
+                            );
+                    } catch (error) {
+                        console.log(`Error at download image: ${imagePath}`, error["name"])
+                    }
                 }
             }
         }
