@@ -26,7 +26,7 @@ export class KeywordListComponent implements OnInit {
   selectedKeywords: FindAllKeywordDTO[] = []
   deleteWindowRef: NbWindowRef;
 
-  defaultItems: number = 5;
+  defaultItems: number = 50;
   numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : this.defaultItems;
   source: LocalDataSource = new LocalDataSource();
   settings = {

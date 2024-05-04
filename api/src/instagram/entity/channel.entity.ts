@@ -37,6 +37,9 @@ export class Channel {
     @Column({ length: 1000, nullable: true })
     profile_pic_url?: string;
 
+    @Column({ type: 'int', nullable: true })
+    media_count?: number;
+
     @Column({ length: 200, nullable: true })
     id?: string;
 
@@ -50,7 +53,7 @@ export class Channel {
     is_self_adding?: boolean;
 
     @Column({ type: 'bool', name: "is_bot_scanning", nullable: true, default: false })
-    is_bot_scanning?: boolean;
+    is_bot_scanning?: boolean; 
 
     @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel, {
         eager: true,
@@ -61,12 +64,18 @@ export class Channel {
     @OneToMany(() => ChannelFriendship, friendship => friendship.channel)
     friendships?: ChannelFriendship[];
 
-    @OneToMany(() => ChannelPost, reel => reel.channel)
+    @OneToMany(() => ChannelPost, reel => reel.channel, {
+        lazy: true
+    })
     posts?: ChannelPost[];
 
-    @OneToMany(() => ChannelReel, reel => reel.channel)
+    @OneToMany(() => ChannelReel, reel => reel.channel, {
+        lazy: true
+    })
     reels?: ChannelReel[];
 
-    @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.channel)
+    @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.channel, {
+        lazy: true
+    })
     keywords?: KeywordChannel[];
 }

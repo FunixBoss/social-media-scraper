@@ -7,8 +7,8 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 })
 export class ItemOfListComponent implements OnInit {
 
-  DEFAULT_OPTION = 10
-  options = [5, 10, 20, 50]
+  DEFAULT_OPTION = 50
+  options = [50, 100, 200, 500]
   chosenOpt: number;
 
   @Output() selectNumberOfItem: EventEmitter<number> = new EventEmitter<number>()

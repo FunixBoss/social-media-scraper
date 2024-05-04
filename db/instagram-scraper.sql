@@ -24,6 +24,7 @@ create table `channel`(
     following_count int,
     full_name varchar(200),
     profile_pic_url varchar(1000),
+    media_count bigint,
     hd_profile_pic_url_info varchar(1000),
     id varchar(200),
     pk varchar(200),
@@ -60,16 +61,11 @@ create table `channel_crawling_history`(
 );
 
 create table `channel_friendship`(
-	username varchar(200) primary key,
-	id varchar(200),
-    friendship_status varchar(200),
-    full_name varchar(200),
-    pk varchar(200),
-    profile_pic_url varchar(1000),
-    supervision_info varchar(200),
-    social_context varchar(200),
+	username varchar(200),
     channel_username varchar(200),
-	foreign key(channel_username) references `channel`(username)
+    primary key (username, channel_username),
+    foreign key (username) references `channel`(username),
+	foreign key (channel_username) references `channel`(username)
 );
 
 CREATE TABLE `channel_post` (

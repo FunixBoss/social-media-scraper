@@ -4,7 +4,7 @@ import { ViewCell } from "ng2-smart-table";
 
 @Component({
     template: `
-        <a [href]="'/admin/channels/list?keyword=' + rowData.name" target="_blank" [innerHTML]="rowData.total_channels"></a>
+        <a [href]="'/admin/channels/list?keyword=' + rowData.name" [innerHTML]="rowData.total_channels"></a>
     `,
 })
 

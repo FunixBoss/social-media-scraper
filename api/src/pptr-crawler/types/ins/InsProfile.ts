@@ -106,7 +106,7 @@ export function mapInsProfile(profile: InsProfileFull): Channel {
         profile_pic_url: profile.user?.profile_pic_url ?? '',
         hd_profile_pic_url_info: profile.user?.hd_profile_pic_url_info?.url ?? '',
         id: profile.user?.id ?? '',
-        // total_posts: profile.user?.media_count ?? 0,
+        media_count: +profile.user?.media_count ?? 0,
         pk: profile.user?.pk ?? '',
         username: profile.user?.username ?? '',
         is_self_adding: true,

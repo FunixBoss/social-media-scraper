@@ -1,8 +1,8 @@
 import { takeUntil } from 'rxjs/operators';
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { LocalDataSource } from 'ng2-smart-table';
+import { LocalDataSource, Ng2SmartTableComponent } from 'ng2-smart-table';
 import { ToastState, UtilsService } from '../../../@core/services/utils.service';
-import { ChannelService } from '../../../@core/services/channel/channel.service';
+import { ChannelService, FindAllChannelQueryOption } from '../../../@core/services/channel/channel.service';
 import { CustomLinkComponent } from '../shared/custom-link.component';
 import { CustomChannelActionComponent } from './custom/custom-channel-action.component';
 import { Subject } from 'rxjs';
@@ -11,6 +11,8 @@ import { CustomChannelReelLinkComponent } from './custom/custom-channel-reel-lin
 import { CustomChannelPostLinkComponent } from './custom/custom-channel-post-link.component';
 import { CustomPriorityComponent } from '../shared/custom-priority.component';
 import { CustomChannelFriendshipLinkComponent } from './custom/custom-channel-friend-link.component';
+import { ActivatedRoute } from '@angular/router';
+import { CustomChannelFollowerComponent } from './custom/custom-channel-follower.component';
 
 @Component({
   selector: 'ngx-channel-list',
@@ -19,11 +21,11 @@ import { CustomChannelFriendshipLinkComponent } from './custom/custom-channel-fr
 })
 export class ChannelListComponent implements OnInit, AfterViewInit {
   private unsubscribe = new Subject<void>();
-  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : 5;
+  defaultItems = 50;
+  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : this.defaultItems;
   source: LocalDataSource = new LocalDataSource();
-
+  queryOptions?: FindAllChannelQueryOption;
   loadedList: boolean = false;
-  // Setting for List layout
 
   // for select multi
   selectedChannels: any[] = []
@@ -55,14 +57,15 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
       },
       follower_count: {
         title: 'Follower',
-        type: 'number',
-        width: '5%'
+        type: 'custom',
+        width: '5%',
+        renderComponent: CustomChannelFollowerComponent
       },
       total_posts: {
         title: 'Posts',
         type: 'custom',
         width: '5%',
-        renderComponent: CustomChannelPostLinkComponent
+        renderComponent: CustomChannelPostLinkComponent,
       },
       total_reels: {
         title: 'Reels',
@@ -74,7 +77,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         title: 'Friendships',
         type: 'custom',
         width: '5%',
-        renderComponent: CustomChannelFriendshipLinkComponent
+        renderComponent: CustomChannelFriendshipLinkComponent,
       },
       priority: {
         title: "Priority",
@@ -114,7 +117,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
           component: CustomChannelFilterActionsComponent,
         },
         renderComponent: CustomChannelActionComponent
-      }
+      },
     },
     pager: {
       display: true,
@@ -126,11 +129,16 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
   constructor(
     private channelService: ChannelService,
     private utilsService: UtilsService,
-  ) {
-
-  }
+    private activatedRoute: ActivatedRoute,
+  ) { }
 
   ngOnInit(): void {
+    this.activatedRoute.queryParamMap.subscribe(params => {
+      this.queryOptions = {
+        keyword: params.get('keyword'),
+        friendshipsOf: params.get('friendshipsOf')
+      }
+    });
     this.channelService.channelChange$
       .pipe(takeUntil(this.unsubscribe))
       .subscribe(() => {
@@ -141,23 +149,25 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
 
   loadChannels() {
     this.loadedList = false
-    this.channelService.findAll()
+    this.channelService.findAll(this.queryOptions)
       .subscribe(body => {
         if (body) {
           const mappedChannels: any[] = body.data.reverse().map(channel => {
-            const { username, profile_pic_url, full_name, category, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled } = channel;
+            const { username, profile_pic_url, media_count, full_name, category, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled } = channel;
             return {
               username,
               full_name,
               category,
               follower_count,
-              total_posts,
+              total_posts: total_posts || media_count,
               total_reels,
+              media_count,
               total_friendships,
               priority,
               url,
               profile_pic_url,
-              crawled: crawled.join("-")
+              onlyHasMediaCount: media_count && !total_posts,
+              crawled: crawled.sort((a: any, b: any) => (a - b)).map(crawl => crawl.replace("CHANNEL_", "")).join("\n")
             }
           })
           this.source.load(mappedChannels)
@@ -165,8 +175,6 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         }
       })
   }
-
-
 
   ngAfterViewInit() {
     const pager = document.querySelector('ng2-smart-table-pager');
@@ -177,7 +185,6 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
 
   onRowSelect(event: any): void {
     this.selectedChannels = (event.selected)
-
   }
 
   onDelete(isDeleted: boolean) {

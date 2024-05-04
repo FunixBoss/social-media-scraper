@@ -76,8 +76,6 @@ export function mapInsReels(reels: InsReelsFull): ChannelReel[] {
             product_type: media.product_type,
             video_url: (media.video_versions?.[0]?.url) ?? '',
         };
-        console.log(`code: ${media.code} - play_count: ${media.play_count}`);
-        
         mappedReels.push(mappedReel);
     }
     return mappedReels;

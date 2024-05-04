@@ -5,7 +5,6 @@ import { ViewCell } from "ng2-smart-table";
     template: `
         <a *ngIf="rowData.total_posts" 
         [href]="'/admin/channels/reels/' + rowData.username" 
-        target="_blank"
         [innerHTML]="rowData.total_reels"></a>
     `,
 })

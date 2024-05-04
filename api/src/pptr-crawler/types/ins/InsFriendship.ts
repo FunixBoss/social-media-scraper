@@ -1,5 +1,3 @@
-import { ChannelFriendship } from "src/instagram/entity/channel-friendship.entity";
-
 export type InsFriendshipUserFull = {
     xdt_api__v1__discover__chaining: {
         users: InsFriendshipUser[]

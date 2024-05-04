@@ -10,6 +10,7 @@ export default interface FindAllChannelDTO {
     full_name?: string;
     hd_profile_pic_url_info?: string;
     profile_pic_url?: string;
+    media_count?: number;
     id?: string;
     total_posts: number;
     total_reels: number;

@@ -15,6 +15,10 @@ import FindOneKeywordDTO from '../../models/keyword/findone-keyword.dto';
 import { tap } from 'rxjs/operators';
 import { saveAs } from 'file-saver';
 
+export interface FindAllChannelQueryOption {
+    keyword?: string;
+    friendshipsOf?: string;
+}
 export type CrawlContent = "PROFILE" | "FRIENDSHIPS" | "POSTS" | "REELS" | "ALL";
 @Injectable({
     providedIn: 'root'
@@ -44,8 +48,16 @@ export class ChannelService {
         return this.httpClient.get<ApiResponse<boolean>>(url);
     }
 
-    findAll(): Observable<ApiResponse<FindAllChannelDTO[]>> {
-        const url: string = `${this.baseUrlService.baseURL}/channel`
+    findAll(options?: FindAllChannelQueryOption): Observable<ApiResponse<FindAllChannelDTO[]>> {
+        let url: string;
+        let { keyword, friendshipsOf } = options;
+        if (keyword) {
+            url = `${this.baseUrlService.baseURL}/keyword/${options.keyword}/channels`;
+        } else if (friendshipsOf) {
+            url = `${this.baseUrlService.baseURL}/channel/${options.friendshipsOf}/friendships`;
+        } else {
+            url = `${this.baseUrlService.baseURL}/channel`;
+        }
         return this.httpClient.get<ApiResponse<FindAllChannelDTO[]>>(url)
     }
 
@@ -97,44 +109,19 @@ export class ChannelService {
         return this.httpClient.get<ApiResponse<ChannelDownloadHistoryDTO[]>>(url)
     }
 
-    downloadChannel(username: string, download_type: string, from_other: number, to_order: number) {
+    downloadChannel(username: string, download_type: string, from_other: number, to_order: number): Observable<{ message: string }> {
         const url = `${this.baseUrlService.baseURL}/channel/download/${username}`;
         let params = new HttpParams()
             .set('type', download_type.toLowerCase())
             .set('from_order', from_other)
             .set('to_order', to_order)
 
-        return this.httpClient.get<Blob>(url, {
-            responseType: 'blob' as 'json', // Ensure TypeScript understands the Blob response
-            observe: 'response',
-            params
-        }).pipe(
-            tap((response: HttpResponse<Blob>) => {
-                const contentDisposition = response.headers.get('Content-Disposition');
-                const filename = this.getFilenameFromContentDisposition(contentDisposition);
-                if (response.body) {
-                    const blob = new Blob([response.body], { type: 'application/zip' });
-                    saveAs(blob, filename);
-                }
-            })
-        );
+        return this.httpClient.get<{ message: string }>(url, { params })
     }
 
-    downloadPostNReel(username: string, id: number): Observable<HttpResponse<Blob>> {
+    downloadPostNReel(username: string, id: number): Observable<{ message: string }> {
         const url = `${this.baseUrlService.baseURL}/channel/download/${username}/${id}`;
-        return this.httpClient.get<Blob>(url, {
-            responseType: 'blob' as 'json', // Ensure TypeScript understands the Blob response
-            observe: 'response'
-        }).pipe(
-            tap((response: HttpResponse<Blob>) => {
-                const contentDisposition = response.headers.get('Content-Disposition');
-                const filename = this.getFilenameFromContentDisposition(contentDisposition);
-                if (response.body) {
-                    const blob = new Blob([response.body], { type: 'application/zip' });
-                    saveAs(blob, filename);
-                }
-            })
-        );
+        return this.httpClient.get<{ message: string }>(url)
     }
 
 

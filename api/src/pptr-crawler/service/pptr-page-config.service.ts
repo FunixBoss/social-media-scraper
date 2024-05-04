@@ -11,10 +11,10 @@ export class PptrPageConfig {
     readonly DEFAULT_PAGE_SIZE = { width: 1920, height: 1080 }
     readonly DEFAULT_HTTP_HEADERS = { 'Accept-Language': 'en-US,en;q=0.9' }
     constructor(@InjectBrowser('social-media-scraper') private readonly browser: Browser) {
-        this.setupPages();
+        this.setupDefaultPages();
     }
 
-    async setupPages() {
+    async setupDefaultPages() {
         console.log("setup pages");
         await this.closeFirstPage()
         const pages = await this.browser.pages();
@@ -28,7 +28,17 @@ export class PptrPageConfig {
         }
     }
 
-    async setupPage(page: Page, cookiePath?: string, url?: string, credentials?: Credentials): Promise<void> {
+    async createPages(number: number, url?: string, cookiePath?: string, credentials?: Credentials): Promise<void> {
+        let promises: Promise<any>[]= []
+        for (let i = 0; i < number; i++) {
+            promises.push(this.setupPage(undefined, cookiePath, url, credentials))
+        }
+        await Promise.all(promises)
+    }
+
+    async setupPage(page?: Page, cookiePath?: string, url?: string, credentials?: Credentials): Promise<void> {
+        if (!page) page = await this.browser.newPage();
+
         await page.setDefaultTimeout(+this.DEFAULT_TIMEOUT);
         await page.setViewport(this.DEFAULT_PAGE_SIZE);
         await page.setExtraHTTPHeaders(this.DEFAULT_HTTP_HEADERS);
@@ -45,7 +55,7 @@ export class PptrPageConfig {
         }
         if (credentials) {
             await page.authenticate(credentials)
-        }
+        } 
         if (url) {
             await page.goto(url, { waitUntil: "domcontentloaded" })
         }

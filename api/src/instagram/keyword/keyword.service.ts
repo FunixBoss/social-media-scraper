@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Keyword } from '../entity/keyword.entity';
@@ -19,19 +19,23 @@ import FindAllKeywordDTO from './dto/findall-keyword.dto';
 import FindAllHashtagDTO from '../hashtag/dto/findall-hashtag.dto';
 import FindAllChannelDTO from '../channel/dto/findall-channel.dto';
 import { ChannelService } from '../channel/service/channel.service';
+import ChannelMapperService from '../channel/service/channel-mapper.service';
+import ChannelCrawlService from '../channel/service/channel-crawl.service';
 
 @Injectable()
-export class KeywordService { 
+export class KeywordService {
   private interceptManager: RequestInterceptionManager
 
   constructor(
     private readonly channelService: ChannelService,
+    private readonly crawlService: ChannelCrawlService,
     @InjectRepository(Keyword) private readonly keywordRepository: Repository<Keyword>,
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
     @InjectRepository(KeywordChannel) private readonly keywordChannelRepository: Repository<KeywordChannel>,
     @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly mapperService: ChannelMapperService
   ) {
     this.setUpPageInterceptors()
   }
@@ -51,11 +55,11 @@ export class KeywordService {
     return {
       name: keyword.name,
       priority: keyword.priority,
-      channels: keyword.channels.map(ch => ch.channel),
-      hashtags: keyword.hashtags,
+      channels: await this.mapperService.mapToFindAllChannelDTOs(keyword.channels.map(ch => ch.channel)),
+      hashtags: keyword.hashtags as any,
       total_hashtags: keyword.hashtags ? keyword.hashtags.length : 0,
       total_channels: keyword.channels ? keyword.channels.length : 0
-    } as FindOneKeywordDTO;
+    } ;
   }
 
   async mapToFindAllKeywordDTOs(keywords: Keyword[]): Promise<FindAllKeywordDTO[]> {
@@ -141,7 +145,7 @@ export class KeywordService {
 
   async create(createKeywordDto: CreateKeywordDto): Promise<FindOneKeywordDTO> {
     if ((await this.isExists(createKeywordDto.name))) throw new EntityAlreadyExists('Keyword', createKeywordDto.name);
-
+ 
     try {
       const keyword = new Keyword();
       keyword.name = createKeywordDto.name;
@@ -150,7 +154,9 @@ export class KeywordService {
       const hashtags: Hashtag[] = await this.fetchHashtags(keyword);
       hashtags.forEach(hashtag => hashtag.keyword = { name: keyword.name });
 
-      const channels: Channel[] = await this.fetchChannel(keyword);
+      const channelUsernames: string[] = await this.fetchChannelUsernames(keyword);
+      const channels: Channel[] = await this.crawlService.crawlProfiles(channelUsernames)
+
       const channelsLen: number = channels.length
       let kwChannels: KeywordChannel[] = []
       for (let i = 0; i < channelsLen; i++) {
@@ -165,6 +171,9 @@ export class KeywordService {
       await this.dataSource.transaction(async (transactionalEntityManager) => {
         await this.keywordRepository.save(keyword)
         await this.channelRepository.save(channels);
+        await Promise.all(channels.map(channel =>
+          this.channelService.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])
+        ));
         keyword.channels = kwChannels;
         keyword.hashtags = hashtags;
         await this.keywordRepository.save(keyword)
@@ -200,7 +209,7 @@ export class KeywordService {
     return hashtags;
   }
 
-  private async fetchChannel(keyword: Keyword): Promise<Channel[]> {
+  private async fetchChannelUsernames(keyword: Keyword): Promise<string[]> {
     let channels: Channel[] = [];
     await this.interceptManager.intercept({
       urlPattern: `https://www.instagram.com/api/graphql`,
@@ -222,7 +231,7 @@ export class KeywordService {
     await this.page.evaluate(`document.querySelectorAll('span[aria-describedby^=":r"] a')[1].click()`);
     await this.page.type('input[aria-label^="Search"]', `${keyword.name}`);
     await sleep(3);
-    return channels;
+    return channels.map(ch => ch.username);
   }
 
   async findHashtags(keyword: string): Promise<FindAllHashtagDTO[]> {
@@ -236,7 +245,7 @@ export class KeywordService {
       where: { name: keywordName },
       relations: ['channels', 'channels.channel']
     });
-    return this.channelService.mapToFindAllChannelDTOs(keyword.channels.map(keywordChannel => keywordChannel.channel));
+    return this.mapperService.mapToFindAllChannelDTOs(keyword.channels.map(keywordChannel => keywordChannel.channel));
   }
 
   async remove(keyword: string): Promise<void> {

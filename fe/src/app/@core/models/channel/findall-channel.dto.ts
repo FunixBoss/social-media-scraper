@@ -5,6 +5,7 @@ export default interface FindAllChannelDTO {
     biography?: string;
     bio_link_url?: string;
     external_url?: string;
+    media_count?: number;
     follower_count?: number;
     following_count?: number;
     full_name?: string;

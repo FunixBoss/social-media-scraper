@@ -39,11 +39,6 @@ export class KeywordService {
     return this.httpClient.get<ApiResponse<FindAllKeywordDTO[]>>(url)
   }
 
-  findByKeyword(keyword: string): Observable<ApiResponse<FindOneChannelDTO>> {
-    const url: string = `${this.baseUrlService.baseURL}/keyword/${keyword}`
-    return this.httpClient.get<ApiResponse<FindOneChannelDTO>>(url)
-  }
-
   insert(keyword: CreateKeywordDto): Observable<ApiResponse<FindOneChannelDTO>> {
     const url: string = `${this.baseUrlService.baseURL}/keyword`
     return this.httpClient.post<ApiResponse<FindOneChannelDTO>>(url, keyword);

@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HelperModule } from './helper/helper.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiResponseInterceptor } from './interceptors/global-api-response.interceptor';
+import { ParseCommaSeparatedQuery } from './pipes/parse-comma-separate-query.pipe';
 
 @Module({
   providers: [
@@ -12,6 +13,7 @@ import { ApiResponseInterceptor } from './interceptors/global-api-response.inter
       provide: APP_INTERCEPTOR,
       useClass: ApiResponseInterceptor,
     },
+    ParseCommaSeparatedQuery
   ],
   imports: [
     InstagramModule,

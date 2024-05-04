@@ -3,7 +3,7 @@ import { ViewCell } from "ng2-smart-table";
 
 @Component({
     template: `
-        <a [href]="rowData.url" target="_blank" [innerHTML]="rowData.username"></a>
+        <a [href]="rowData.url" target="_blank"  [innerHTML]="rowData.username"></a>
     `,
 })
 

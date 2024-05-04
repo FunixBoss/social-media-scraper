@@ -3,18 +3,18 @@ import { ViewCell } from "ng2-smart-table";
 
 @Component({
     template: `
-        <a [href]="'/admin/channels/list?friendshipsOf=' + rowData.username"
-        [innerHTML]="renderValue"></a>
+        <span [innerHTML]="formattedNumber"></span>
     `,
 })
 
-export class CustomChannelFriendshipLinkComponent implements ViewCell, OnInit {
-    renderValue: string | number;
-
+export class CustomChannelFollowerComponent implements ViewCell, OnInit {
+    renderValue: string;
+    formattedNumber: string;
     @Input() value: string | number;
     @Input() rowData: any;
 
     ngOnInit(): void {
         this.renderValue = this.value ? this.value.toString() : undefined
-    }
+        this.formattedNumber = this.value ? this.value.toLocaleString('de-DE') : undefined
+    }   
 }

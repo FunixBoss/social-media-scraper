@@ -15,7 +15,7 @@ import { NbWindowRef, NbWindowService } from '@nebular/theme';
   styleUrls: ["./customer-contact.component.scss"],
 })
 export class CustomerContactComponent implements OnInit, AfterViewInit {
-  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : 10; // default
+  numberOfItem: number = localStorage.getItem('itemPerPage') != null ? +localStorage.getItem('itemPerPage') : 50; // default
   source: LocalDataSource = new LocalDataSource();
   private unsubscribe = new Subject<void>();
 

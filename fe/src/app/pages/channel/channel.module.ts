@@ -24,6 +24,7 @@ import { ChannelDownloadAddComponent } from './channel-download/channel-download
 import { CustomChannelDownloadActionComponent } from './channel-download/custom/custom-channel-download-action.component';
 import { CustomChannelDownloadFilterActionsComponent } from './channel-download/custom/custom-channel-download-filter-actions.component';
 import { CustomChannelDownloadPriorityComponent } from './channel-download/custom/custom-channel-download-priority.component';
+import { CustomChannelFollowerComponent } from './channel-list/custom/custom-channel-follower.component';
 
 @NgModule({
   imports: [
@@ -65,6 +66,8 @@ import { CustomChannelDownloadPriorityComponent } from './channel-download/custo
     CustomChannelStatusComponent,
     ChannelListMultiComponent,
     CustomPriorityComponent,
+
+    CustomChannelFollowerComponent,
     CustomChannelReelLinkComponent,
     CustomInstaReelLinkComponent,
     CustomInstaPostLinkComponent,

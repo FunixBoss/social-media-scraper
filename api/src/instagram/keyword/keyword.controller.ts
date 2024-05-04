@@ -23,7 +23,7 @@ export class KeywordController {
     return this.keywordService.mapToFindOneKeywordDTO(param.name);
   }
 
-  @Get(':name/hashtags')
+  @Get(':name/hashtags')  
   async findHashtags(@Param() param: GetHashtagNameParamsDto): Promise<FindAllHashtagDTO[]> {
     return this.keywordService.findHashtags(param.name);
   }

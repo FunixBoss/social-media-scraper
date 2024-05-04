@@ -1,17 +1,17 @@
 import { ChannelDownloadHistoryDTO } from './dto/channel-download-history.dto';
-import { Controller, Get, Param, Query, Res, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res, UsePipes } from '@nestjs/common';
 import { ChannelService } from './service/channel.service';
 import { IsEmpty, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsValidScraperInfo } from '../pipe/is-valid-scraper-info.validation';
 import type { Response } from 'express';
 import FindAllChannelDTO from './dto/findall-channel.dto';
 import ChannelPostDTO from './dto/channel-post.dto';
-import ChannelFriendshipDTO from './dto/channel-friendship.dto';
 import ChannelReelDTO from './dto/channel-reel.dto';
 import FindOneChannelDTO from './dto/findone-channel.dto';
-import { ChannelExportService, ReadStreamDTO } from './service/channel-export.service';
+import { ChannelExportService } from './service/channel-export.service';
 import { ChannelDownloadService } from './service/channel-download.service';
 import { Type } from 'class-transformer';
+import { ParseCommaSeparatedQuery } from 'src/pipes/parse-comma-separate-query.pipe';
 
 export type ScrapeInfo = 'all' | 'profile' | 'friendships' | 'posts' | 'reels'
 class GetUserScrapeInfosDto {
@@ -101,91 +101,58 @@ export class ChannelController {
     private readonly channelExportService: ChannelExportService,
     private readonly channelDownloadService: ChannelDownloadService,
   ) { }
-
-  @Get('')
-  async fetchAll(@Query() queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
-    return await this.channelService.findAll(queries);
-  }
-
+  
+  //#region Download
   @Get('download/:username/findall')
   async findAllDownloads(@Param() params: GetUserParamsDto): Promise<ChannelDownloadHistoryDTO[]> {
     return await this.channelDownloadService.findAllDownloadHistories(params.username);
   }
 
   @Get('download/:username/:id')
-  async downloadReelsWithId(@Param() params: GetUserNIdParamsDto, @Res() res: Response) {
-    try {
-      const { readStream, fileName } = await this.channelDownloadService.downloadById(params.username, params.id);
-      res.set({
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-      });
-      readStream.pipe(res);
-    } catch (error) {
-      console.error('Error:', error.message);
-      if (!res.headersSent) {
-        res.status(404).send(error.message);
-      }
-    }
+  async downloadReelsWithId(@Param() params: GetUserNIdParamsDto): Promise<{ message: string }> {
+    this.channelDownloadService.downloadById(params.username, params.id);
+    return { message: "Downloading" };
   }
 
   @Get('download/:username')
-  async download(@Param() params: GetUserParamsDto, @Query() queries: GetDownloadTypeDto, @Res() res: Response) {
-    try {
-      const { readStream, fileName } = await this.channelDownloadService.download(params.username, queries.type, queries.from_order, queries.to_order);
-      res.set({
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-      });
-      readStream.pipe(res);
-    } catch (error) {
-      console.error('Error:', error.message);
-      if (!res.headersSent) {
-        res.status(404).send(error.message);
-      }
-    }
+  async download(@Param() params: GetUserParamsDto, @Query() queries: GetDownloadTypeDto): Promise<{ message: string }>{
+    this.channelDownloadService.download(params.username, queries.type, queries.from_order, queries.to_order);
+    return { message: "Downloading" };
   }
+  //#endregion
 
+  //#region export
   @Get('export')
-  async exportChannels(@Res({ passthrough: true }) res: Response, @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
-    const file: ReadStreamDTO = await this.channelExportService.exportChannels(queries.type);
-    if (queries.type == 'excel') {
-      res.set({
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${file.fileName}"`,
-      });
-    } else {
-      res.set({
-        'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="${file.fileName}"`,
-      });
-    }
-    return new StreamableFile(file.readStream);
+  async exportChannels(@Res({ passthrough: true }) res: Response, @Query() queries: GetExportTypeDto): Promise<{ message: string }> {
+    this.channelExportService.exportChannels(queries.type);
+    return { message: "Exporting" };
   }
 
   @Get('export/:username')
   async exportChannel(
     @Res({ passthrough: true }) res: Response,
     @Param() params: GetUserParamsDto,
-    @Query() queries: GetExportTypeDto): Promise<StreamableFile> {
-    const file: ReadStreamDTO = await this.channelExportService.exportChannel(params.username, queries.type);
-    if (queries.type == 'excel') {
-      res.set({
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${file.fileName}"`,
-      });
-    } else {
-      res.set({
-        'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="${file.fileName}"`,
-      });
-    }
-    return new StreamableFile(file.readStream);
+    @Query() queries: GetExportTypeDto): Promise<{ message: string }> {
+    this.channelExportService.exportChannel(params.username, queries.type);
+    return { message: "Exporting" };
+  }
+  //#endregion
+
+  //#region Fetch
+  @Get('')
+  async fetchAll(@Query() queries: GetChannelsParamsDto): Promise<FindAllChannelDTO[]> {
+    return await this.channelService.findAll(queries);
   }
 
   @Get(':username')
   async fetchUser(@Param() params: GetUserParamsDto, @Query() queries: GetUserScrapeInfosDto): Promise<FindOneChannelDTO> {
     return await this.channelService.fetchUser(params.username, queries.infos);
+  }
+
+  @Get('scrape/profile')
+  @UsePipes(ParseCommaSeparatedQuery)
+  getUsersByUsernames(@Query('usernames') usernames: string[]): Promise<FindAllChannelDTO[]> {
+    return this.channelService.fetchUserProfiles(usernames);
   }
 
   @Get(":username/exists")
@@ -200,11 +167,11 @@ export class ChannelController {
 
   @Get(':username/profile')
   async fetchProfile(@Param() params: GetUserParamsDto): Promise<FindAllChannelDTO> {
-    return await this.channelService.fetchUserProfile(params.username);
+    return this.channelService.fetchUserProfile(params.username);
   }
 
   @Get(':username/friendships')
-  async fetchFriendships(@Param() params: GetUserParamsDto): Promise<ChannelFriendshipDTO[]> {
+  async fetchFriendships(@Param() params: GetUserParamsDto): Promise<FindAllChannelDTO[]> {
     return await this.channelService.fetchFriendships(params.username);
   }
 
@@ -217,5 +184,5 @@ export class ChannelController {
   async fetchReels(@Param() params: GetUserParamsDto): Promise<ChannelReelDTO[]> {
     return await this.channelService.fetchReels(params.username);
   }
-
+  //#endregion
 } 

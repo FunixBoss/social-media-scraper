@@ -18,6 +18,8 @@ import { ChannelPost } from '../entity/channel-post.entity';
 import { ChannelExportService } from './service/channel-export.service';
 import { ChannelDownloadService } from './service/channel-download.service';
 import { ChannelDownloadHistory } from '../entity/channel-download-history.entity';
+import ChannelCrawlService from './service/channel-crawl.service';
+import ChannelMapperService from './service/channel-mapper.service';
 
 @Module({
   imports: [
@@ -33,12 +35,16 @@ import { ChannelDownloadHistory } from '../entity/channel-download-history.entit
   providers: [
     ChannelService,
     ChannelExportService,
-    ChannelDownloadService
+    ChannelDownloadService,
+    ChannelCrawlService,
+    ChannelMapperService
   ],
   exports: [
     ChannelService,
     ChannelExportService,
-    ChannelDownloadService
+    ChannelDownloadService,
+    ChannelCrawlService,
+    ChannelMapperService
   ]
 })
 export class ChannelModule { }

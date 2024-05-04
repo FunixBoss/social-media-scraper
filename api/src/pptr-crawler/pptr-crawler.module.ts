@@ -11,12 +11,12 @@ import { ConfigModule } from '@nestjs/config';
         PptrBrowserConfig,
     ],
     imports: [
-        PuppeteerModule.forRoot({
-            plugins: [
-                require('puppeteer-extra-plugin-stealth'),
-                require('puppeteer-extra-plugin-anonymize-ua'),
-            ]
-        }),
+        // PuppeteerModule.forRoot({
+        //     plugins: [
+        //         require('puppeteer-extra-plugin-stealth'),
+        //         require('puppeteer-extra-plugin-anonymize-ua'),
+        //     ]
+        // }),
         PuppeteerModule.forRootAsync({
             name: 'social-media-scraper',
             isGlobal: true,
@@ -24,6 +24,10 @@ import { ConfigModule } from '@nestjs/config';
         }),
         PuppeteerModule.forFeature(['instagram'], 'social-media-scraper'),
     ],
-    exports: [PuppeteerModule]
+    exports: [
+        PuppeteerModule,
+        PptrPageConfig,
+        PptrBrowserConfig,
+    ]
 })
 export class PptrCrawlerModule { }
