@@ -137,24 +137,28 @@ export class ChannelService {
         await this.mapperService.findAllChannelsByRootFriendshipUsername(username)
       )
     }
-
-    let friendshipUsernames: string[] = await this.crawlService.crawlFriendships(username);
-    let channels: Channel[] = await this.crawlService.crawlProfiles(friendshipUsernames);
-    const friendships: ChannelFriendship[] = friendshipUsernames.map(friendshipUsername => ({
-      username: username,
-      channel_username: friendshipUsername
-    }));
-    await this.dataSource.transaction(async (transactionalEntityManager) => {
-      await this.channelRepository.save(channels);
-      await Promise.all(channels.map(channel => this.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])));
-
-      await this.channelFriendRepository.save(friendships)
-      await this.writeCrawlHistory(username, ["CHANNEL_FRIENDSHIP"])
-    })
-
-    return this.mapperService.mapToFindAllChannelDTOs(
-      await this.mapperService.findAllChannelsByRootFriendshipUsername(username)
-    )
+    try {
+      let friendshipUsernames: string[] = await this.crawlService.crawlFriendships(username);
+      let channels: Channel[] = await this.crawlService.crawlProfiles(friendshipUsernames);
+      const friendships: ChannelFriendship[] = friendshipUsernames.map(friendshipUsername => ({
+        username: username,
+        channel_username: friendshipUsername 
+      }));
+      await this.dataSource.transaction(async (transactionalEntityManager) => {
+        await this.channelRepository.save(channels);
+        await Promise.all(channels.map(channel => this.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])));
+  
+        await this.channelFriendRepository.save(friendships)
+        await this.writeCrawlHistory(username, ["CHANNEL_FRIENDSHIP"])
+      })
+  
+      return this.mapperService.mapToFindAllChannelDTOs(
+        await this.mapperService.findAllChannelsByRootFriendshipUsername(username)
+      )
+    } catch (error) {
+      console.log(error);
+      return []
+    }
   }
 
   async fetchPosts(username: string): Promise<ChannelPostDTO[]> {

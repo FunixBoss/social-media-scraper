@@ -38,20 +38,22 @@ const minimal_args = [
     '--password-store=basic',
     '--use-gl=swiftshader',
     '--use-mock-keychain',
-    `--proxy-server=http://206.206.69.103:6367`, 
 ];
 
 @Injectable()
 export class PptrBrowserConfig implements PuppeteerOptionsFactory {
 
+    proxy: string[]
     constructor(private readonly configService: ConfigService) {
         console.log(this.configService.get<boolean>("PUPPETEER_HEADLESS"))
+        this.proxy = this.configService.get<string>("PROXY").split(":")
     }
 
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
         return {
             args: [
                 '--enable-automation',
+                this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
                 ...minimal_args
             ],
             headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new"

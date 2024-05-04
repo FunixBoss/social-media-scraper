@@ -131,7 +131,7 @@ export default class ChannelCrawlService {
                     }
                 }
             })
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'load' })
         await sleep(1)
         await this.interceptManager.clear()
         return channel;
@@ -222,18 +222,14 @@ export default class ChannelCrawlService {
                 }
             },
         })
-        await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'networkidle2' })
-        if (!await this.hasReelsTab()) {
-            console.log("Do not have any reels")
-            return []
-        }
+        await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'load' })
         try {
             await scrollToBottom(this.page);
         } catch (error) {
             if (error instanceof TimeoutError) {
                 console.log("Scanned All Reels")
             }
-        };
+        }; 
         for (let i = 0; i < reelLen; i++) {
             let reel: ChannelReel = reels[i];
             reel.channel_reel_numerical_order = reelLen - i;
