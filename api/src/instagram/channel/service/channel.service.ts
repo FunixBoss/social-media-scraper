@@ -140,17 +140,14 @@ export class ChannelService {
 
     let friendshipUsernames: string[] = await this.crawlService.crawlFriendships(username);
     let channels: Channel[] = await this.crawlService.crawlProfiles(friendshipUsernames);
-    const friendships: ChannelFriendship[] = friendshipUsernames.map(friendshipUsername => {
-      return {
-        username,
-        channel_username: friendshipUsername
-      }
-    });
+    const friendships: ChannelFriendship[] = friendshipUsernames.map(friendshipUsername => ({
+      username: username,
+      channel_username: friendshipUsername
+    }));
     await this.dataSource.transaction(async (transactionalEntityManager) => {
       await this.channelRepository.save(channels);
-      await Promise.all(channels.map(channel =>
-        this.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])
-      ));
+      await Promise.all(channels.map(channel => this.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])));
+
       await this.channelFriendRepository.save(friendships)
       await this.writeCrawlHistory(username, ["CHANNEL_FRIENDSHIP"])
     })
