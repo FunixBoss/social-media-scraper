@@ -60,7 +60,7 @@ export default class ChannelCrawlService {
     }
 
     async crawlProfiles(usernames: string[]): Promise<Channel[]> {
-        const MAX_BATCH_SIZE = 3;
+        const MAX_BATCH_SIZE = 2;
 
         const usernameBatches: string[][] = [];
         for (let i = 0; i < usernames.length; i += MAX_BATCH_SIZE) {
@@ -132,6 +132,8 @@ export default class ChannelCrawlService {
                 }
             })
         await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+        await sleep(1)
+        await this.interceptManager.clear()
         return channel;
     }
 
@@ -156,6 +158,8 @@ export default class ChannelCrawlService {
             }
         });
         await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+        await sleep(1.5)
+        await this.interceptManager.clear()
         return friendshipUsernames
     }
 
@@ -180,13 +184,14 @@ export default class ChannelCrawlService {
                 }
             }
         })
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle0' })
         try {
             await scrollToBottom(this.page);
         } catch (error) {
             if (error instanceof TimeoutError) {
                 console.log("Scanned All Posts")
             }
+            await this.interceptManager.clear()
         };
         for (let i = len; i > 0; i--) {
             let post: ChannelPost = posts[i - 1];
@@ -242,9 +247,11 @@ export default class ChannelCrawlService {
 async function scrollToBottom(page: Page) {
     let previousHeight = await page.evaluate('document.body.scrollHeight');
     while (true) {
+        console.log("start scrolling");
+        
         const numberOfScrolls = 20;
         const scrollAmount = -150;
-        const delayBetweenScrolls = 0.07;
+        const delayBetweenScrolls = 0.1;
 
         for (let i = 0; i < numberOfScrolls; i++) {
             await page.evaluate((scrollY) => window.scrollBy(0, scrollY), scrollAmount);
@@ -268,5 +275,7 @@ async function scrollToBottom(page: Page) {
             throw new TimeoutError('');
         }
         previousHeight = currentHeight;
+        console.log("scrolling done");
+        
     }
 }

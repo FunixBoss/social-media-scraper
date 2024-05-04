@@ -62,135 +62,122 @@ export class ChannelDownloadService {
         this.logger.log(`Downloaded all ${type} successfully - Folder: ${downloadPath}`);
     }
 
-    async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<any[]> {
-        let reels: ChannelReelDTO[] = await this.channelService.fetchReels(username)
-        let filteredReels: ChannelReelDTO[] = reels.filter(reel => reel.channel_reel_numerical_order >= from_order &&
-            reel.channel_reel_numerical_order <= to_order)
-        if (reels.length == 0) return [];
-
+    async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
+        const reels: ChannelReelDTO[] = await this.channelService.fetchReels(username);
+        const filteredReels: ChannelReelDTO[] = reels.filter(reel => 
+            reel.channel_reel_numerical_order >= from_order && reel.channel_reel_numerical_order <= to_order
+        );
+    
+        if (filteredReels.length === 0) {
+            console.log("No reels found within the specified range.");
+            return;
+        }
+    
         await createAndAccessFolder(downloadPath);
         const downloadPromises = filteredReels.map(reel => this.downloadReel(reel, downloadPath));
-        return Promise.all(downloadPromises);
+        await Promise.all(downloadPromises);
     }
+ 
+    private async downloadReel(reel: ChannelReelDTO, downloadPath: string): Promise<void> {
+        const videoName = `${reel.channel_reel_numerical_order}-${reel.code}.mp4`;
+        const filePath = `${downloadPath}/${videoName}`;
+    
+        try {
+            const response = await axios({
+                url: reel.video_url,
+                method: 'GET',
+                responseType: 'stream',
+            });
+    
+            const writer = createWriteStream(filePath);
+            const streamPromise = new Promise<void>((resolve, reject) => {
+                writer.on('finish', () => {
+                    console.log(`Downloaded video: ${videoName} successfully`);
+                    resolve();
+                });
+    
+                writer.on('error', err => {
+                    console.error(`Error downloading video at ${filePath}:`, `Error: ${err.name} - ${err.message}`);
+                    writer.close();
+                    reject(err);
+                });
+            });
+    
+            response.data.pipe(writer);
+            await streamPromise;
+        } catch (error) {
+            console.error(`Error downloading video ${reel.channel_reel_numerical_order}-${reel.code} to ${filePath}:`, `Error: ${error.name} - ${error.message}`);
+        }
+    }
+    
 
-    private async downloadReel(reel: ChannelReelDTO, downloadPath: string): Promise<string> {
-        const { video_url, channel_reel_numerical_order, code } = reel;
-        const videoName = `${channel_reel_numerical_order}-${code}.mp4`;
+    async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
+        const posts: ChannelPostDTO[] = await this.channelService.fetchPosts(username);
+        to_order = Math.min(to_order, posts.length);
+    
+        const filteredPosts: ChannelPostDTO[] = posts.filter(post => 
+            post.channel_post_numerical_order >= from_order && post.channel_post_numerical_order <= to_order
+        );
+    
+        if (filteredPosts.length === 0) return;
+    
+        await createAndAccessFolder(downloadPath);
+        const downloadPromises = [];
+        for (const post of filteredPosts) {
+            downloadPromises.push(...this.downloadPost(post, downloadPath));
+        }
+    
+        await Promise.all(downloadPromises);
+    }
+    
+    downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<void>[] {
+        const tasks = [];
+        if (post.product_type === "feed" || post.product_type === "carousel_container") {
+            tasks.push(this.downloadImages(post, downloadPath));
+        } else if (post.product_type === "clips" || post.product_type === "igtv") {
+            tasks.push(this.downloadVideo(post, downloadPath));
+        }
+        return tasks;
+    }
+    
+    async downloadImages(post: ChannelPostDTO, downloadPath: string): Promise<void> {
+        if (!post.image_urls || post.image_urls.length === 0) return;
+    
+        const imagePromises = post.image_urls.map(async (url, index) => {
+            const fileSuffix = post.product_type === "carousel_container" ? `.${index + 1}` : "";
+            const imagePath = `${downloadPath}/${post.channel_post_numerical_order}${fileSuffix}-${post.code}.jpg`;
+            try {
+                const response = await axios.get(url, { responseType: 'arraybuffer' });
+                await promises.writeFile(imagePath, response.data);
+                console.log(`Downloaded image: ${imagePath} successfully`);
+            } catch (error) {
+                this.logger.error(`Error at download image: ${imagePath}`, error);
+            }
+        });
+    
+        await Promise.all(imagePromises);
+    }
+    
+    async downloadVideo(post: ChannelPostDTO, downloadPath: string): Promise<void> {
+        const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
         try {
-            const response = await axios(video_url, { method: 'GET', responseType: 'stream' });
+            const response = await axios(post.video_url, { method: 'GET', responseType: 'stream' });
             const writer = createWriteStream(filePath);
             response.data.pipe(writer);
             return new Promise((resolve, reject) => {
                 writer.on('finish', () => {
                     console.log(`Downloaded video: ${videoName} successfully`);
-                    resolve(filePath)
+                    resolve();
                 });
-                writer.on('error', (err) => {
-                    console.error(`Error downloading video at ${filePath}:`, `Error: ${err["name"]} - ${err["message"]}`);
+                writer.on('error', err => {
+                    console.error(`Error downloading video at ${filePath}:`, `Error: ${err.name} - ${err.message}`);
                     writer.close();
                     reject(err);
                 });
             });
         } catch (error) {
-            console.error(`Error downloading video ${reel.channel_reel_numerical_order}-${reel.code} to ${filePath}:`, `Error: ${error["name"]} - ${error["message"]}`);
-        }
-    }
-
-    async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
-        let posts: ChannelPostDTO[] = await this.channelService.fetchPosts(username);
-        to_order = (to_order > posts.length) ? posts.length : to_order;
-
-        let filteredPosts: ChannelPostDTO[] = posts.filter(post => post.channel_post_numerical_order >= from_order &&
-            post.channel_post_numerical_order <= to_order)
-
-        if (filteredPosts.length === 0) return;
-
-        await createAndAccessFolder(downloadPath);
-        const downloadPromises = [];
-        for (const [index, post] of filteredPosts.entries()) {
-            downloadPromises.push(this.downloadPost(post, downloadPath))
-        }
-        await Promise.all(downloadPromises);
-    }
-
-    async downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<any> {
-        switch (post.product_type) {
-            case "feed": {
-                const imagePath = `${downloadPath}/${post.channel_post_numerical_order}-${post.code}.jpg`;
-                if (post.image_urls && post.image_urls.length > 0) {
-                    const response = await axios.get(post.image_urls[0], { responseType: 'arraybuffer' });
-                    await promises.writeFile(imagePath, response.data);
-                    console.log(`Downloaded image: ${imagePath} successfully`);
-                } else if (post.video_url) {
-                    const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
-                    const filePath = `${downloadPath}/${videoName}`;
-                    const response = await axios(post.video_url, { method: 'GET', responseType: 'stream' });
-                    const writer = createWriteStream(filePath);
-                    response.data.pipe(writer);
-                    return new Promise((resolve, reject) => {
-                        writer.on('finish', () => {
-                            console.log(`Downloaded video: ${videoName} successfully`);
-                            resolve(filePath)
-                        });
-                        writer.on('error', (err) => {
-                            console.error(`Error downloading video at ${filePath}:`, `Error: ${err["name"]} - ${err["message"]}`);
-                            writer.close();
-                            reject(err);
-                        });
-                    });
-                }
-                break;
-            };
-            case "carousel_container": {
-                if (post.image_urls && post.image_urls.length > 0) {
-                    for (const [index, image_url] of post.image_urls.entries()) {
-                        const imagePath = `${downloadPath}/${post.channel_post_numerical_order}.${index + 1}-${post.code}.jpg`;
-                        const response = await axios.get(image_url, { responseType: 'arraybuffer' });
-                        await promises.writeFile(imagePath, response.data);
-                        console.log(`Downloaded image: ${imagePath} successfully`);
-                    }
-                }
-                break;
-            }
-            case "clips": {
-                const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
-                const filePath = `${downloadPath}/${videoName}`;
-                const response = await axios(post.video_url, { method: 'GET', responseType: 'stream' });
-                const writer = createWriteStream(filePath);
-                response.data.pipe(writer);
-                return new Promise((resolve, reject) => {
-                    writer.on('finish', () => {
-                        console.log(`Downloaded video: ${videoName} successfully`);
-                        resolve(filePath)
-                    });
-                    writer.on('error', (err) => {
-                        console.error(`Error downloading video at ${filePath}:`, `Error: ${err["name"]} - ${err["message"]}`);
-                        writer.close();
-                        reject(err);
-                    });
-                });
-                break;
-            }
-            case "igtv": {
-                const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
-                const filePath = `${downloadPath}/${videoName}`;
-                const response = await axios(post.video_url, { method: 'GET', responseType: 'stream' });
-                const writer = createWriteStream(filePath);
-                response.data.pipe(writer);
-                return new Promise((resolve, reject) => {
-                    writer.on('finish', () => {
-                        console.log(`Downloaded video: ${videoName} successfully`);
-                        resolve(filePath)
-                    });
-                    writer.on('error', (err) => {
-                        console.error(`Error downloading video at ${filePath}:`, `Error: ${err["name"]} - ${err["message"]}`);
-                        writer.close();
-                        reject(err);
-                    });
-                });
-                break;
-            }
+            this.logger.error(`Error at download video: ${filePath}`, error);
         }
     }
 }
