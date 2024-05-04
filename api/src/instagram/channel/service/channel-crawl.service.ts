@@ -224,7 +224,7 @@ export default class ChannelCrawlService {
         }
         try {
             await scrollToBottom(this.page);
-        } catch (error) {
+        } catch (error) { 
             if (error instanceof TimeoutError) {
                 console.log("Scanned All Reels")
             }

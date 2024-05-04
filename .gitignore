@@ -1,2 +1,5 @@
-/api/node_modules
-/api/dist
+api/node_modules
+api/dist
+
+fe/.angular
+fe/node_modules

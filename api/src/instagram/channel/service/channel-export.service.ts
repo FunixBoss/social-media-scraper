@@ -20,7 +20,7 @@ import { ConfigService } from '@nestjs/config';
 export class ChannelExportService {
   readonly DOWNLOAD_PATH: string;
   private readonly logger = new Logger(ChannelExportService.name);
-
+ 
   constructor(
     private readonly configService: ConfigService,
     private readonly mapperService: ChannelMapperService,
