@@ -229,7 +229,7 @@ export default class ChannelCrawlService {
         }
         try {
             await scrollToBottom(this.page);
-        } catch (error) { 
+        } catch (error) {
             if (error instanceof TimeoutError) {
                 console.log("Scanned All Reels")
             }
@@ -246,9 +246,8 @@ export default class ChannelCrawlService {
 
 async function scrollToBottom(page: Page) {
     let previousHeight = await page.evaluate('document.body.scrollHeight');
+    console.log("start scrolling");
     while (true) {
-        console.log("start scrolling");
-        
         const numberOfScrolls = 20;
         const scrollAmount = -150;
         const delayBetweenScrolls = 0.1;
@@ -276,6 +275,6 @@ async function scrollToBottom(page: Page) {
         }
         previousHeight = currentHeight;
         console.log("scrolling done");
-        
+
     }
 }
