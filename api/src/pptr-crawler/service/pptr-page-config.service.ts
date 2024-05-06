@@ -3,14 +3,18 @@ import { Browser, Credentials, Page, Protocol } from "puppeteer";
 import { InjectBrowser } from 'nestjs-puppeteer';
 import { FB_URL, INS_URL, THREADS_URL } from "../config/social-media.config";
 import { readFileSync } from "fs";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class PptrPageConfig {
+    proxy: string[]
+
     readonly DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT;
     readonly DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
     readonly DEFAULT_PAGE_SIZE = { width: 1920, height: 1080 }
     readonly DEFAULT_HTTP_HEADERS = { 'Accept-Language': 'en-US,en;q=0.9' }
-    constructor(@InjectBrowser('social-media-scraper') private readonly browser: Browser) {
+    constructor(@InjectBrowser('social-media-scraper') private readonly browser: Browser, private readonly configService: ConfigService) {
+        this.proxy = this.configService.get<string>("PROXY").split(":")
         this.setupDefaultPages();
     }
 
@@ -22,8 +26,11 @@ export class PptrPageConfig {
             const page = pages[i];
             const redirectUrls = [INS_URL, FB_URL, THREADS_URL];
             const cookiesPaths = ['./uploads/cookies/instagram/0.json', null, null]
-            await this.setupPage(page, cookiesPaths[i], redirectUrls[i]
-                , { username: 'eklbdtximj', password: 'mR1oHLz6IQa9' }
+            await this.setupPage(
+                page, 
+                cookiesPaths[i], 
+                redirectUrls[i], 
+                this.proxy ? { username: this.proxy[2], password: this.proxy[3] } : undefined
             )
         }
     }
