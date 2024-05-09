@@ -1,11 +1,11 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { KeywordModule } from './instagram/keyword/keyword.module';
+import { Module } from '@nestjs/common';
 import { InstagramModule } from './instagram/instagram.module';
 import { ConfigModule } from '@nestjs/config';
 import { HelperModule } from './helper/helper.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiResponseInterceptor } from './interceptors/global-api-response.interceptor';
 import { ParseCommaSeparatedQuery } from './pipes/parse-comma-separate-query.pipe';
+import { AllExceptionsFilter } from './exception/all-exceptions-handler';
 
 @Module({
   providers: [
@@ -13,11 +13,14 @@ import { ParseCommaSeparatedQuery } from './pipes/parse-comma-separate-query.pip
       provide: APP_INTERCEPTOR,
       useClass: ApiResponseInterceptor,
     },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
     ParseCommaSeparatedQuery
   ],
   imports: [
     InstagramModule,
-    KeywordModule,
     HelperModule,
     ConfigModule.forRoot({
       isGlobal: true,

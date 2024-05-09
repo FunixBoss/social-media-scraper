@@ -98,8 +98,8 @@ export class KeywordListComponent implements OnInit {
           return {
             name: keyword.name,
             priority: keyword.priority,
-            total_hashtags: keyword.total_channels,
-            total_channels: keyword.total_hashtags
+            total_hashtags: keyword.total_hashtags,
+            total_channels: keyword.total_channels
           }
         })
         this.source.load(mappedKeywords)

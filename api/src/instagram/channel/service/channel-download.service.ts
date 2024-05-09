@@ -12,6 +12,7 @@ import { ChannelDownloadHistoryDTO } from '../dto/channel-download-history.dto';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { format } from 'date-fns';
+import { sleep } from 'src/pptr-crawler/utils/Utils';
 
 @Injectable()
 export class ChannelDownloadService {
@@ -64,85 +65,95 @@ export class ChannelDownloadService {
 
     async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
         const reels: ChannelReelDTO[] = await this.channelService.fetchReels(username);
-        const filteredReels: ChannelReelDTO[] = reels.filter(reel => 
+        const filteredReels: ChannelReelDTO[] = reels.filter(reel =>
             reel.channel_reel_numerical_order >= from_order && reel.channel_reel_numerical_order <= to_order
         );
-    
+
         if (filteredReels.length === 0) {
             console.log("No reels found within the specified range.");
             return;
         }
-    
+
         await createAndAccessFolder(downloadPath);
-        const downloadPromises = filteredReels.map(reel => this.downloadReel(reel, downloadPath));
-        await Promise.all(downloadPromises);
+        const batches = this.createBatches(filteredReels, 10);
+
+        for (const batch of batches) {
+            const downloadPromises = batch.map(reel => this.downloadReel(reel, downloadPath));
+            await Promise.all(downloadPromises);
+            this.logger.log("Downloaded a batch of reels successfully")
+        }
     }
- 
+
+   
     private async downloadReel(reel: ChannelReelDTO, downloadPath: string): Promise<void> {
         const videoName = `${reel.channel_reel_numerical_order}-${reel.code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
-    
+
         try {
             const response = await axios({
                 url: reel.video_url,
                 method: 'GET',
                 responseType: 'stream',
             });
-    
+
             const writer = createWriteStream(filePath);
             const streamPromise = new Promise<void>((resolve, reject) => {
                 writer.on('finish', () => {
                     console.log(`Downloaded video: ${videoName} successfully`);
                     resolve();
                 });
-    
+
                 writer.on('error', err => {
                     console.error(`Error downloading video at ${filePath}:`, `Error: ${err.name} - ${err.message}`);
                     writer.close();
                     reject(err);
                 });
             });
-    
+
             response.data.pipe(writer);
             await streamPromise;
         } catch (error) {
             console.error(`Error downloading video ${reel.channel_reel_numerical_order}-${reel.code} to ${filePath}:`, `Error: ${error.name} - ${error.message}`);
         }
     }
-    
 
     async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
         const posts: ChannelPostDTO[] = await this.channelService.fetchPosts(username);
         to_order = Math.min(to_order, posts.length);
-    
-        const filteredPosts: ChannelPostDTO[] = posts.filter(post => 
+
+        const filteredPosts: ChannelPostDTO[] = posts.filter(post =>
             post.channel_post_numerical_order >= from_order && post.channel_post_numerical_order <= to_order
         );
-    
-        if (filteredPosts.length === 0) return;
-    
-        await createAndAccessFolder(downloadPath);
-        const downloadPromises = [];
-        for (const post of filteredPosts) {
-            downloadPromises.push(...this.downloadPost(post, downloadPath));
+
+        if (filteredPosts.length === 0) {
+            this.logger.log("No posts found within the specified range.");
+            return;
         }
-    
-        await Promise.all(downloadPromises);
+
+        await createAndAccessFolder(downloadPath);
+        const batches = this.createBatches(filteredPosts, 10);
+
+        for (const batch of batches) {
+            const downloadPromises = batch.map(post => this.downloadPost(post, downloadPath));
+            await Promise.all(downloadPromises);
+            this.logger.log("Downloaded a batch of posts successfully");
+        }
+        this.logger.log('All batches completed');
     }
-    
-    downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<void>[] {
+
+    async downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<void[]> {
         const tasks = [];
         if (post.product_type === "feed" || post.product_type === "carousel_container") {
             tasks.push(this.downloadImages(post, downloadPath));
         } else if (post.product_type === "clips" || post.product_type === "igtv") {
             tasks.push(this.downloadVideo(post, downloadPath));
         }
-        return tasks;
+        return Promise.all(tasks);
     }
-    
+
     async downloadImages(post: ChannelPostDTO, downloadPath: string): Promise<void> {
         if (!post.image_urls || post.image_urls.length === 0) return;
-    
+
         const imagePromises = post.image_urls.map(async (url, index) => {
             const fileSuffix = post.product_type === "carousel_container" ? `.${index + 1}` : "";
             const imagePath = `${downloadPath}/${post.channel_post_numerical_order}${fileSuffix}-${post.code}.jpg`;
@@ -151,13 +162,13 @@ export class ChannelDownloadService {
                 await promises.writeFile(imagePath, response.data);
                 console.log(`Downloaded image: ${imagePath} successfully`);
             } catch (error) {
-                this.logger.error(`Error at download image: ${imagePath}`, error);
+                this.logger.warn(`Error downloading image at ${imagePath}`, error);
             }
         });
-    
+
         await Promise.all(imagePromises);
     }
-    
+
     async downloadVideo(post: ChannelPostDTO, downloadPath: string): Promise<void> {
         const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
@@ -165,21 +176,30 @@ export class ChannelDownloadService {
             const response = await axios(post.video_url, { method: 'GET', responseType: 'stream' });
             const writer = createWriteStream(filePath);
             response.data.pipe(writer);
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 writer.on('finish', () => {
                     console.log(`Downloaded video: ${videoName} successfully`);
                     resolve();
                 });
                 writer.on('error', err => {
-                    console.error(`Error downloading video at ${filePath}:`, `Error: ${err.name} - ${err.message}`);
+                    this.logger.warn(`Error downloading video at ${filePath}`, err);
                     writer.close();
                     reject(err);
                 });
             });
         } catch (error) {
-            this.logger.error(`Error at download video: ${filePath}`, error);
+            this.logger.warn(`Error downloading video at ${filePath}`, error);
         }
     }
+
+    private createBatches(data: any[], batchSize: number): any[][] {
+        const batches: any[][] = [];
+        for (let i = 0; i < data.length; i += batchSize) {
+            batches.push(data.slice(i, i + batchSize));
+        }
+        return batches;
+    }
+
 }
 
 async function createAndAccessFolder(path: string): Promise<void> {

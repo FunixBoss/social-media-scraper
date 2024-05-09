@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { GetChannelsParamsDto, ScrapeInfo } from '../channel.controller';
 import { Channel } from '../../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,6 +19,7 @@ import ChannelMapperService from './channel-mapper.service';
 @Injectable()
 export class ChannelService {
   private readonly baseUrl = 'https://instagram.com'
+  private readonly logger = new Logger(ChannelService.name);
 
   constructor(
     private readonly dataSource: DataSource,
@@ -89,6 +90,7 @@ export class ChannelService {
     let reels: ChannelReelDTO[] = needToScan.includes("reels")
       ? await this.fetchReels(username)
       : undefined
+    this.logger.log(`Fetch User ${username} - ${needToScan.join(", ")} Successfully`)
     return {
       ...(await this.fetchUserProfile(username)), // call again to update the return channel crawling histories
       friendships,
@@ -113,7 +115,7 @@ export class ChannelService {
         this.channelRepository.findOneBy({ username: channel.username })
       )
     );
-
+    this.logger.log(`Fetch User Profiles ${usernames.join(", ")} Successfully`)
     return this.mapperService.mapToFindAllChannelDTOs(updatedChannels.filter(Boolean));
   }
 
@@ -127,6 +129,8 @@ export class ChannelService {
       await this.channelRepository.save(channel);
       await this.writeCrawlHistory(username, ["CHANNEL_PROFILE"])
     })
+
+    this.logger.log(`Fetch User ${username} Profile Successfully`)
     return this.mapperService.mapToFindAllChannelDTO(await this.channelRepository.findOneBy({ username }));
   }
 
@@ -137,21 +141,24 @@ export class ChannelService {
         await this.mapperService.findAllChannelsByRootFriendshipUsername(username)
       )
     }
+
     try {
       let friendshipUsernames: string[] = await this.crawlService.crawlFriendships(username);
       let channels: Channel[] = await this.crawlService.crawlProfiles(friendshipUsernames);
-      const friendships: ChannelFriendship[] = friendshipUsernames.map(friendshipUsername => ({
+      
+      const friendships: ChannelFriendship[] = channels.map(channel => ({
         username: username,
-        channel_username: friendshipUsername 
+        channel_username: channel.username
       }));
       await this.dataSource.transaction(async (transactionalEntityManager) => {
         await this.channelRepository.save(channels);
         await Promise.all(channels.map(channel => this.writeCrawlHistory(channel.username, ["CHANNEL_PROFILE"])));
-  
+
         await this.channelFriendRepository.save(friendships)
         await this.writeCrawlHistory(username, ["CHANNEL_FRIENDSHIP"])
       })
-  
+
+      this.logger.log(`Fetch Friendships Of User: ${username} Successfully`)
       return this.mapperService.mapToFindAllChannelDTOs(
         await this.mapperService.findAllChannelsByRootFriendshipUsername(username)
       )
@@ -174,6 +181,8 @@ export class ChannelService {
       await this.channelPostRepository.save(posts)
       await this.writeCrawlHistory(username, ["CHANNEL_POSTS"])
     })
+
+    this.logger.log(`Fetch Posts Of User: ${username} Successfully`)
     return this.mapperService.mapToChannelPostDTOs(posts);
   }
 
@@ -187,6 +196,8 @@ export class ChannelService {
       await this.channelReelRepository.save(reels)
       await this.writeCrawlHistory(username, ["CHANNEL_REELS"])
     })
+
+    this.logger.log(`Fetch Reels Of User: ${username} Successfully`)
     return this.mapperService.mapToChannelReelDTOs(reels);
   }
 }

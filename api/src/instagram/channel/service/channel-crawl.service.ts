@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
-import { Browser, Page, TimeoutError } from "puppeteer";
+import { Browser, BrowserContext, Page, TimeoutError } from "puppeteer";
 import { RequestInterceptionManager } from "puppeteer-intercept-and-modify-requests";
 import { ChannelPost } from "src/instagram/entity/channel-post.entity";
 import { ChannelReel } from "src/instagram/entity/channel-reel.entity";
@@ -12,7 +12,7 @@ import { InsProfileFull, mapInsProfile } from "src/pptr-crawler/types/ins/InsPro
 import { InsReelsFull, mapInsReels } from "src/pptr-crawler/types/ins/InsReels";
 import { sleep } from "src/pptr-crawler/utils/Utils";
 import { PptrPageConfig } from '../../../pptr-crawler/service/pptr-page-config.service';
-
+import CrawlConfig from "../config/crawl-config";
 @Injectable()
 export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
@@ -25,7 +25,6 @@ export default class ChannelCrawlService {
     ) {
         this.setUpDefaultPageInterceptors()
     }
-
 
     private async setUpDefaultPageInterceptors(): Promise<void> {
         this.interceptManager = new RequestInterceptionManager(
@@ -60,14 +59,15 @@ export default class ChannelCrawlService {
     }
 
     async crawlProfiles(usernames: string[]): Promise<Channel[]> {
-        const MAX_BATCH_SIZE = 2;
+        const MAX_BATCH_SIZE = 5;
 
         const usernameBatches: string[][] = [];
         for (let i = 0; i < usernames.length; i += MAX_BATCH_SIZE) {
             usernameBatches.push(usernames.slice(i, i + MAX_BATCH_SIZE));
         }
-        await this.pptrPageConfig.createPages(MAX_BATCH_SIZE)
-        const pages: Page[] = await this.browser.pages()
+        const context: BrowserContext = this.browser.browserContexts().at(1)
+        await this.pptrPageConfig.createPages(context, MAX_BATCH_SIZE);
+        const pages: Page[] = await context.pages()
 
         const channelsMap = new Map();
         for (const usernameBatch of usernameBatches) {
@@ -83,10 +83,10 @@ export default class ChannelCrawlService {
                         try {
                             const dataObj: InsAPIWrapper = JSON.parse(body);
                             if (!dataObj.data) return;
-
+                            
                             if (dataObj.data["user"]) {
                                 console.log(`==> Found Response: User Profile - ${username}`);
-                                if (!channelsMap.has(username)) {
+                                if (!channelsMap.has(username) && (dataObj.data as InsProfileFull).user?.follower_count >= CrawlConfig.MIN_CHANNEL_FOLLOWER) {
                                     channelsMap.set(username, mapInsProfile(dataObj.data as InsProfileFull))
                                 }
                             }

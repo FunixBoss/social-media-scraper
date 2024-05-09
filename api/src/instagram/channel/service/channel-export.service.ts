@@ -74,7 +74,7 @@ export class ChannelExportService {
   }
 
 
-
+  
   async exportChannel(username: string, exportType: string | "json" | "excel"): Promise<void> {
     if (!(await this.channelService.isExists(username))) throw new EntityNotExists("Channel", username);
     const crawledTypes: TCrawlingType[] = await this.channelService.getCrawledHistory(username)

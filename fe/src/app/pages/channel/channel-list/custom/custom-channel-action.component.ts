@@ -95,7 +95,6 @@ export class CustomChannelActionComponent implements ViewCell, OnInit {
         this.utilsService.updateToastState(new ToastState(`Exporting Excel of ${this.username}`, "info"));
         this.channelService.exportExcel(this.username).subscribe({
             next: (data) => {
-                this.downloadFile(data, `${this.username}.xlsx`);
                 this.utilsService.updateToastState(new ToastState(`Export Excel of ${this.username} completed successfully`, "success"));
             },
             error: (error) => {
@@ -103,22 +102,6 @@ export class CustomChannelActionComponent implements ViewCell, OnInit {
                 this.utilsService.updateToastState(new ToastState('Failed to download Excel file', "danger"));
             }
         });
-    }
-
-    private downloadFile(data: Blob, filename: string) {
-        const a = document.createElement('a');
-        const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }, 0);
     }
 
     onDownload() {

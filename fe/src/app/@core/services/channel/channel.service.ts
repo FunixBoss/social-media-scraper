@@ -97,11 +97,9 @@ export class ChannelService {
         return this.httpClient.get<ApiResponse<FindAllChannelDTO>>(url)
     }
 
-    exportExcel(username: string): Observable<Blob> {
+    exportExcel(username: string): Observable<ApiResponse<{ message: string }>> {
         const url = `${this.baseUrlService.baseURL}/channel/export/${username}?type=excel`;
-        return this.httpClient.get(url, {
-            responseType: 'blob'
-        });
+        return this.httpClient.get<ApiResponse<{ message: string }>>(url);
     }
 
     findAllDownloadHistories(username: string): Observable<ApiResponse<ChannelDownloadHistoryDTO[]>> {

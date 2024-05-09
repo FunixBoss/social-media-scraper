@@ -1,9 +1,11 @@
 import { ChannelPostImage } from "src/instagram/entity/channel-post-image.entity";
 import { ChannelPost } from "src/instagram/entity/channel-post.entity";
+import { PageInfo } from "src/instagram/scraper/types";
 
 export type InsPostsFull = {
   xdt_api__v1__feed__user_timeline_graphql_connection: {
     edges: InsPostFull[]
+    page_info: PageInfo
   }
 }
 
