@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
 import { PuppeteerNodeLaunchOptions } from "puppeteer";
@@ -60,8 +60,8 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
                 ? "new"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            // userDataDir: this.configService.get<string>("PROFILE_PATH"),
-            // devtools: this.configService.get<boolean>("DEVTOOLS"),
+            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            devtools: this.configService.get<boolean>("DEVTOOLS"),
         };
     }
 }

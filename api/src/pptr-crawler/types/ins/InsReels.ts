@@ -3,7 +3,7 @@ import { ChannelReel } from "src/instagram/entity/channel-reel.entity";
 export type InsReelsFull = {
     xdt_api__v1__clips__user__connection_v2: {
         edges: IntReelsEdgeFull[],
-        pages_info: {
+        page_info: {
             end_cursor: string;
             has_next_page: boolean;
             has_previous_page: boolean;

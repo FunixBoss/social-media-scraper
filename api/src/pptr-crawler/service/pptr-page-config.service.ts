@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Browser, BrowserContext, Credentials, Page, Protocol } from "puppeteer";
 import { InjectBrowser } from 'nestjs-puppeteer';
 import { FB_URL, INS_URL, THREADS_URL } from "../config/social-media.config";
@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 export class PptrPageConfig {
     proxy: string[] = []
     proxyIncognito: string[] = []
+    private readonly logger = new Logger(PptrPageConfig.name);
 
     readonly DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT;
     readonly DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
@@ -27,6 +28,7 @@ export class PptrPageConfig {
     async setupPptr(numberOfContexts: number) {
         await this.setUpBrowserContexts(numberOfContexts);
         await this.setupDefaultPages()
+        this.logger.log("Setup Puppeteer Successfully")
     }
 
     async setUpBrowserContexts(numberOfContexts: number): Promise<void> {
@@ -43,6 +45,7 @@ export class PptrPageConfig {
 
     async setupDefaultPages(): Promise<void> {
         let promises: Promise<any>[] = []
+        await this.closeFirstPage()
         for (const context of this.browser.browserContexts()) {
             let pages: Page[] = await context.pages();
             console.log(`isIncognito: ${context.isIncognito()} - pages: ${pages.length}`);

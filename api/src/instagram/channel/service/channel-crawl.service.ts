@@ -13,6 +13,8 @@ import { InsReelsFull, mapInsReels } from "src/pptr-crawler/types/ins/InsReels";
 import { sleep } from "src/pptr-crawler/utils/Utils";
 import { PptrPageConfig } from '../../../pptr-crawler/service/pptr-page-config.service';
 import CrawlConfig from "../config/crawl-config";
+import { scrollPageToBottom, scrollPageToTop } from "../utils/scroll";
+
 @Injectable()
 export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
@@ -83,7 +85,7 @@ export default class ChannelCrawlService {
                         try {
                             const dataObj: InsAPIWrapper = JSON.parse(body);
                             if (!dataObj.data) return;
-                            
+
                             if (dataObj.data["user"]) {
                                 console.log(`==> Found Response: User Profile - ${username}`);
                                 if (!channelsMap.has(username) && (dataObj.data as InsProfileFull).user?.follower_count >= CrawlConfig.MIN_CHANNEL_FOLLOWER) {
@@ -165,7 +167,8 @@ export default class ChannelCrawlService {
 
     async crawlPosts(username: string): Promise<ChannelPost[]> {
         let posts: ChannelPost[] = [];
-        let len: number = 0
+        let len: number = 0;
+        let scanComplete = false;
         await this.interceptManager.intercept({
             urlPattern: `https://www.instagram.com/api/graphql`,
             resourceType: 'XHR',
@@ -174,25 +177,29 @@ export default class ChannelCrawlService {
                     const dataObj: InsAPIWrapper = JSON.parse(body);
                     if (dataObj.data["xdt_api__v1__feed__user_timeline_graphql_connection"]) {
                         console.log(`==> Found Response: Posts - ${username}`);
-                        const pagedPosts: ChannelPost[] = await mapInsPosts(dataObj.data as InsPostsFull);
+                        const insPostFull: InsPostsFull = dataObj.data as InsPostsFull
+                        const pagedPosts: ChannelPost[] = await mapInsPosts(insPostFull);
                         posts.push(...pagedPosts);
                         len += pagedPosts.length
                         console.log(len);
+                        const hasNextPage = insPostFull.xdt_api__v1__feed__user_timeline_graphql_connection.page_info.has_next_page
+                        console.log(`hasNextPage: ${hasNextPage}`);
+                        if (!hasNextPage) {
+                            scanComplete = true;
+                        }
                     }
                 } catch (error) {
                     console.log(error);
                 }
             }
         })
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle0' })
-        try {
-            await scrollToBottom(this.page);
-        } catch (error) {
-            if (error instanceof TimeoutError) {
-                console.log("Scanned All Posts")
-            }
-            await this.interceptManager.clear()
-        };
+        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'load', timeout: 15000 })
+        while (!scanComplete) {
+            await scrollPageToTop(this.page, {size: 250, delay: 10, stepsLimit: 3})
+            await scrollPageToBottom(this.page)
+        }
+        console.log("Scanned All Posts")
+        await this.interceptManager.clear()
         for (let i = len; i > 0; i--) {
             let post: ChannelPost = posts[i - 1];
             post.channel_post_numerical_order = i;
@@ -203,7 +210,9 @@ export default class ChannelCrawlService {
 
     async crawlReels(username: string): Promise<ChannelReel[]> {
         let reels: ChannelReel[] = [];
-        let reelLen: number = 0
+        let reelLen: number = 0;
+        let scanComplete = false;
+
         await this.interceptManager.intercept({
             urlPattern: `https://www.instagram.com/graphql/query`,
             resourceType: 'XHR',
@@ -212,10 +221,17 @@ export default class ChannelCrawlService {
                     const dataObj: InsAPIWrapper = JSON.parse(body);
                     if (dataObj && dataObj.data && dataObj.data["xdt_api__v1__clips__user__connection_v2"]) {
                         console.log("==> Found Graphql Request: Reels");
-                        const pagedReels: ChannelReel[] = mapInsReels(dataObj.data as InsReelsFull)
+                        const insReelsFull: InsReelsFull = dataObj.data as InsReelsFull
+                        const pagedReels: ChannelReel[] = mapInsReels(insReelsFull)
                         reels.push(...pagedReels)
                         reelLen += pagedReels.length
                         console.log(reelLen);
+                        
+                        const hasNextPage = insReelsFull.xdt_api__v1__clips__user__connection_v2.page_info.has_next_page
+                        console.log(`hasNextPage: ${hasNextPage}`);
+                        if (!hasNextPage) {
+                            scanComplete = true;
+                        }
                     }
                 } catch (error) {
                     console.log(error);
@@ -223,13 +239,10 @@ export default class ChannelCrawlService {
             },
         })
         await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'load' })
-        try {
-            await scrollToBottom(this.page);
-        } catch (error) {
-            if (error instanceof TimeoutError) {
-                console.log("Scanned All Reels")
-            }
-        }; 
+        while (!scanComplete) {
+            await scrollPageToTop(this.page, {size: 250, delay: 10, stepsLimit: 3})
+            await scrollPageToBottom(this.page)
+        }
         for (let i = 0; i < reelLen; i++) {
             let reel: ChannelReel = reels[i];
             reel.channel_reel_numerical_order = reelLen - i;
@@ -238,39 +251,4 @@ export default class ChannelCrawlService {
         return reels;
     }
 
-}
-
-async function scrollToBottom(page: Page) {
-    let previousHeight = await page.evaluate('document.body.scrollHeight');
-    console.log("start scrolling");
-    while (true) {
-        const numberOfScrolls = 20;
-        const scrollAmount = -150;
-        const delayBetweenScrolls = 0.1;
-
-        for (let i = 0; i < numberOfScrolls; i++) {
-            await page.evaluate((scrollY) => window.scrollBy(0, scrollY), scrollAmount);
-            await sleep(delayBetweenScrolls)
-        }
-        const numberOfIncrements = 20;
-        const scrollHeight = (await page.evaluate(() => document.body.scrollHeight)) + 500;
-        const scrollIncrement = Math.floor(scrollHeight / numberOfIncrements);
-
-        for (let i = 0; i < numberOfIncrements; i++) {
-            await page.evaluate((scrollIncrement) => {
-                window.scrollBy(0, scrollIncrement);
-            }, scrollIncrement);
-            await sleep(delayBetweenScrolls)
-        }
-
-        await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 2000 });
-        let currentHeight = await page.evaluate('document.body.scrollHeight');
-
-        if (previousHeight >= currentHeight) {
-            throw new TimeoutError('');
-        }
-        previousHeight = currentHeight;
-        console.log("scrolling done");
-
-    }
 }

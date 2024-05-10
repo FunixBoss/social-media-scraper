@@ -82,7 +82,7 @@ export class CustomChannelActionComponent implements ViewCell, OnInit {
                     this.isCrawling = false;
                     this.channelService.notifyChannelChange();
                     this.utilsService.updateToastState(new ToastState(`Crawled ${crawlContent} of ${this.username} completely in ${body.handlerTime}ms`, "success"));
-                }
+                }   
             },
             error => {
                 this.isCrawling = false;

@@ -12,7 +12,6 @@ import { ChannelDownloadHistoryDTO } from '../dto/channel-download-history.dto';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { format } from 'date-fns';
-import { sleep } from 'src/pptr-crawler/utils/Utils';
 
 @Injectable()
 export class ChannelDownloadService {
