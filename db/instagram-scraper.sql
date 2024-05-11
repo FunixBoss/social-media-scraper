@@ -144,6 +144,33 @@ create table `channel_reel_hashtag`(
     foreign key (hashtag_id) references `hashtag`(id)
 );
 
+create table `proxy`(
+	id bigint auto_increment primary key,
+    ip varchar(200),
+    port varchar(200),
+    username varchar(200),
+    password varchar(200),
+    country_code varchar(200),
+    status enum('live', 'die', 'out_of_date'),
+    import_date date,
+    expiration_date date,
+    last_checked datetime,
+    last_used datetime
+);
+
+create table `instagram_cookie`(
+	id bigint auto_increment primary key,
+    username varchar(200),
+    password varchar(200),
+    `2fa` varchar(200),
+    cookie_string varchar(10000),
+    mail varchar(200),
+    status enum('live', 'ban', 'restrict'),
+    import_date date,
+    last_checked datetime,
+    last_used datetime
+);
+
 insert into `priority`(name) values
 ('HIGH'),
 ('MEDIUM'),

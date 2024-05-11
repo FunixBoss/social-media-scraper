@@ -2,11 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import * as moment from 'moment-timezone';
+moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
+export { moment };
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  process.env.TZ = 'Asia/Ho_Chi_Minh'
   app.enableCors({
-    origin: "*",
+    origin: "*", 
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
     exposedHeaders: 'Content-Disposition',

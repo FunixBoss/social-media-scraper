@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Browser, BrowserContext, Credentials, Page, Protocol } from "puppeteer";
+import { Browser, BrowserContext, BrowserContextOptions, Credentials, Page, Protocol } from "puppeteer";
 import { InjectBrowser } from 'nestjs-puppeteer';
 import { FB_URL, INS_URL, THREADS_URL } from "../config/social-media.config";
 import { readFileSync } from 'fs';
@@ -34,13 +34,21 @@ export class PptrPageConfig {
     async setUpBrowserContexts(numberOfContexts: number): Promise<void> {
         try {
             for (let i = 0; i < numberOfContexts; i++) {
-                const context = await this.browser.createIncognitoBrowserContext({ proxyServer: `http://${this.proxyIncognito[0]}:${this.proxyIncognito[1]}` });
-                await context.newPage()
+                this.createBrowserContext({ip: this.proxyIncognito[0], port: this.proxyIncognito[1]})
             }
-            console.log(`Successfully created ${numberOfContexts} incognito contexts.`);
         } catch (error) {
             console.error('Error creating incognito contexts:', error);
         }
+    }
+
+    async createBrowserContext(proxy?: { ip: string, port: string }): Promise<BrowserContext> {
+        const options: BrowserContextOptions = {
+            proxyServer: proxy ? `http://${proxy.ip}:${proxy.port}` : undefined
+        };
+        const context = await this.browser.createIncognitoBrowserContext(options);
+        console.log(`Successfully created incognito contexts. ${proxy ? 'with proxy ' + proxy.ip + ':' + proxy.port : ''}`);
+        await context.newPage()
+        return context;
     }
 
     async setupDefaultPages(): Promise<void> {
@@ -101,9 +109,8 @@ export class PptrPageConfig {
             await page.authenticate(credentials)
         }
         if (url) {
-            await page.goto(url, { waitUntil: "domcontentloaded" })
+            await page.goto(url, { waitUntil: "networkidle2" })
             console.log(`context (isIncognito: ${context.isIncognito()}): arrived ${url}`);
-
         }
     }
 
