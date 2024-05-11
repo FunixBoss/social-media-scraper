@@ -158,7 +158,7 @@ create table `proxy`(
     last_used datetime
 );
 
-create table `instagram_cookie`(
+create table `instagram_account`(
 	id bigint auto_increment primary key,
     username varchar(200),
     password varchar(200),

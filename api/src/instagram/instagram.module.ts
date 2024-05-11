@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { ScraperModule } from './scraper/scraper.module';
 import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { AccountModule } from './account/account.module';
 
 // const envData = process.env;
 @Module({
@@ -31,6 +32,7 @@ import { ProxyModule } from './proxy/proxy.module';
       inject: [ConfigService],
     }),
     ProxyModule,
+    AccountModule,
   ],
   exports: [
     TypeOrmModule,
