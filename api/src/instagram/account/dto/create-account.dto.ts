@@ -1,7 +1,21 @@
+import { IsEmail, IsOptional, IsString } from "class-validator";
+
 export class CreateAccountDto {
-    username?: string;
-    password?: string;
-    twoFactorAuthentication?: string;
-    cookie_string?: string;
-    mail?: string;
+
+    @IsString()
+    username: string;
+
+    @IsString()
+    password: string;
+
+    @IsString()
+    twoFactorAuthentication: string;
+
+    @IsOptional()
+    @IsString()
+    cookie_string: string;
+
+    @IsOptional()
+    @IsEmail()
+    mail: string;
 }

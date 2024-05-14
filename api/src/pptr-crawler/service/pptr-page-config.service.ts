@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Browser, BrowserContext, BrowserContextOptions, Credentials, Page, Protocol } from "puppeteer";
+import puppeteer, { Browser, BrowserContext, BrowserContextOptions, Credentials, Page, Protocol } from "puppeteer";
 import { InjectBrowser } from 'nestjs-puppeteer';
 import { FB_URL, INS_URL, THREADS_URL } from "../config/social-media.config";
 import { readFileSync } from 'fs';
 import { ConfigService } from "@nestjs/config";
+import BypassInstagramRestrictionService from "./bypass-instagram-restriction.service";
 
 @Injectable()
 export class PptrPageConfig {
@@ -18,35 +19,39 @@ export class PptrPageConfig {
 
     constructor(
         @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-        private readonly configService: ConfigService) {
+        private readonly configService: ConfigService,
+        private readonly instaBypassService: BypassInstagramRestrictionService
+    ) {
         this.proxy = this.configService.get<string>("PROXY").split(":")
         this.proxyIncognito = this.configService.get<string>("PROXY_INCOGNITO").split(":")
-
+        
         this.setupPptr(1);
     }
 
     async setupPptr(numberOfContexts: number) {
-        await this.setUpBrowserContexts(numberOfContexts);
-        await this.setupDefaultPages()
+        const browser2 = await puppeteer.launch({headless: false});
+
+        await this.createBrowserContexts(numberOfContexts);
+        await this.setupDefaultPages();
         this.logger.log("Setup Puppeteer Successfully")
     }
 
-    async setUpBrowserContexts(numberOfContexts: number): Promise<void> {
+    async createBrowserContexts(numberOfContexts: number): Promise<void> {
         try {
             for (let i = 0; i < numberOfContexts; i++) {
-                this.createBrowserContext({ip: this.proxyIncognito[0], port: this.proxyIncognito[1]})
+                this.createBrowserContext({ ip: this.proxyIncognito[0], port: this.proxyIncognito[1] })
             }
         } catch (error) {
-            console.error('Error creating incognito contexts:', error);
+            console.error('Error creating contexts:', error);
         }
     }
 
     async createBrowserContext(proxy?: { ip: string, port: string }): Promise<BrowserContext> {
         const options: BrowserContextOptions = {
-            proxyServer: proxy ? `http://${proxy.ip}:${proxy.port}` : undefined
+            proxyServer: proxy ? `http://${proxy.ip}:${proxy.port}` : undefined,
         };
-        const context = await this.browser.createIncognitoBrowserContext(options);
-        console.log(`Successfully created incognito contexts. ${proxy ? 'with proxy ' + proxy.ip + ':' + proxy.port : ''}`);
+        const context = await this.browser.createBrowserContext(options);
+        console.log(`Successfully created contexts. ${proxy ? 'with proxy ' + proxy.ip + ':' + proxy.port : ''}`);
         await context.newPage()
         return context;
     }
@@ -65,7 +70,7 @@ export class PptrPageConfig {
                 const credentials = context.isIncognito()
                     ? { username: this.proxy[2], password: this.proxy[3] }
                     : { username: this.proxyIncognito[2], password: this.proxyIncognito[3] }
-                promises.push(this.setupPage(
+                promises.push(this.createPage(
                     context,
                     page,
                     context.isIncognito() ? incognitoCookiesPaths[i] : normalCookiesPaths[i],
@@ -81,12 +86,17 @@ export class PptrPageConfig {
         console.log(`create Pages (in context incognito ${context.isIncognito()}) - create ${number} pages`);
         let promises: Promise<any>[] = []
         for (let i = 0; i < number; i++) {
-            promises.push(this.setupPage(context, undefined, cookiePath, url, credentials))
+            promises.push(this.createPage(context, undefined, cookiePath, url, credentials))
         }
         await Promise.all(promises)
     }
 
-    async setupPage(context?: BrowserContext, page?: Page, cookiePath?: string, url?: string, credentials?: Credentials): Promise<void> {
+    async createPage(context?: BrowserContext,
+        page?: Page,
+        cookiePath?: string,
+        url?: string,
+        credentials?: Credentials
+    ): Promise<Page> {
         console.log(`setup Page: incognito: ${context.isIncognito()}`);
         if (!context) context = this.browser.defaultBrowserContext();
         if (!page) page = await context.newPage();
@@ -96,6 +106,7 @@ export class PptrPageConfig {
         await page.setExtraHTTPHeaders(this.DEFAULT_HTTP_HEADERS);
         await page.setUserAgent(this.DEFAULT_USER_AGENT);
         await page.setJavaScriptEnabled(true);
+        await this.instaBypassService.bypass(page);
         if (cookiePath != null) {
             try {
                 const cookiesJSON = readFileSync(cookiePath, 'utf-8');
@@ -112,32 +123,25 @@ export class PptrPageConfig {
             await page.goto(url, { waitUntil: "networkidle2" })
             console.log(`context (isIncognito: ${context.isIncognito()}): arrived ${url}`);
         }
+        return page;
     }
-
-    async closePage(index: number): Promise<void> {
+  
+    async closePage(context?: BrowserContext, index: number = 0): Promise<void> {
+        if (!context) context = this.browser.defaultBrowserContext();
         const pages = await this.browser.pages()
-        await pages.at(index).close()
-    }
-
-    async closeFirstPage() {
-        const pages = await this.browser.pages();
         if (pages.length > 0) {
-            await pages[0].close();
+            await pages[index].close();
         } else {
             console.log('No pages to close.');
         }
     }
 
-    async closeLastPage() {
-        const pages = await this.browser.pages();
+    async closeFirstPage(context?: BrowserContext): Promise<void> {
+        return this.closePage(context, 0)
+    }
 
-        // Check if there is at least one page open
-        if (pages.length > 0) {
-            // Close the last page
-            await pages[pages.length - 1].close();
-        } else {
-            console.log('No pages to close.');
-        }
+    async closeLastPage(context?: BrowserContext) {
+        return this.closePage(context, (await context.pages()).length - 1)
     }
 
     async getLastPage(): Promise<Page> {

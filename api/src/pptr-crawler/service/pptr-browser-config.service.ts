@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
 import { PuppeteerNodeLaunchOptions } from "puppeteer";
@@ -50,18 +50,23 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
     }
 
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
+        const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
+        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
         return {
             args: [
                 '--enable-automation',
+                `--load-extension=${AUTOCAPTCHAPRO}`,
+                `--disable-extensions-except=${AUTOCAPTCHAPRO}`, 
                 this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
                 ...minimal_args
             ],
-            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new"
-                ? "new"
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
+                ? "shell"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
             userDataDir: this.configService.get<string>("PROFILE_PATH"),
             devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            pipe: true
         };
     }
 }

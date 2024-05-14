@@ -18,6 +18,8 @@ import { AccountModule } from './account/account.module';
     ChannelModule,
     ReelModule,
     ScraperModule,
+    ProxyModule,
+    AccountModule,
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
@@ -31,10 +33,15 @@ import { AccountModule } from './account/account.module';
       }),
       inject: [ConfigService],
     }),
-    ProxyModule,
-    AccountModule,
   ],
   exports: [
+    KeywordModule,
+    HashtagModule,
+    ChannelModule,
+    ReelModule,
+    ScraperModule,
+    ProxyModule,
+    AccountModule,
     TypeOrmModule,
   ]
 })

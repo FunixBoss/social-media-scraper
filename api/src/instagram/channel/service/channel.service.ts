@@ -75,8 +75,6 @@ export class ChannelService {
       }
     })
     await this.channelCrawlingHistoryRepository.save(crawlingHistories);
-
-
   }
 
   async fetchUser(username: string, needToScan: ScrapeInfo[]): Promise<FindOneChannelDTO> {

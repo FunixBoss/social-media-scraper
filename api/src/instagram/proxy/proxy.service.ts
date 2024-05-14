@@ -18,8 +18,22 @@ export class ProxyService {
   constructor(
     @InjectRepository(Proxy) private readonly proxyRepository: Repository<Proxy>,
     @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-  ) {
+  ) { }
 
+  async getRandom(): Promise<Proxy> {
+    const randomProxy = await this.proxyRepository
+      .createQueryBuilder('proxy')
+      .where('proxy.status = :status', { status: 'live' })
+      .orderBy('RAND()') // Corrected for MySQL
+      .getOne();
+
+    if (!randomProxy) {
+      this.logger.warn('No live proxy found in the database.');
+      throw new Error('No live proxy available');
+    }
+
+    this.logger.log('Random live proxy retrieved successfully.');
+    return randomProxy;
   }
 
   async checkAll(): Promise<void> {
