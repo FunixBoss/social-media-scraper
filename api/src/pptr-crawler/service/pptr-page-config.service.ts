@@ -1,10 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
-import puppeteer, { Browser, BrowserContext, BrowserContextOptions, Credentials, Page, Protocol } from "puppeteer";
+import { Browser, BrowserContext, BrowserContextOptions, Credentials, Page, Protocol } from "puppeteer";
 import { InjectBrowser } from 'nestjs-puppeteer';
 import { FB_URL, INS_URL, THREADS_URL } from "../config/social-media.config";
 import { readFileSync } from 'fs';
 import { ConfigService } from "@nestjs/config";
 import BypassInstagramRestrictionService from "./bypass-instagram-restriction.service";
+import puppeteer from 'puppeteer-extra'
+import { minimal_args } from "./pptr-browser-config.service";
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+
 
 @Injectable()
 export class PptrPageConfig {
@@ -24,12 +28,37 @@ export class PptrPageConfig {
     ) {
         this.proxy = this.configService.get<string>("PROXY").split(":")
         this.proxyIncognito = this.configService.get<string>("PROXY_INCOGNITO").split(":")
-        
+
+
+        this.launchSecBrowser()
         this.setupPptr(1);
     }
 
+    async launchSecBrowser() {
+        puppeteer.use(StealthPlugin())
+        const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
+        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
+        const browser2 = await puppeteer.launch({
+            args: [
+                ...minimal_args,
+                '--enable-automation',
+                `--load-extension=${AUTOCAPTCHAPRO}`,
+                // this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
+                `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
+            ],
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
+                ? "shell"
+                : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
+            executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
+            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            pipe: true
+        });
+
+    }
+
     async setupPptr(numberOfContexts: number) {
-        const browser2 = await puppeteer.launch({headless: false});
+
 
         await this.createBrowserContexts(numberOfContexts);
         await this.setupDefaultPages();
@@ -125,7 +154,7 @@ export class PptrPageConfig {
         }
         return page;
     }
-  
+
     async closePage(context?: BrowserContext, index: number = 0): Promise<void> {
         if (!context) context = this.browser.defaultBrowserContext();
         const pages = await this.browser.pages()

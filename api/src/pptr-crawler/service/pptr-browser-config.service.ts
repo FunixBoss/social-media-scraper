@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
 import { PuppeteerNodeLaunchOptions } from "puppeteer";
 
-const minimal_args = [
+export const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
     '--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪
     '--disable-background-timer-throttling', // Disable task throttling of timer tasks from background pages. ↪
@@ -63,9 +63,9 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
             headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
                 ? "shell"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
-            executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            userDataDir: this.configService.get<string>("PROFILE_PATH"),
-            devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            // executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
+            // userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            // devtools: this.configService.get<string>("DEVTOOLS") == "true",
             pipe: true
         };
     }
