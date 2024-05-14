@@ -4,14 +4,14 @@ import { KeywordController } from './keyword.controller';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Keyword } from "../entity/keyword.entity";
 import { Hashtag } from '../entity/hashtag.entity';
-import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
+import { PptrModule } from 'src/pptr/pptr.module';
 import { Channel } from '../entity/channel.entity';
 import { KeywordChannel } from '../entity/keyword-channel.entity';
 import { ChannelModule } from '../channel/channel.module';
 
 @Module({
   imports: [
-    PptrCrawlerModule,
+    PptrModule,
     ChannelModule,
     TypeOrmModule.forFeature([
       Keyword, Hashtag, Channel, KeywordChannel

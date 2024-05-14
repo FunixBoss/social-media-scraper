@@ -1,5 +1,5 @@
 import { Page, TimeoutError } from "puppeteer";
-import { sleep } from "src/pptr-crawler/utils/Utils";
+import { sleep } from "src/pptr/utils/Utils";
 
 async function scrollInfinityToBottom(page: Page) {
     let previousHeight = await page.evaluate('document.body.scrollHeight');

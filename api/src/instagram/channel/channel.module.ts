@@ -3,7 +3,7 @@ import { ChannelService } from './service/channel.service';
 import { ChannelController } from './channel.controller';
 import { HelperModule } from 'src/helper/helper.module';
 import { ScraperModule } from '../scraper/scraper.module';
-import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
+import { PptrModule } from 'src/pptr/pptr.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Channel } from '../entity/channel.entity';
 import { ChannelFriendship } from '../entity/channel-friendship.entity';
@@ -25,7 +25,7 @@ import ChannelMapperService from './service/channel-mapper.service';
   imports: [
     HelperModule,
     ScraperModule,
-    PptrCrawlerModule,
+    PptrModule,
     TypeOrmModule.forFeature([
       Channel, ChannelFriendship, ChannelReel, ChannelReelHashtag, CrawlingType, Hashtag, Keyword, Priority,
       ChannelCrawlingHistory, ChannelPost, ChannelDownloadHistory

@@ -1,7 +1,7 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
-import { Proxy } from 'src/instagram/entity/proxy.entity';
+import { Proxy } from 'src/proxy/entity/proxy.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()

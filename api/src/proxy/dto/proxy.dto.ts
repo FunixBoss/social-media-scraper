@@ -1,4 +1,4 @@
-import { Proxy } from "src/instagram/entity/proxy.entity";
+import { Proxy } from "src/proxy/entity/proxy.entity";
 import { moment } from 'src/main';
 
 export default class ProxyDTO {

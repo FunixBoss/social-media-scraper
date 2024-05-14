@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectPage } from 'nestjs-puppeteer';
-import { Page } from 'puppeteer';
+import { Browser } from 'puppeteer';
 import { Channel } from '../../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,19 +15,25 @@ import ChannelReelDTO from '../dto/channel-reel.dto';
 import FindOneChannelDTO from '../dto/findone-channel.dto';
 import ChannelMapperService from './channel-mapper.service';
 import { ConfigService } from '@nestjs/config';
+import { PptrBrowserManagement } from 'src/pptr/service/pptr-browser-management.service';
 @Injectable()
 export class ChannelExportService {
-  readonly DOWNLOAD_PATH: string;
+  private DOWNLOAD_PATH: string;
   private readonly logger = new Logger(ChannelExportService.name);
- 
+  private browser: Browser;
   constructor(
     private readonly configService: ConfigService,
     private readonly mapperService: ChannelMapperService,
     private readonly channelService: ChannelService,
-    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
+    private readonly browserManagement: PptrBrowserManagement,
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
   ) {
+    this.onInit()
+  }
+  
+  private async onInit() {
     this.DOWNLOAD_PATH = this.configService.get<string>("DOWNLOAD_PATH")
+    this.browser = this.browserManagement.getBrowser('instagram');
   }
 
   async exportChannels(exportType: string | "json" | "excel"): Promise<void> {

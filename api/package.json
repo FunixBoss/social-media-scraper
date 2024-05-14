@@ -43,7 +43,6 @@
     "joi": "^17.13.0",
     "moment-timezone": "^0.5.45",
     "mysql2": "^3.9.7",
-    "nestjs-puppeteer": "^2.1.0",
     "proxy-chain": "^2.4.0",
     "puppeteer": "22.8.0",
     "puppeteer-extra": "^3.3.6",

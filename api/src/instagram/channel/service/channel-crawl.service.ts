@@ -1,31 +1,41 @@
 import { Injectable } from "@nestjs/common";
-import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
-import { Browser, BrowserContext, Page, TimeoutError } from "puppeteer";
+import { Browser, BrowserContext, Page } from "puppeteer";
 import { RequestInterceptionManager } from "puppeteer-intercept-and-modify-requests";
 import { ChannelPost } from "src/instagram/entity/channel-post.entity";
 import { ChannelReel } from "src/instagram/entity/channel-reel.entity";
 import { Channel } from "src/instagram/entity/channel.entity";
-import { InsAPIWrapper } from "src/pptr-crawler/types/ins/InsAPIWrapper";
-import { InsFriendshipUserFull } from "src/pptr-crawler/types/ins/InsFriendship";
-import { InsPostsFull, mapInsPosts } from "src/pptr-crawler/types/ins/InsPosts";
-import { InsProfileFull, mapInsProfile } from "src/pptr-crawler/types/ins/InsProfile";
-import { InsReelsFull, mapInsReels } from "src/pptr-crawler/types/ins/InsReels";
-import { sleep } from "src/pptr-crawler/utils/Utils";
-import { PptrPageConfig } from '../../../pptr-crawler/service/pptr-page-config.service';
+import { InsAPIWrapper } from "src/pptr/types/ins/InsAPIWrapper";
+import { InsFriendshipUserFull } from "src/pptr/types/ins/InsFriendship";
+import { InsPostsFull, mapInsPosts } from "src/pptr/types/ins/InsPosts";
+import { InsProfileFull, mapInsProfile } from "src/pptr/types/ins/InsProfile";
+import { InsReelsFull, mapInsReels } from "src/pptr/types/ins/InsReels";
+import { sleep } from "src/pptr/utils/Utils";
 import CrawlConfig from "../config/crawl-config";
 import { scrollPageToBottom, scrollPageToTop } from "../utils/scroll";
+import { PptrPageConfigService } from "src/pptr/service/pptr-page-config.service";
+import { PptrBrowserManagement } from "src/pptr/service/pptr-browser-management.service";
+import { INS_URL } from "src/pptr/config/social-media.config";
 
 @Injectable()
 export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
-    private readonly baseUrl = 'https://instagram.com'
-
+    private browser: Browser;
+    private page: Page;
     constructor(
-        @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-        @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
-        private readonly pptrPageConfig: PptrPageConfig
+        private readonly browserManagement: PptrBrowserManagement,
+        private readonly pptrPageConfig: PptrPageConfigService
     ) {
-        this.setUpDefaultPageInterceptors()
+        this.onInit()
+    }
+
+    private async onInit() {
+        await sleep(5)
+        this.browser = this.browserManagement.getBrowser('instagram');
+        console.log(this.browser);
+        
+        // await sleep(10)
+        // this.page = (await this.browser.pages()).at(0)
+        // this.setUpDefaultPageInterceptors()  
     }
 
     private async setUpDefaultPageInterceptors(): Promise<void> {
@@ -68,7 +78,7 @@ export default class ChannelCrawlService {
             usernameBatches.push(usernames.slice(i, i + MAX_BATCH_SIZE));
         }
         const context: BrowserContext = this.browser.browserContexts().at(1)
-        await this.pptrPageConfig.createPages(context, MAX_BATCH_SIZE);
+        await this.pptrPageConfig.createPages(context, { number: MAX_BATCH_SIZE });
         const pages: Page[] = await context.pages()
 
         const channelsMap = new Map();
@@ -97,7 +107,7 @@ export default class ChannelCrawlService {
                         }
                     }
                 });
-                await page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' });
+                await page.goto(`${INS_URL}/${username}`, { waitUntil: 'networkidle2' });
                 await interceptManager.clear()
             });
 
@@ -133,7 +143,7 @@ export default class ChannelCrawlService {
                     }
                 }
             })
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'load' })
+        await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load' })
         await sleep(1)
         await this.interceptManager.clear()
         return channel;
@@ -159,7 +169,7 @@ export default class ChannelCrawlService {
                 }
             }
         });
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'networkidle2' })
+        await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'networkidle2' })
         await sleep(1.5)
         await this.interceptManager.clear()
         return friendshipUsernames
@@ -193,9 +203,9 @@ export default class ChannelCrawlService {
                 }
             }
         })
-        await this.page.goto(`${this.baseUrl}/${username}`, { waitUntil: 'load', timeout: 15000 })
+        await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: 15000 })
         while (!scanComplete) {
-            await scrollPageToTop(this.page, {size: 250, delay: 10, stepsLimit: 3})
+            await scrollPageToTop(this.page, { size: 250, delay: 10, stepsLimit: 3 })
             await scrollPageToBottom(this.page)
         }
         console.log("Scanned All Posts")
@@ -226,7 +236,7 @@ export default class ChannelCrawlService {
                         reels.push(...pagedReels)
                         reelLen += pagedReels.length
                         console.log(reelLen);
-                        
+
                         const hasNextPage = insReelsFull.xdt_api__v1__clips__user__connection_v2.page_info.has_next_page
                         console.log(`hasNextPage: ${hasNextPage}`);
                         if (!hasNextPage) {
@@ -238,9 +248,9 @@ export default class ChannelCrawlService {
                 }
             },
         })
-        await this.page.goto(`${this.baseUrl}/${username}/reels`, { waitUntil: 'load' })
+        await this.page.goto(`${INS_URL}/${username}/reels`, { waitUntil: 'load' })
         while (!scanComplete) {
-            await scrollPageToTop(this.page, {size: 250, delay: 10, stepsLimit: 3})
+            await scrollPageToTop(this.page, { size: 250, delay: 10, stepsLimit: 3 })
             await scrollPageToBottom(this.page)
         }
         for (let i = 0; i < reelLen; i++) {

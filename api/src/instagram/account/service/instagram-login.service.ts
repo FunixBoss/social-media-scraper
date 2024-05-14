@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import axios, { AxiosProxyConfig } from "axios";
-import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
-import { Browser, ElementHandle, Page } from "puppeteer";
+import { ElementHandle, Page } from "puppeteer";
 import { WrongCredentialsException } from "src/exception/wrong-credentials";
 import { WrongTwoFactorAuthenticationException } from "src/exception/wrong-two-factor-authentication";
-import { Proxy } from "src/instagram/entity/proxy.entity";
-import { ProxyService } from "src/instagram/proxy/proxy.service";
-import { PptrPageConfig } from "src/pptr-crawler/service/pptr-page-config.service";
-import { sleep } from "src/pptr-crawler/utils/Utils";
+import { Proxy } from "src/proxy/entity/proxy.entity";
+import { sleep } from "src/pptr/utils/Utils";
+import { PptrBrowserManagement } from '../../../pptr/service/pptr-browser-management.service';
+import { PptrPageConfigService } from "src/pptr/service/pptr-page-config.service";
+import { ProxyService } from "src/proxy/proxy.service";
+import ProxyDTO from "src/proxy/dto/proxy.dto";
 
 export type TwoFACode = {
     code: string,
@@ -17,9 +18,8 @@ export type TwoFACode = {
 export default class InstagramLoginService {
 
     constructor(
-        @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-        @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
-        private readonly pptrConfig: PptrPageConfig,
+        private readonly browserManagement: PptrBrowserManagement,
+        private readonly pageConfig: PptrPageConfigService,
         private readonly proxyService: ProxyService
     ) {
 
@@ -27,17 +27,15 @@ export default class InstagramLoginService {
 
     async login(credentials: { username: string, password: string, twoFA?: string }): Promise<boolean> {
         const LOGIN_URL = "https://www.instagram.com";
-        const proxy: Proxy = await this.proxyService.getRandom();
-        let context = await this.pptrConfig.createBrowserContext({ ip: proxy.ip, port: proxy.port });
-        const page: Page = await this.pptrConfig.createPage(
-            context,
-            (await context.pages()).at(0),
-            undefined,
-            LOGIN_URL,
-            { username: proxy.username, password: proxy.password });
+        const proxy: ProxyDTO = await this.proxyService.getRandom();
+        const browser = await this.browserManagement.createBrowser({ browserName: 'insta-login', proxy });
+        const context = browser.defaultBrowserContext();
+        const page: Page = await this.pageConfig.setupPage(context, {
+            page: (await context.pages()).at(0),
+            url: LOGIN_URL,
+            proxy
+        })
 
-
-        // have to check right username/password
         const usernameHandler: ElementHandle<HTMLInputElement> = await page.waitForSelector("input[name='username']", { timeout: 5000 });
         await usernameHandler.type(credentials.username, { delay: 100 })
         await page.type("input[name='password'", credentials.password, { delay: 120 });

@@ -2,12 +2,12 @@ import { AxiosProxyConfig } from 'axios';
 import { Injectable, Logger } from "@nestjs/common";
 import { CookieHandler } from "src/helper/CookieHandler";
 import { InsScraperServiceFactory, InstaFetcher } from "./ins-scraper-factory";
-import { ProxyService } from "src/instagram/proxy/proxy.service";
 import { Channel } from "src/instagram/entity/channel.entity";
 import { ScrapeUserProfileFailed } from 'src/exception/scrape-user-profile.exception';
 import { UserGraphQlV2, mapUserGraphQLToChannel } from '../types/UserGraphQlV2';
 import BatchHelper from 'src/helper/BatchHelper';
-import { sleep } from 'src/pptr-crawler/utils/Utils';
+import { sleep } from 'src/pptr/utils/Utils';
+import { ProxyService } from 'src/proxy/proxy.service';
 
 @Injectable()
 export default class ScraperService {
@@ -16,9 +16,7 @@ export default class ScraperService {
     constructor(private readonly cookieHandler: CookieHandler,
         private readonly scraperServiceFactory: InsScraperServiceFactory,
         private readonly proxyService: ProxyService
-    ) {
-
-    }
+    ) {}
 
     async scrapeUserProfile(username: string, options: { cookies?: string, proxy?: AxiosProxyConfig } = {}): Promise<Channel> {
         if (!options.cookies) options.cookies = this.convertToRightFormat(this.cookieHandler.getAsText('instagram', 'default.json'));

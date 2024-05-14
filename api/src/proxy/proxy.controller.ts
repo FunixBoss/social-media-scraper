@@ -2,9 +2,9 @@ import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe } from '@nestj
 import { ProxyService } from './proxy.service';
 import { CreateProxyDto } from './dto/create-proxy.dto';
 import ProxyDTO from './dto/proxy.dto';
-import { Proxy } from '../entity/proxy.entity';
 import { ParseProxyIpv4 } from './pipe/parse-proxy-ip-v4.pipe';
 import { ProxyByIdPipe } from './pipe/proxy-by-id.pipe';
+import { Proxy } from './entity/proxy.entity';
 
 @Controller('proxy')
 export class ProxyController {

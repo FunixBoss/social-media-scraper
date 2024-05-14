@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
+import { Browser, PuppeteerLaunchOptions } from "puppeteer";
 import { ConfigService } from "@nestjs/config";
-import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
-import { PuppeteerNodeLaunchOptions } from "puppeteer";
+import ProxyDTO from "src/proxy/dto/proxy.dto";
 
-const minimal_args = [
+export const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
     '--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪
     '--disable-background-timer-throttling', // Disable task throttling of timer tasks from background pages. ↪
@@ -41,32 +41,31 @@ const minimal_args = [
 ];
 
 @Injectable()
-export class PptrBrowserConfig implements PuppeteerOptionsFactory {
+export default class PptrBrowserConfigService {
 
-    proxy: string[]
-    constructor(private readonly configService: ConfigService) {
-        console.log(this.configService.get<boolean>("PUPPETEER_HEADLESS"))
-        this.proxy = this.configService.get<string>("PROXY").split(":")
-    }
+    static defaultBrowser: Browser;
 
-    createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
+    constructor(private readonly configService: ConfigService) { }
+
+    getConfig(options: { proxy?: ProxyDTO } = {}): PuppeteerLaunchOptions {
         const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
         const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
         return {
             args: [
+                ...minimal_args,
                 '--enable-automation',
                 `--load-extension=${AUTOCAPTCHAPRO}`,
-                `--disable-extensions-except=${AUTOCAPTCHAPRO}`, 
-                this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
-                ...minimal_args
+                `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
+                // options.proxy ? `--proxy-server=http://${options.proxy.ip}:${options.proxy.port}` : '',
+                `--user-data-dir=${this.configService.get<string>("PROFILE_PATH")}`,
+                `--profile-directory=Profile 2`
             ],
             headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
                 ? "shell"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            userDataDir: this.configService.get<string>("PROFILE_PATH"),
-            devtools: this.configService.get<string>("DEVTOOLS") == "true",
-            pipe: true
+            // userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            // devtools: this.configService.get<string>("DEVTOOLS") == "true",
         };
     }
 }

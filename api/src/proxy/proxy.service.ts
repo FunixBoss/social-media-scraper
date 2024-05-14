@@ -1,26 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateProxyDto } from './dto/create-proxy.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Proxy } from '../entity/proxy.entity';
 import { Repository } from 'typeorm';
 import ProxyDTO from './dto/proxy.dto';
-import { Browser } from 'puppeteer';
-import { InjectBrowser } from 'nestjs-puppeteer';
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import axios from 'axios';
 import { lookup } from 'geoip-lite';
 import { ProxyIpv4 } from './types/proxy-ipv4';
+import { Proxy } from './entity/proxy.entity';
 
 @Injectable()
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
-
   constructor(
     @InjectRepository(Proxy) private readonly proxyRepository: Repository<Proxy>,
-    @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-  ) { }
+  ) {
+  }
 
-  async getRandom(): Promise<Proxy> {
+  async getRandom(): Promise<ProxyDTO> {
     const randomProxy = await this.proxyRepository
       .createQueryBuilder('proxy')
       .where('proxy.status = :status', { status: 'live' })
@@ -33,7 +30,7 @@ export class ProxyService {
     }
 
     this.logger.log('Random live proxy retrieved successfully.');
-    return randomProxy;
+    return new ProxyDTO(await this.proxyRepository.save(randomProxy));
   }
 
   async checkAll(): Promise<void> {

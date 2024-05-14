@@ -3,7 +3,7 @@ import { HelperModule } from 'src/helper/helper.module';
 import { ScraperController } from './scraper.controller';
 import { InsScraperServiceFactory } from './service/ins-scraper-factory';
 import ScraperService from './service/scraper.service';
-import { ProxyModule } from '../proxy/proxy.module';
+import { ProxyModule } from 'src/proxy/proxy.module';
 
 @Module({
     imports: [

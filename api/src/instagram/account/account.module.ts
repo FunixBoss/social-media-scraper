@@ -4,12 +4,12 @@ import { AccountController } from './account.controller';
 import InstagramLoginService from './service/instagram-login.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InstagramAccount } from '../entity/instagram-account.entity';
-import { PptrCrawlerModule } from 'src/pptr-crawler/pptr-crawler.module';
-import { ProxyModule } from '../proxy/proxy.module';
+import { PptrModule } from 'src/pptr/pptr.module';
+import { ProxyModule } from 'src/proxy/proxy.module';
 
 @Module({
   imports: [
-    PptrCrawlerModule,
+    PptrModule,
     ProxyModule,
     TypeOrmModule.forFeature([
       InstagramAccount
