@@ -49,23 +49,22 @@ export default class PptrBrowserConfigService {
 
     getConfig(options: { proxy?: ProxyDTO } = {}): PuppeteerLaunchOptions {
         const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
-        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
+        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`;
         return {
             args: [
                 ...minimal_args,
                 '--enable-automation',
                 `--load-extension=${AUTOCAPTCHAPRO}`,
+                // this.proxy ? --proxy-server=http://${this.proxy[0]}:${this.proxy[1]} : '',
                 `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
-                // options.proxy ? `--proxy-server=http://${options.proxy.ip}:${options.proxy.port}` : '',
-                `--user-data-dir=${this.configService.get<string>("PROFILE_PATH")}`,
-                `--profile-directory=Profile 2`
             ],
             headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
                 ? "shell"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            // userDataDir: this.configService.get<string>("PROFILE_PATH"),
-            // devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            pipe: true
         };
     }
 }

@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { Browser } from "puppeteer";
-import PptrBrowserConfigService from "./pptr-browser-config.service";
+import PptrBrowserConfigService, { minimal_args } from "./pptr-browser-config.service";
 import puppeteer, { PuppeteerExtraPlugin } from 'puppeteer-extra'
 import { PptrBrowserContextConfigService } from "./pptr-browser-context-config.service";
 import { BROWSERSCAN_URL, INS_URL } from "../config/social-media.config";
@@ -8,6 +8,7 @@ import { PptrPageConfigService } from "./pptr-page-config.service";
 import { ProxyService } from "src/proxy/proxy.service";
 import ProxyDTO from "src/proxy/dto/proxy.dto";
 import { sleep } from "../utils/Utils";
+import { ConfigService } from "@nestjs/config";
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const AnonymizeUAPlugin = require('puppeteer-extra-plugin-anonymize-ua');
 const BlockResourcesPlugin = require('puppeteer-extra-plugin-block-resources');
@@ -35,6 +36,7 @@ export class PptrBrowserManagement implements OnModuleInit {
     private browserMap: Map<string, Browser> = new Map()
 
     constructor(
+        private readonly configService: ConfigService,
         private readonly browserConfigService: PptrBrowserConfigService,
         private readonly contextConfigService: PptrBrowserContextConfigService,
         private readonly pageConfigService: PptrPageConfigService,
@@ -100,15 +102,29 @@ export class PptrBrowserManagement implements OnModuleInit {
     }
 
     getBrowser(browserName: string): Browser {
-        
         return this.browserMap.get(browserName)
     }
 
     async createBrowser(options: { browserName?: string, proxy?: ProxyDTO } = {}): Promise<Browser> {
-        const browser = await puppeteer.launch(this.browserConfigService.getConfig({ proxy: options.proxy }))
-        if (options.browserName) {
-            this.browserMap.set(options.browserName, browser)
-        }
+        puppeteer.use(StealthPlugin())
+        const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
+        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
+        const browser = await puppeteer.launch({
+            args: [
+                ...minimal_args,
+                '--enable-automation',
+                `--load-extension=${AUTOCAPTCHAPRO}`,
+                // this.proxy ? --proxy-server=http://${this.proxy[0]}:${this.proxy[1]} : '',
+                `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
+            ],
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
+                ? "shell"
+                : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
+            executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
+            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            devtools: this.configService.get<string>("DEVTOOLS") == "true",
+            pipe: true
+        });
         return browser;
     }
 
