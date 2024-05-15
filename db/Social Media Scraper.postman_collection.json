@@ -17,7 +17,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java/hashtags"
+								"url": "http://localhost:3000/api/ins/keyword/gardening/hashtags"
 							},
 							"response": []
 						},
@@ -26,7 +26,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/java/channels"
+								"url": "http://localhost:3000/api/ins/keyword/java.world/channels"
 							},
 							"response": []
 						},
@@ -55,404 +55,6 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"gardening\",\r\n    \"priority\": \"HIGH\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": "http://localhost:3000/api/ins/keyword"
-							},
-							"response": []
-						},
-						{
-							"name": "delete",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": "http://localhost:3000/api/ins/keyword/python"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Channel",
-					"item": [
-						{
-							"name": "crawl",
-							"item": [
-								{
-									"name": "mutti-channel-profiles",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/scrape/profile?usernames=_javadeveloper,java.world,drfacerejuvenator,deyluv.layyy,ng.dhb,fate.nassaf8,queenquin.0602,\ncallmemammam,poetry_and_paula,kyos_oarsis.2202,sheraliyjorayiv",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"scrape",
-												"profile"
-											],
-											"query": [
-												{
-													"key": "usernames",
-													"value": "_javadeveloper,java.world,drfacerejuvenator,deyluv.layyy,ng.dhb,fate.nassaf8,queenquin.0602,\ncallmemammam,poetry_and_paula,kyos_oarsis.2202,sheraliyjorayiv"
-												}
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "full channels",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/java.world?infos=profile-posts-reels-friendships",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"java.world"
-											],
-											"query": [
-												{
-													"key": "infos",
-													"value": "profile-posts-reels-friendships"
-												}
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "full channel",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/rockwellwater_?infos=profile-friendships-posts-reels",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"rockwellwater_"
-											],
-											"query": [
-												{
-													"key": "infos",
-													"value": "profile-friendships-posts-reels"
-												}
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "profile",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/_javadeveloper/profile"
-									},
-									"response": []
-								},
-								{
-									"name": "friendships",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/_javadeveloper/friendships"
-									},
-									"response": []
-								},
-								{
-									"name": "posts",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/_javadeveloper/posts"
-									},
-									"response": []
-								},
-								{
-									"name": "reels",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "export",
-							"item": [
-								{
-									"name": "export channels (excel, json)",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/export?type=json",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"export"
-											],
-											"query": [
-												{
-													"key": "type",
-													"value": "json"
-												}
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "export channel (excel, json)",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/export/_javadeveloper?type=json",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"export",
-												"_javadeveloper"
-											],
-											"query": [
-												{
-													"key": "type",
-													"value": "json"
-												}
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "download",
-							"item": [
-								{
-									"name": "download reels/posts",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:3000/api/ins/channel/download/_javadeveloper?type=posts&from_order=1&to_order=500",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "3000",
-											"path": [
-												"api",
-												"ins",
-												"channel",
-												"download",
-												"_javadeveloper"
-											],
-											"query": [
-												{
-													"key": "type",
-													"value": "posts"
-												},
-												{
-													"key": "from_order",
-													"value": "1"
-												},
-												{
-													"key": "to_order",
-													"value": "500"
-												}
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "findall download histories",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/download/_javadeveloper/findall"
-									},
-									"response": []
-								},
-								{
-									"name": "download reels/posts by id",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/ins/channel/download/_javadeveloper/13"
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "proxy",
-							"item": [
-								{
-									"name": "find all",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/proxy"
-									},
-									"response": []
-								},
-								{
-									"name": "find one",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/proxy/1"
-									},
-									"response": []
-								},
-								{
-									"name": "check",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/proxy/check/1"
-									},
-									"response": []
-								},
-								{
-									"name": "check-all",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": "http://localhost:3000/api/proxy"
-									},
-									"response": []
-								},
-								{
-									"name": "create",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\r\n    \"proxy\": \"198.46.137.153:6357:ncpptvdk:g9czf5seop32\",\r\n    \"import_date\": \"2024-05-11\",\r\n    \"expiration_date\": \"2024-11-10\"\r\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": "http://localhost:3000/api/proxy"
-									},
-									"response": []
-								},
-								{
-									"name": "delete",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "{\r\n    \"proxy\": \"198.46.137.153:6357:ncpptvdk:g9czf5seop32\",\r\n    \"import_date\": \"2024-05-10\",\r\n    \"expiration_date\": \"2024-11-10\"\r\n}",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": "http://localhost:3000/api/proxy/1"
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "testlazy",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": "http://localhost:3000/api/ins/channel/testlazy"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Hashtag",
-					"item": [
-						{
-							"name": "find all",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:3000/api/ins/hashtag?keyword=gardening",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "3000",
-									"path": [
-										"api",
-										"ins",
-										"hashtag"
-									],
-									"query": [
-										{
-											"key": "keyword",
-											"value": "gardening"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "create",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
 									"raw": "{\r\n    \"name\": \"gardening2\",\r\n    \"priority\": \"HIGH\"\r\n}",
 									"options": {
 										"raw": {
@@ -470,6 +72,187 @@
 								"method": "DELETE",
 								"header": [],
 								"url": "http://localhost:3000/api/ins/keyword/java.world"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Channel",
+					"item": [
+						{
+							"name": "export channels (excel, json)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/export?type=excel",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"export"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "excel"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "export channel (excel, json)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/export?type=excel",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"export"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "excel"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "full channel",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/_javadeveloper?infos=profile-reels-posts-friendships",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"_javadeveloper"
+									],
+									"query": [
+										{
+											"key": "infos",
+											"value": "profile-reels-posts-friendships"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "full channels",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel?classify=SELF_ADDING",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel"
+									],
+									"query": [
+										{
+											"key": "classify",
+											"value": "SELF_ADDING"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/profile"
+							},
+							"response": []
+						},
+						{
+							"name": "friendships",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/friendships"
+							},
+							"response": []
+						},
+						{
+							"name": "posts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/posts"
+							},
+							"response": []
+						},
+						{
+							"name": "reels",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "http://localhost:3000/api/ins/channel/_javadeveloper/reels"
+							},
+							"response": []
+						},
+						{
+							"name": "download reels/posts",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/ins/channel/download/_javadeveloper?type=areels",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"ins",
+										"channel",
+										"download",
+										"_javadeveloper"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "areels"
+										}
+									]
+								}
 							},
 							"response": []
 						}

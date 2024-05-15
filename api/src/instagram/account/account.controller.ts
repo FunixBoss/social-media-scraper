@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { InstagramAccountService } from './service/account.service';
+import { AccountService } from './service/account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 
-@Controller('ins/account')
+@Controller('account')
 export class AccountController {
-  constructor(private readonly accountService: InstagramAccountService) {}
+  constructor(private readonly accountService: AccountService) {}
 
   @Post()
   create(@Body() createAccountDto: CreateAccountDto) {

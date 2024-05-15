@@ -1,5 +1,9 @@
+<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
 import { Injectable } from "@nestjs/common";
 import { Browser, PuppeteerLaunchOptions } from "puppeteer";
+=======
+import { Injectable, Logger } from "@nestjs/common";
+>>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
 import { ConfigService } from "@nestjs/config";
 import ProxyDTO from "src/proxy/dto/proxy.dto";
 
@@ -45,26 +49,34 @@ export default class PptrBrowserConfigService {
 
     static defaultBrowser: Browser;
 
+<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
     constructor(private readonly configService: ConfigService) { }
 
     getConfig(options: { proxy?: ProxyDTO } = {}): PuppeteerLaunchOptions {
         const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
         const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`;
+=======
+    createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
+>>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
         return {
             args: [
                 ...minimal_args,
                 '--enable-automation',
+<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
                 `--load-extension=${AUTOCAPTCHAPRO}`,
                 // this.proxy ? --proxy-server=http://${this.proxy[0]}:${this.proxy[1]} : '',
                 `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
+=======
+                this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
+                ...minimal_args
+>>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
             ],
-            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
-                ? "shell"
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new"
+                ? "new"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
             userDataDir: this.configService.get<string>("PROFILE_PATH"),
             devtools: this.configService.get<string>("DEVTOOLS") == "true",
-            pipe: true
         };
     }
 }

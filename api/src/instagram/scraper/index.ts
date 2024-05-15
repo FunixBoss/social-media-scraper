@@ -1,28 +1,27 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { getPostType, shortcodeFormatter } from '../utils/index';
-import { ProductType, MediaType, ISearchFollow, PostGraphQL } from '../types';
-import { UserGraphQL } from '../types/UserMetadata';
-import { IGStoriesMetadata, ItemStories, StoriesGraphQL } from '../types/StoriesMetadata';
-import { highlight_ids_query, highlight_media_query, post_shortcode_query } from '../helper/query';
-import { HightlighGraphQL, ReelsIds } from '../types/HighlightMetadata';
-import { HMedia, IHighlightsMetadata, IReelsMetadata, ReelsMediaData } from '../types/HighlightMediaMetadata';
-import { IPostModels, IRawBody, MediaUrls } from '../types/PostModels';
-import { config } from '../config';
-import { UserGraphQlV2, Graphql } from '../types/UserGraphQlV2';
-import { Injectable } from '@nestjs/common';
+import { bufferToStream, getPostType, parseCookie, randInt, shortcodeFormatter } from './utils/index';
+import { ProductType, MediaType, IChangedProfilePicture, ISearchFollow, IGPostMetadata, PostGraphQL } from './types';
+import { IGUserMetadata, UserGraphQL } from './types/UserMetadata';
+import { IGStoriesMetadata, ItemStories, StoriesGraphQL } from './types/StoriesMetadata';
+import { highlight_ids_query, highlight_media_query, post_shortcode_query } from './helper/query';
+import { HightlighGraphQL, ReelsIds } from './types/HighlightMetadata';
+import { HMedia, IHighlightsMetadata, IReelsMetadata, ReelsMediaData } from './types/HighlightMediaMetadata';
+import { IPostModels, IRawBody, MediaUrls } from './types/PostModels';
+import { config } from './config';
+import { UserGraphQlV2, Graphql } from './types/UserGraphQlV2';
+import { FactoryProvider, Injectable } from '@nestjs/common';
 
-export * from '../utils'
-export * as InstagramMetadata from '../types'
-export * from '../helper/Session';
+export * from './utils'
+export * as InstagramMetadata from './types'
+export * from './helper/Session';
 
 @Injectable()
-export class InsScraperServiceFactory {
-    static create(IgCookie?: string, AxiosOpts?: AxiosRequestConfig): InstaFetcher {
-        return new InstaFetcher(IgCookie, AxiosOpts);
-    }
-}
-
-export class InstaFetcher {
+export class InsScraperService {
+	/**
+	 * @param IgCookie
+	 * @param storeCookie
+	 * @param AxiosOpts
+	 */
 	private accountUserId: string;
 
 	constructor(
@@ -51,7 +50,7 @@ export class InstaFetcher {
 		};
 	}
 
-	private fetchApi = ( 
+	private fetchApi = (
 		baseURL: string,
 		url: string = '',
 		agent: string = config.android,
@@ -395,3 +394,10 @@ export class InstaFetcher {
 	}
 }
 
+export const insScraperServiceFactory: FactoryProvider<InsScraperService> = {
+	provide: InsScraperService,
+	useFactory: (IgCookie: string, AxiosOpts?: AxiosRequestConfig) => {
+		return new InsScraperService(IgCookie, AxiosOpts);
+	},
+	inject: ['IgCookie', 'AxiosOpts'], // Inject dependencies (IgCookie and AxiosOpts) here
+};

@@ -91,14 +91,11 @@ export interface InsProfileFull {
         };
     };
 }
-const defaultOptions = {
-    is_bot_scanning: false
-}
 
-export function mapInsProfile(profile: InsProfileFull, options: { is_bot_scanning: boolean } = defaultOptions): Channel {
+export function mapInsProfile(profile: InsProfileFull): Channel {
     return {
         biography: profile.user?.biography ?? '',
-        bio_link_url: profile.user?.bio_links && profile.user.bio_links.length > 0
+        bio_link_url: profile.user?.bio_links && profile.user.bio_links.length > 0 
             ? profile.user.bio_links[0].url
             : null,
         category: profile.user?.category ?? '',
@@ -112,7 +109,7 @@ export function mapInsProfile(profile: InsProfileFull, options: { is_bot_scannin
         media_count: +profile.user?.media_count ?? 0,
         pk: profile.user?.pk ?? '',
         username: profile.user?.username ?? '',
-        is_self_adding: !options.is_bot_scanning,
-        is_bot_scanning: options.is_bot_scanning
+        is_self_adding: true,
+        is_bot_scanning: false
     }
 }

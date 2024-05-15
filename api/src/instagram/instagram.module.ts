@@ -40,7 +40,6 @@ import { ProxyModule } from 'src/proxy/proxy.module';
     KeywordModule,
     ReelModule,
     ScraperModule,
-    ProxyModule,
     TypeOrmModule,
   ]
 })

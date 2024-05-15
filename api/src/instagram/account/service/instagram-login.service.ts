@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+<<<<<<< HEAD
 import axios, { AxiosProxyConfig } from "axios";
 import { ElementHandle, Page } from "puppeteer";
 import { WrongCredentialsException } from "src/exception/wrong-credentials";
@@ -9,15 +10,13 @@ import { PptrBrowserManagement } from '../../../pptr/service/pptr-browser-manage
 import { PptrPageConfigService } from "src/pptr/service/pptr-page-config.service";
 import { ProxyService } from "src/proxy/proxy.service";
 import ProxyDTO from "src/proxy/dto/proxy.dto";
+=======
+>>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper)
 
-export type TwoFACode = {
-    code: string,
-    lifetime: number
-}
 @Injectable()
 export default class InstagramLoginService {
-
     constructor(
+<<<<<<< HEAD
         private readonly browserManagement: PptrBrowserManagement,
         private readonly pageConfig: PptrPageConfigService,
         private readonly proxyService: ProxyService
@@ -86,4 +85,9 @@ export default class InstagramLoginService {
         })
         return result;
     }
+=======
+    ) {
+
+    }
+>>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper)
 }
