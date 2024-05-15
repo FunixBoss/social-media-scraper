@@ -18,7 +18,6 @@ import ChannelMapperService from './channel-mapper.service';
 
 @Injectable()
 export class ChannelService {
-  private readonly baseUrl = 'https://instagram.com'
   private readonly logger = new Logger(ChannelService.name);
 
   constructor(
@@ -122,7 +121,7 @@ export class ChannelService {
   async fetchUserProfile(username: string): Promise<FindAllChannelDTO> {
     if (await this.isExists(username) && await this.isCrawledContent(username, "CHANNEL_PROFILE")) {
       return this.mapperService.mapToFindAllChannelDTO(await this.channelRepository.findOneBy({ username }))
-    }
+    } 
 
     let channel: Channel = await this.crawlService.crawlProfile(username);
     await this.dataSource.transaction(async (transactionalEntityManager) => {

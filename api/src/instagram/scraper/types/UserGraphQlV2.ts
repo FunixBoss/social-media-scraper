@@ -1,3 +1,4 @@
+import { Channel } from "src/instagram/entity/channel.entity";
 import { PageInfo } from ".";
 
 export interface Graphql {
@@ -108,4 +109,29 @@ export interface EdgeOwnerToTimelineMedia {
     count?:     number;
     page_info?: PageInfo;
     edges?:     any[];
+}
+
+const defaultOptions = {
+    is_bot_scanning: false
+}
+export function mapUserGraphQLToChannel(userGraphql: UserGraphQlV2, options: { is_bot_scanning: boolean } = defaultOptions): Channel {
+    return {
+        biography: userGraphql.biography ?? '',
+        bio_link_url:userGraphql?.bio_links && userGraphql.bio_links.length > 0
+            ? userGraphql.bio_links[0].url
+            : null,
+        category: userGraphql?.category_name,
+        external_url: userGraphql?.external_url,
+        follower_count: userGraphql?.edge_followed_by.count ?? 0,
+        following_count: userGraphql?.edge_follow.count,
+        full_name: userGraphql?.full_name,
+        profile_pic_url: userGraphql?.profile_pic_url,
+        hd_profile_pic_url_info: userGraphql?.profile_pic_url_hd,
+        id: userGraphql?.id,
+        media_count: userGraphql?.edge_owner_to_timeline_media?.count,
+        pk: userGraphql?.id,
+        username: userGraphql?.username,
+        is_self_adding: !options?.is_bot_scanning,
+        is_bot_scanning: options?.is_bot_scanning
+    }
 }

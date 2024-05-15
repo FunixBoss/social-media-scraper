@@ -1,40 +1,45 @@
 import { Injectable } from "@nestjs/common";
-<<<<<<< HEAD
 import axios, { AxiosProxyConfig } from "axios";
-import { ElementHandle, Page } from "puppeteer";
+import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
+import { Browser, ElementHandle, Page } from "puppeteer";
 import { WrongCredentialsException } from "src/exception/wrong-credentials";
 import { WrongTwoFactorAuthenticationException } from "src/exception/wrong-two-factor-authentication";
-import { Proxy } from "src/proxy/entity/proxy.entity";
+import { PptrPageService } from "src/pptr/service/pptr-page.service";
+import { PptrBrowserContextService } from "src/pptr/service/pptr-browser-context.service";
+import { INS_URL } from "src/pptr/config/social-media.config";
 import { sleep } from "src/pptr/utils/Utils";
-import { PptrBrowserManagement } from '../../../pptr/service/pptr-browser-management.service';
-import { PptrPageConfigService } from "src/pptr/service/pptr-page-config.service";
+import { Proxy } from "src/proxy/entity/proxy.entity";
 import { ProxyService } from "src/proxy/proxy.service";
 import ProxyDTO from "src/proxy/dto/proxy.dto";
-=======
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper)
 
+export type TwoFACode = {
+    code: string,
+    lifetime: number
+}
 @Injectable()
 export default class InstagramLoginService {
+
     constructor(
-<<<<<<< HEAD
-        private readonly browserManagement: PptrBrowserManagement,
-        private readonly pageConfig: PptrPageConfigService,
+        @InjectBrowser('social-media-scraper') private readonly browser: Browser,
+        @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
+        private readonly pageService: PptrPageService,
+        private readonly contextService: PptrBrowserContextService,
         private readonly proxyService: ProxyService
     ) {
 
     }
 
     async login(credentials: { username: string, password: string, twoFA?: string }): Promise<boolean> {
-        const LOGIN_URL = "https://www.instagram.com";
         const proxy: ProxyDTO = await this.proxyService.getRandom();
-        const browser = await this.browserManagement.createBrowser({ browserName: 'insta-login', proxy });
-        const context = browser.defaultBrowserContext();
-        const page: Page = await this.pageConfig.setupPage(context, {
+        let context = await this.contextService.createBrowserContext(this.browser, { proxy });
+        const page: Page = await this.pageService.setupPage(context, {
             page: (await context.pages()).at(0),
-            url: LOGIN_URL,
+            url: INS_URL,
             proxy
-        })
+        });
 
+
+        // have to check right username/password
         const usernameHandler: ElementHandle<HTMLInputElement> = await page.waitForSelector("input[name='username']", { timeout: 5000 });
         await usernameHandler.type(credentials.username, { delay: 100 })
         await page.type("input[name='password'", credentials.password, { delay: 120 });
@@ -85,9 +90,4 @@ export default class InstagramLoginService {
         })
         return result;
     }
-=======
-    ) {
-
-    }
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper)
 }

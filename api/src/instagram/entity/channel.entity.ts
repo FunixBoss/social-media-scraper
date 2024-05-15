@@ -5,13 +5,13 @@ import { ChannelReel } from './channel-reel.entity';
 import { KeywordChannel } from './keyword-channel.entity';
 import { ChannelPost } from './channel-post.entity';
 
-@Entity()
+@Entity('channel')
 export class Channel {
     @PrimaryColumn({ length: 200 })
     username?: string;
 
     @Column({ length: 200, nullable: true })
-    category?: string;
+    category?: string; 
 
     @Column({ length: 2000, nullable: true })
     biography?: string;

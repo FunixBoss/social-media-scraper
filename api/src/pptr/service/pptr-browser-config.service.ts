@@ -1,11 +1,7 @@
-<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
 import { Injectable } from "@nestjs/common";
-import { Browser, PuppeteerLaunchOptions } from "puppeteer";
-=======
-import { Injectable, Logger } from "@nestjs/common";
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
 import { ConfigService } from "@nestjs/config";
-import ProxyDTO from "src/proxy/dto/proxy.dto";
+import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
+import { PuppeteerNodeLaunchOptions } from "puppeteer";
 
 export const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
@@ -45,38 +41,31 @@ export const minimal_args = [
 ];
 
 @Injectable()
-export default class PptrBrowserConfigService {
+export class PptrBrowserConfig implements PuppeteerOptionsFactory {
 
-    static defaultBrowser: Browser;
+    constructor(
+        private readonly proxy: string[],
+        private readonly profilePathName: string,
+        private readonly configService: ConfigService,
+    ) { }
 
-<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
-    constructor(private readonly configService: ConfigService) { }
-
-    getConfig(options: { proxy?: ProxyDTO } = {}): PuppeteerLaunchOptions {
-        const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
-        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`;
-=======
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
+        const EXTENSION_PATH = 'D:/ProgrammingLife/Tool/social-media-scraper/api/extensions';
+        const AUTOCAPTCHAPRO = `${EXTENSION_PATH}/AutocaptchaProExtension`
         return {
             args: [
-                ...minimal_args,
                 '--enable-automation',
-<<<<<<< HEAD:api/src/pptr/service/pptr-browser-config.service.ts
                 `--load-extension=${AUTOCAPTCHAPRO}`,
-                // this.proxy ? --proxy-server=http://${this.proxy[0]}:${this.proxy[1]} : '',
                 `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
-=======
                 this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
                 ...minimal_args
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper):api/src/pptr-crawler/service/pptr-browser-config.service.ts
             ],
-            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "new"
-                ? "new"
+            headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"
+                ? "shell"
                 : this.configService.get<string>("PUPPETEER_HEADLESS") == "true",
             executablePath: this.configService.get<string>("EXECUTABLE_PATH"),
-            userDataDir: this.configService.get<string>("PROFILE_PATH"),
+            userDataDir: `${this.configService.get<string>("PROFILE_PATH")}/${this.profilePathName}`,
             devtools: this.configService.get<string>("DEVTOOLS") == "true",
         };
     }
-}
+} 

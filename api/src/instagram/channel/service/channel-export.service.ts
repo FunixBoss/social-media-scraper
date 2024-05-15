@@ -14,28 +14,16 @@ import ChannelPostDTO from '../dto/channel-post.dto';
 import ChannelReelDTO from '../dto/channel-reel.dto';
 import FindOneChannelDTO from '../dto/findone-channel.dto';
 import ChannelMapperService from './channel-mapper.service';
-import { ConfigService } from '@nestjs/config';
-import { PptrBrowserManagement } from 'src/pptr/service/pptr-browser-management.service';
 @Injectable()
 export class ChannelExportService {
   private DOWNLOAD_PATH: string;
   private readonly logger = new Logger(ChannelExportService.name);
-  private browser: Browser;
   constructor(
-    private readonly configService: ConfigService,
     private readonly mapperService: ChannelMapperService,
     private readonly channelService: ChannelService,
-    private readonly browserManagement: PptrBrowserManagement,
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
-  ) {
-    this.onInit()
-  }
+  ) {}
   
-  private async onInit() {
-    this.DOWNLOAD_PATH = this.configService.get<string>("DOWNLOAD_PATH")
-    this.browser = this.browserManagement.getBrowser('instagram');
-  }
-
   async exportChannels(exportType: string | "json" | "excel"): Promise<void> {
     if (exportType == 'excel') this.exportChannelsExcel();
     if (exportType == 'json') this.exportChannelsJson();

@@ -38,7 +38,7 @@ export default class ScraperService {
     async scrapeUserProfiles(usernames: string[]): Promise<Channel[]> {
         const MAX_FETCH_BATCH = 20
         const usernameBatches: string[][] = BatchHelper.createBatches<string>(usernames, MAX_FETCH_BATCH);
-
+            
         const cookieStrs: string[] = await this.cookieHandler.getAllCookies('instagram');
         const rotatingProxy: AxiosProxyConfig = {
             protocol: "http",

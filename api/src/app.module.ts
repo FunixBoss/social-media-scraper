@@ -8,7 +8,6 @@ import { ParseCommaSeparatedQuery } from './pipes/parse-comma-separate-query.pip
 import { AllExceptionsFilter } from './exception/all-exceptions-handler';
 import { PptrModule } from './pptr/pptr.module';
 import { ProxyModule } from './proxy/proxy.module';
-import { PptrBrowserManagement } from './pptr/service/pptr-browser-management.service';
 
 @Module({
   providers: [
@@ -37,10 +36,4 @@ import { PptrBrowserManagement } from './pptr/service/pptr-browser-management.se
     }),
   ],
 })
-export class AppModule implements OnApplicationBootstrap{
-  constructor(private readonly browserManagement: PptrBrowserManagement) {}
-
-  async onApplicationBootstrap() {
-    await this.browserManagement.ensureInitialized();
-  }
-}
+export class AppModule { }

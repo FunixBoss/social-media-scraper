@@ -3,9 +3,10 @@ import { BrowserContext, Page, Protocol } from "puppeteer";
 import { readFileSync } from 'fs';
 import BypassInstagramRestrictionService from "./bypass-instagram-restriction.service";
 import ProxyDTO from "src/proxy/dto/proxy.dto";
+
 @Injectable()
-export class PptrPageConfigService {
-    private readonly logger = new Logger(PptrPageConfigService.name);
+export class PptrPageService {
+    private readonly logger = new Logger(PptrPageService.name);
 
     readonly DEFAULT_TIMEOUT = process.env.DEFAULT_TIMEOUT;
     readonly DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
@@ -36,10 +37,9 @@ export class PptrPageConfigService {
         url?: string,
         proxy?: ProxyDTO
     } = {}): Promise<Page> {
-        console.log(`setup Page: incognito: ${context.isIncognito()}`);
         if (!opts.page) opts.page = await context.newPage();
 
-        await opts.page.setDefaultTimeout(+this.DEFAULT_TIMEOUT);
+        opts.page.setDefaultTimeout(+this.DEFAULT_TIMEOUT);
         await opts.page.setViewport(this.DEFAULT_PAGE_SIZE);
         await opts.page.setExtraHTTPHeaders(this.DEFAULT_HTTP_HEADERS);
         await opts.page.setUserAgent(this.DEFAULT_USER_AGENT);
@@ -68,7 +68,7 @@ export class PptrPageConfigService {
     async closePage(context: BrowserContext, index: number = 0): Promise<void> {
         const pages = await context.pages()
         if (pages.length > 0) {
-            await pages[index].close();
+            await (pages[index].close());
         } else {
             console.log('No pages to close.');
         }

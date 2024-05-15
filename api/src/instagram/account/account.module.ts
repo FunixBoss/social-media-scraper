@@ -4,7 +4,6 @@ import { AccountController } from './account.controller';
 import InstagramLoginService from './service/instagram-login.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InstagramAccount } from '../entity/instagram-account.entity';
-<<<<<<< HEAD
 import { PptrModule } from 'src/pptr/pptr.module';
 import { ProxyModule } from 'src/proxy/proxy.module';
 
@@ -12,11 +11,6 @@ import { ProxyModule } from 'src/proxy/proxy.module';
   imports: [
     PptrModule,
     ProxyModule,
-=======
-
-@Module({
-  imports: [
->>>>>>> parent of ba779404 (add extensions. instagram login, detect restrictions, improve scraper)
     TypeOrmModule.forFeature([
       InstagramAccount
     ])

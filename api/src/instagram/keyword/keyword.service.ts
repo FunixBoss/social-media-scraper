@@ -5,7 +5,8 @@ import { Keyword } from '../entity/keyword.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Hashtag } from '../entity/hashtag.entity';
 import { EntityAlreadyExists } from 'src/exception/entity-already-exists.exception';
-import { Browser, Page } from 'puppeteer';
+import { InjectPage } from 'nestjs-puppeteer';
+import { Page } from 'puppeteer';
 import { RequestInterceptionManager } from 'puppeteer-intercept-and-modify-requests';
 import { InsAPIWrapper } from 'src/pptr/types/ins/InsAPIWrapper';
 import { InsSearching, mapInsHashtag, mapInsSearchChannel } from 'src/pptr/types/ins/InsSearch';
@@ -20,13 +21,11 @@ import FindAllChannelDTO from '../channel/dto/findall-channel.dto';
 import { ChannelService } from '../channel/service/channel.service';
 import ChannelMapperService from '../channel/service/channel-mapper.service';
 import ChannelCrawlService from '../channel/service/channel-crawl.service';
-import { PptrBrowserManagement } from 'src/pptr/service/pptr-browser-management.service';
 
 @Injectable()
 export class KeywordService {
-  private interceptManager: RequestInterceptionManager;
-  private browser: Browser;
-  private page: Page;
+  private interceptManager: RequestInterceptionManager
+
   constructor(
     private readonly channelService: ChannelService,
     private readonly crawlService: ChannelCrawlService,
@@ -34,17 +33,10 @@ export class KeywordService {
     @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
     @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
     @InjectRepository(KeywordChannel) private readonly keywordChannelRepository: Repository<KeywordChannel>,
-    private readonly browserManagement: PptrBrowserManagement,
+    @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
     private readonly dataSource: DataSource,
     private readonly mapperService: ChannelMapperService
   ) {
-    this.onInit()
-  }
-
-  private async onInit() {
-    this.browser = this.browserManagement.getBrowser('instagram');
-    await sleep(60)
-    this.page = (await this.browser.pages()).at(0)
     this.setUpPageInterceptors()
   }
 
@@ -67,7 +59,7 @@ export class KeywordService {
       hashtags: keyword.hashtags as any,
       total_hashtags: keyword.hashtags ? keyword.hashtags.length : 0,
       total_channels: keyword.channels ? keyword.channels.length : 0
-    };
+    } ;
   }
 
   async mapToFindAllKeywordDTOs(keywords: Keyword[]): Promise<FindAllKeywordDTO[]> {
@@ -153,7 +145,7 @@ export class KeywordService {
 
   async create(createKeywordDto: CreateKeywordDto): Promise<FindOneKeywordDTO> {
     if ((await this.isExists(createKeywordDto.name))) throw new EntityAlreadyExists('Keyword', createKeywordDto.name);
-
+ 
     try {
       const keyword = new Keyword();
       keyword.name = createKeywordDto.name;

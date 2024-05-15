@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ElementHandle, Page } from "puppeteer";
+import { Page } from "puppeteer";
 
 /*
     restriction cases:

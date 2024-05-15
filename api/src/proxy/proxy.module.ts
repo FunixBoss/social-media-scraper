@@ -10,12 +10,13 @@ import { Proxy } from './entity/proxy.entity';
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        host: configService.get<string>('INS_DB_HOST'),
-        port: parseInt(configService.get<string>('INS_DB_PORT'), 10) || 3306,
-        username: configService.get<string>('INS_DB_USERNAME'),
-        password: configService.get<string>('INS_DB_PASSWORD'),
-        database: configService.get<string>('INS_DB_NAME'),
+        host: configService.get<string>('PROXY_DB_HOST'),
+        port: parseInt(configService.get<string>('PROXY_DB_PORT'), 10) || 3306,
+        username: configService.get<string>('PROXY_DB_USERNAME'),
+        password: configService.get<string>('PROXY_DB_PASSWORD'),
+        database: configService.get<string>('PROXY_DB_NAME'),
         entities: [__dirname + '/entity/*.entity{.ts,.js}'],
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
@@ -27,4 +28,4 @@ import { Proxy } from './entity/proxy.entity';
   providers: [ProxyService],
   exports: [ProxyService]
 })
-export class ProxyModule {}
+export class ProxyModule { }

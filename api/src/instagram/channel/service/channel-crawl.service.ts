@@ -12,31 +12,23 @@ import { InsReelsFull, mapInsReels } from "src/pptr/types/ins/InsReels";
 import { sleep } from "src/pptr/utils/Utils";
 import CrawlConfig from "../config/crawl-config";
 import { scrollPageToBottom, scrollPageToTop } from "../utils/scroll";
-import { PptrPageConfigService } from "src/pptr/service/pptr-page-config.service";
-import { PptrBrowserManagement } from "src/pptr/service/pptr-browser-management.service";
 import { INS_URL } from "src/pptr/config/social-media.config";
+import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
+import { PptrPageService } from "src/pptr/service/pptr-page.service";
 
 @Injectable()
 export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
-    private browser: Browser;
-    private page: Page;
+    private readonly baseUrl = 'https://instagram.com'
+
     constructor(
-        private readonly browserManagement: PptrBrowserManagement,
-        private readonly pptrPageConfig: PptrPageConfigService
+        @InjectBrowser('social-media-scraper') private readonly browser: Browser,
+        @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
+        private readonly pageService: PptrPageService
     ) {
-        this.onInit()
+        this.setUpDefaultPageInterceptors()
     }
 
-    private async onInit() {
-        await sleep(5)
-        this.browser = this.browserManagement.getBrowser('instagram');
-        console.log(this.browser);
-        
-        // await sleep(10)
-        // this.page = (await this.browser.pages()).at(0)
-        // this.setUpDefaultPageInterceptors()  
-    }
 
     private async setUpDefaultPageInterceptors(): Promise<void> {
         this.interceptManager = new RequestInterceptionManager(
@@ -78,7 +70,7 @@ export default class ChannelCrawlService {
             usernameBatches.push(usernames.slice(i, i + MAX_BATCH_SIZE));
         }
         const context: BrowserContext = this.browser.browserContexts().at(1)
-        await this.pptrPageConfig.createPages(context, { number: MAX_BATCH_SIZE });
+        await this.pageService.createPages(context, { number: MAX_BATCH_SIZE });
         const pages: Page[] = await context.pages()
 
         const channelsMap = new Map();
