@@ -55,7 +55,7 @@ export default class ScraperService {
             channel = mapUserGraphQLToChannel(await instaFetcher.fetchUser(username) as UserGraphQlV2)
             if (options.log) this.logger.log(`Scraper user profile: ${username} successfully`)
         } catch (error) {
-            this.logger.error(`Scrape user profile: ${username} failed, ${error["name"]}: ${error["message"]}`);
+            if (options.log) this.logger.error(`Scrape user profile: ${username} failed, ${error["name"]}: ${error["message"]}`);
             throw new ScrapeUserProfileFailed(username)
         }
         return channel;
@@ -85,10 +85,11 @@ export default class ScraperService {
             for (const username of usernameBatch) {
                 try {
                     result.channels.push(await this.scrapeUserProfile(username, { log: false, proxy: axiosProxyConfig }));
-                    this.logger.log(`Scrape user profile (${++numberOfCrawled}/${totalUsername}): ${username} successfully`)
-                    await sleep(1);
+                    this.logger.log(`Scrape user profile successfully (${++numberOfCrawled}/${totalUsername}): ${username} `)
+                    await sleep(1); 
                 } catch (error) {
                     if (error instanceof ScrapeUserProfileFailed) {
+                        this.logger.warn(`Scrape user profile failed (${++numberOfCrawled}/${totalUsername}): ${username} `)
                         result.scrapeFailedUsernames.push(username);
                     }
                     continue;

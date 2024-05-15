@@ -81,7 +81,7 @@ export default class ChannelCrawlService {
             const promises = usernameBatch.map(async (username, index) => {
                 const page = pages[index + 1];  // Ensure this is correctly assigned based on your pages array
                 const interceptManager = await this.setUpPageInterceptors(page);
-                await interceptManager.intercept({ 
+                await interceptManager.intercept({
                     urlPattern: `https://www.instagram.com/api/graphql`,
                     resourceType: 'XHR',
                     modifyResponse: async ({ body }) => {
