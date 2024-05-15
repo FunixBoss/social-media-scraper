@@ -13,7 +13,7 @@ import { ProxyModule } from 'src/proxy/proxy.module';
     ProxyModule,
     TypeOrmModule.forFeature([
       InstagramAccount
-    ])
+    ], 'instagram-scraper')
   ],
   controllers: [AccountController],
   providers: [

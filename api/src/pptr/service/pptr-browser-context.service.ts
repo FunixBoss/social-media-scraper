@@ -18,7 +18,7 @@ export class PptrBrowserContextService {
         if (options.closeFirstPage) await this.pageService.closeFirstPage(context);
 
         let promises: Promise<any>[] = []
-        for (let i = 0; i < options.numberOfPages; i++) {
+        for (let i = 0; i < options.numberOfPages; i++) { 
             promises.push(this.pageService.setupPage(context, {
                 page: (await context.pages()).at(i),
                 cookiePath: options.cookiePaths[i],
@@ -26,9 +26,8 @@ export class PptrBrowserContextService {
                 proxy: options.proxy
             }))
         }
-        await Promise.all(promises) 
-        console.log(`page length: ${(await context.pages()).length}`);
-        
+        await Promise.all(promises)
+
     }
 
     async createBrowserContexts(browser: Browser, options: { numberOfContexts?: number, proxy?: ProxyDTO } = { numberOfContexts: 1 }): Promise<BrowserContext[]> {

@@ -116,7 +116,7 @@ const defaultOptions = {
 }
 export function mapUserGraphQLToChannel(userGraphql: UserGraphQlV2, options: { is_bot_scanning: boolean } = defaultOptions): Channel {
     return {
-        biography: userGraphql.biography ?? '',
+        biography: userGraphql?.biography ?? '',
         bio_link_url:userGraphql?.bio_links && userGraphql.bio_links.length > 0
             ? userGraphql.bio_links[0].url
             : null,

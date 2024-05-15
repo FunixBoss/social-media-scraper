@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, UsePipes } from '@nestjs/common';
-import ScraperService from './service/scraper.service';
+import ScraperService, { ScrapeProfilesResult } from './service/scraper.service';
 import { GetUserParamsDto } from '../channel/channel.controller';
 import { Channel } from '../entity/channel.entity';
 import { ParseCommaSeparatedQuery } from 'src/pipes/parse-comma-separate-query.pipe';
@@ -17,7 +17,7 @@ export class ScraperController {
 
   @Get('profiles')
   @UsePipes(ParseCommaSeparatedQuery)
-  getUsersByUsernames(@Query('usernames') usernames: string[]): Promise<Channel[]> {
+  getUsersByUsernames(@Query('usernames') usernames: string[]): Promise<ScrapeProfilesResult> {
     return this.scraperService.scrapeUserProfiles(usernames);
   }
 

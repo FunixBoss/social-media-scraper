@@ -29,7 +29,7 @@ import ChannelMapperService from './service/channel-mapper.service';
     TypeOrmModule.forFeature([
       Channel, ChannelFriendship, ChannelReel, ChannelReelHashtag, CrawlingType, Hashtag, Keyword, Priority,
       ChannelCrawlingHistory, ChannelPost, ChannelDownloadHistory
-    ])
+    ], 'instagram-scraper')
   ],
   controllers: [ChannelController],
   providers: [

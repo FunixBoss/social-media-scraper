@@ -13,7 +13,7 @@ import { Proxy } from './entity/proxy.entity';
 export class ProxyService {
   private readonly logger = new Logger(ProxyService.name);
   constructor(
-    @InjectRepository(Proxy) private readonly proxyRepository: Repository<Proxy>,
+    @InjectRepository(Proxy, 'social-media-scraper-proxy') private readonly proxyRepository: Repository<Proxy>,
   ) {
   }
 

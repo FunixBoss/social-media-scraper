@@ -32,10 +32,14 @@ export class CookieHandler {
 	getAllCookies(cookieType: string): string[] {
 		const cookieDir = `${this.COOKIE_BASE_DIR}/${cookieType}`;
 		const cookieStrs: string[] = [];
+		console.log("Read all cookies");
+		
 		try {
 			const files = fs.readdirSync(cookieDir);  // Synchronously read directory contents
 			files.forEach(file => {
 				const filePath = `${cookieDir}/${file}`;
+				console.log(filePath);
+				
 				const content = fs.readFileSync(filePath, 'utf-8');  // Synchronously read file content
 				cookieStrs.push(content);
 			});

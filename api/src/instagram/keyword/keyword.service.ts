@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Keyword } from '../entity/keyword.entity';
 import { DataSource, Repository } from 'typeorm';
 import { Hashtag } from '../entity/hashtag.entity';
@@ -29,12 +29,12 @@ export class KeywordService {
   constructor(
     private readonly channelService: ChannelService,
     private readonly crawlService: ChannelCrawlService,
-    @InjectRepository(Keyword) private readonly keywordRepository: Repository<Keyword>,
-    @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
-    @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
-    @InjectRepository(KeywordChannel) private readonly keywordChannelRepository: Repository<KeywordChannel>,
+    @InjectRepository(Keyword, 'instagram-scraper') private readonly keywordRepository: Repository<Keyword>,
+    @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(Hashtag, 'instagram-scraper') private readonly hashtagRepository: Repository<Hashtag>,
+    @InjectRepository(KeywordChannel, 'instagram-scraper') private readonly keywordChannelRepository: Repository<KeywordChannel>,
     @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
-    private readonly dataSource: DataSource,
+    @InjectDataSource('instagram-scraper') private readonly dataSource: DataSource,
     private readonly mapperService: ChannelMapperService
   ) {
     this.setUpPageInterceptors()

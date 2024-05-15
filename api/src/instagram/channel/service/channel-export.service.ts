@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Browser } from 'puppeteer';
 import { Channel } from '../../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -21,7 +20,7 @@ export class ChannelExportService {
   constructor(
     private readonly mapperService: ChannelMapperService,
     private readonly channelService: ChannelService,
-    @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
   ) {}
   
   async exportChannels(exportType: string | "json" | "excel"): Promise<void> {

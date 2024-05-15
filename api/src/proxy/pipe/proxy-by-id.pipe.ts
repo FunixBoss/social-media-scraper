@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class ProxyByIdPipe implements PipeTransform {
     constructor(
-        @InjectRepository(Proxy) private readonly proxyRepository: Repository<Proxy>,
+        @InjectRepository(Proxy, 'social-media-scraper-proxy') private readonly proxyRepository: Repository<Proxy>,
     ) { }
 
     async transform(id: number): Promise<Proxy> {

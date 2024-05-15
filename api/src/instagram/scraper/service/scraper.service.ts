@@ -1,4 +1,4 @@
-import { AxiosProxyConfig } from 'axios';
+import axios, { AxiosProxyConfig } from 'axios';
 import { Injectable, Logger } from "@nestjs/common";
 import { CookieHandler } from "src/helper/CookieHandler";
 import { InsScraperServiceFactory, InstaFetcher } from "./ins-scraper-factory";
@@ -8,6 +8,21 @@ import { UserGraphQlV2, mapUserGraphQLToChannel } from '../types/UserGraphQlV2';
 import BatchHelper from 'src/helper/BatchHelper';
 import { sleep } from 'src/pptr/utils/Utils';
 import { ProxyService } from 'src/proxy/proxy.service';
+import { ConfigService } from '@nestjs/config';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+export type ScrapeConfig = {
+    batchSize: number,
+}
+
+export const scrapeConfig: ScrapeConfig = {
+    batchSize: 15
+}
+
+export type ScrapeProfilesResult = {
+    channels: Channel[],
+    scrapeFailedUsernames: string[]
+}
 
 @Injectable()
 export default class ScraperService {
@@ -15,59 +30,96 @@ export default class ScraperService {
 
     constructor(private readonly cookieHandler: CookieHandler,
         private readonly scraperServiceFactory: InsScraperServiceFactory,
-        private readonly proxyService: ProxyService
-    ) {}
+        private readonly proxyService: ProxyService,
+        private readonly configService: ConfigService
+    ) { }
 
-    async scrapeUserProfile(username: string, options: { cookies?: string, proxy?: AxiosProxyConfig } = {}): Promise<Channel> {
-        if (!options.cookies) options.cookies = this.convertToRightFormat(this.cookieHandler.getAsText('instagram', 'default.json'));
-
+    async scrapeUserProfile(username: string, options: {
+        log?: boolean,
+        cookies?: string,
+        proxy?: AxiosProxyConfig
+    } = {
+            log: true,
+            cookies: this.convertToRightFormat(this.cookieHandler.getAsText('instagram', 'incognito.json')),
+            proxy: {
+                protocol: 'http',
+                host: this.configService.get<string>("PROXY_ROTATING").split(":").at(0),
+                port: +this.configService.get<string>("PROXY_ROTATING").split(":").at(1),
+            }
+        }): Promise<Channel> {
         const instaFetcher: InstaFetcher = InsScraperServiceFactory.create(
             options.cookies,
             { proxy: options.proxy ?? false });
         let channel: Channel;
         try {
             channel = mapUserGraphQLToChannel(await instaFetcher.fetchUser(username) as UserGraphQlV2)
-            this.logger.log(`Scraper user profile: ${username} successfully`)
+            if (options.log) this.logger.log(`Scraper user profile: ${username} successfully`)
         } catch (error) {
-            this.logger.log(`Scrape user profile: ${username} failed, ${error["name"]}: ${error["message"]}`);
+            this.logger.error(`Scrape user profile: ${username} failed, ${error["name"]}: ${error["message"]}`);
             throw new ScrapeUserProfileFailed(username)
         }
         return channel;
     }
 
-    async scrapeUserProfiles(usernames: string[]): Promise<Channel[]> {
-        const MAX_FETCH_BATCH = 20
-        const usernameBatches: string[][] = BatchHelper.createBatches<string>(usernames, MAX_FETCH_BATCH);
-            
-        const cookieStrs: string[] = await this.cookieHandler.getAllCookies('instagram');
-        const rotatingProxy: AxiosProxyConfig = {
-            protocol: "http",
-            host: "103.179.173.13",
-            port: 11001,
-        }
-        let channels: Channel[] = [];
-        let usernamesScrapeFailed: string[] = [];
+    async scrapeUserProfiles(usernames: string[]): Promise<ScrapeProfilesResult> {
+        const usernameBatches: string[][] = BatchHelper.createBatches<string>(usernames, scrapeConfig.batchSize);
 
+        let result: ScrapeProfilesResult = {
+            channels: [],
+            scrapeFailedUsernames: []
+        }
+        const totalUsername: number = usernames.length;
+        let numberOfCrawled: number = 0;
+        const [host, port] = this.configService.get<string>("PROXY_ROTATING").split(":");
+        let previousIp: string = await this.getCurrentIp({ host, port: +port });
+        this.logger.verbose(`Current IP: ${previousIp}`);
+
+        const axiosProxyConfig: AxiosProxyConfig = {
+            protocol: 'http',
+            host,
+            port: +port,
+        };
+
+        // should check if IP has changed or not
         for (const usernameBatch of usernameBatches) {
-            const cookies = this.convertToRightFormat(cookieStrs[0]);
             for (const username of usernameBatch) {
                 try {
-                    const channel: Channel = await this.scrapeUserProfile(username, {
-                        cookies,
-                        proxy: rotatingProxy
-                    })
-                    channels.push(channel)
-                    await sleep(1)
+                    result.channels.push(await this.scrapeUserProfile(username, { log: false, proxy: axiosProxyConfig }));
+                    this.logger.log(`Scrape user profile (${++numberOfCrawled}/${totalUsername}): ${username} successfully`)
+                    await sleep(1);
                 } catch (error) {
                     if (error instanceof ScrapeUserProfileFailed) {
-                        usernamesScrapeFailed.push(username);
+                        result.scrapeFailedUsernames.push(username);
                     }
-                    break;
+                    continue;
                 }
             }
-            await sleep(180);
+
+            this.logger.verbose(`Waiting for next IP rotation...`);
+            let currentIp: string;
+            do {
+                try {
+                    currentIp = await this.getCurrentIp({ host, port: +port });
+                    if (currentIp === previousIp) {
+                        await sleep(5);
+                    }
+                } catch (error) {
+                    this.logger.warn(`Ger Current Ip Error: ${error["name"]} - ${error["message"]}`);
+                }
+            } while (currentIp === previousIp);
+
+            this.logger.verbose(`IP changed to ${currentIp}`);
+            previousIp = currentIp; // Update the previous IP to the new IP
         }
-        return channels;
+        this.logger.log(`Scrape (${numberOfCrawled}/${totalUsername}) user profiles successfully - (${result.scrapeFailedUsernames.length}/${totalUsername}) failed`)
+        return result;
+    }
+
+    private async getCurrentIp(rotatingProxy: { host: string, port: number }): Promise<string> {
+        const proxyUrl = `http://:@${rotatingProxy.host}:${rotatingProxy.port}`;
+        const agent = new HttpsProxyAgent(proxyUrl);
+        const response = await axios.get('http://httpbin.org/ip', { httpAgent: agent, timeout: 5000 });
+        return response.data["origin"]
     }
 
     private convertToRightFormat(cookies: string): string {

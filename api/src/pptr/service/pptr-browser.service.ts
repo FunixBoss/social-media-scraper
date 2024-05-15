@@ -16,7 +16,7 @@ export class PptrBrowserService {
         private contextService: PptrBrowserContextService,
         private pageService: PptrPageService,
         private proxyService: ProxyService
-    ) {
+    ) { 
         this.setupPptr(); 
     }
 
@@ -40,9 +40,6 @@ export class PptrBrowserService {
         ]).then(() => {
             this.logger.log("Set up pptr successfully")
         })
-
-
-        this.logger.log("Setup Puppeteer Successfully")
     }
 
 

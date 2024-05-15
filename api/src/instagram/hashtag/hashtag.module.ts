@@ -8,7 +8,7 @@ import { Hashtag } from '../entity/hashtag.entity';
   imports: [
     TypeOrmModule.forFeature([
       Hashtag
-    ])
+    ], 'instagram-scraper')
   ],
   controllers: [HashtagController],
   providers: [HashtagService],

@@ -64,7 +64,7 @@ export class InstaFetcher {
 				headers: AxiosOptions.headers ? AxiosOptions.headers : this.buildHeaders(agent),
 				method: AxiosOptions.method || 'GET',
 				...AxiosOptions,
-				...this.AxiosOpts
+				...this.AxiosOpts,
 			});
 		} catch (error) {
 			if (axios.isAxiosError(error)) {
@@ -78,6 +78,9 @@ export class InstaFetcher {
 			config.instagram_api_v1,
 			`/users/web_profile_info/?username=${username}`,
 			config.iPhone,
+			{
+				timeout: 5000
+			}
 		);
 		const graphql: Graphql = res?.data;
 		return graphql.data?.user as UserGraphQlV2;

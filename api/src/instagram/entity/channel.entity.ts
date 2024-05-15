@@ -11,7 +11,7 @@ export class Channel {
     username?: string;
 
     @Column({ length: 200, nullable: true })
-    category?: string; 
+    category?: string;
 
     @Column({ length: 2000, nullable: true })
     biography?: string;
@@ -53,7 +53,7 @@ export class Channel {
     is_self_adding?: boolean;
 
     @Column({ type: 'bool', name: "is_bot_scanning", nullable: true, default: false })
-    is_bot_scanning?: boolean; 
+    is_bot_scanning?: boolean;
 
     @OneToMany(() => ChannelCrawlingHistory, (history) => history.channel, {
         eager: true,

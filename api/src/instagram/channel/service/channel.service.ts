@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetChannelsParamsDto, ScrapeInfo } from '../channel.controller';
 import { Channel } from '../../entity/channel.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ChannelFriendship } from '../../entity/channel-friendship.entity';
 import { ChannelReel } from '../../entity/channel-reel.entity';
@@ -15,20 +15,22 @@ import ChannelReelDTO from '../dto/channel-reel.dto';
 import FindOneChannelDTO from '../dto/findone-channel.dto';
 import ChannelCrawlService from './channel-crawl.service';
 import ChannelMapperService from './channel-mapper.service';
+import ScraperService, { ScrapeProfilesResult } from 'src/instagram/scraper/service/scraper.service';
 
 @Injectable()
 export class ChannelService {
   private readonly logger = new Logger(ChannelService.name);
 
   constructor(
-    private readonly dataSource: DataSource,
-    @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
-    @InjectRepository(ChannelFriendship) private readonly channelFriendRepository: Repository<ChannelFriendship>,
-    @InjectRepository(ChannelReel) private readonly channelReelRepository: Repository<ChannelReel>,
-    @InjectRepository(CrawlingType) private readonly crawlingTypeRepository: Repository<CrawlingType>,
-    @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
-    @InjectRepository(ChannelPost) private readonly channelPostRepository: Repository<ChannelPost>,
-    @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
+    @InjectDataSource('instagram-scraper') private readonly dataSource: DataSource,
+    @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
+    @InjectRepository(ChannelFriendship, 'instagram-scraper') private readonly channelFriendRepository: Repository<ChannelFriendship>,
+    @InjectRepository(ChannelReel, 'instagram-scraper') private readonly channelReelRepository: Repository<ChannelReel>,
+    @InjectRepository(CrawlingType, 'instagram-scraper') private readonly crawlingTypeRepository: Repository<CrawlingType>,
+    @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
+    @InjectRepository(ChannelPost, 'instagram-scraper') private readonly channelPostRepository: Repository<ChannelPost>,
+    @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
+    private readonly scraperService: ScraperService,
     private readonly crawlService: ChannelCrawlService,
     private readonly mapperService: ChannelMapperService
   ) {
@@ -74,8 +76,6 @@ export class ChannelService {
       }
     })
     await this.channelCrawlingHistoryRepository.save(crawlingHistories);
-
-
   }
 
   async fetchUser(username: string, needToScan: ScrapeInfo[]): Promise<FindOneChannelDTO> {
@@ -121,7 +121,7 @@ export class ChannelService {
   async fetchUserProfile(username: string): Promise<FindAllChannelDTO> {
     if (await this.isExists(username) && await this.isCrawledContent(username, "CHANNEL_PROFILE")) {
       return this.mapperService.mapToFindAllChannelDTO(await this.channelRepository.findOneBy({ username }))
-    } 
+    }
 
     let channel: Channel = await this.crawlService.crawlProfile(username);
     await this.dataSource.transaction(async (transactionalEntityManager) => {
@@ -143,8 +143,10 @@ export class ChannelService {
 
     try {
       let friendshipUsernames: string[] = await this.crawlService.crawlFriendships(username);
-      let channels: Channel[] = await this.crawlService.crawlProfiles(friendshipUsernames);
-      
+      let scraperResult: ScrapeProfilesResult = await this.scraperService.scrapeUserProfiles(friendshipUsernames)
+      let channels: Channel[] = scraperResult.channels;
+      (await this.crawlService.crawlProfiles(scraperResult.scrapeFailedUsernames)).forEach(ch => channels.push(ch))
+
       const friendships: ChannelFriendship[] = channels.map(channel => ({
         username: username,
         channel_username: channel.username

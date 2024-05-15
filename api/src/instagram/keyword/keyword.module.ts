@@ -15,7 +15,7 @@ import { ChannelModule } from '../channel/channel.module';
     ChannelModule,
     TypeOrmModule.forFeature([
       Keyword, Hashtag, Channel, KeywordChannel
-    ]),
+    ], 'instagram-scraper'),
   ],
   controllers: [
     KeywordController,

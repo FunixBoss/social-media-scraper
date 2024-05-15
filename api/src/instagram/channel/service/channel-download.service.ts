@@ -21,7 +21,7 @@ export class ChannelDownloadService {
     constructor(
         private readonly configService: ConfigService,
         private readonly channelService: ChannelService,
-        @InjectRepository(ChannelDownloadHistory) private readonly channelDownloadRepository: Repository<ChannelDownloadHistory>,
+        @InjectRepository(ChannelDownloadHistory, 'instagram-scraper') private readonly channelDownloadRepository: Repository<ChannelDownloadHistory>,
     ) {
         this.DOWNLOAD_PATH = this.configService.get<string>("DOWNLOAD_PATH")
     }

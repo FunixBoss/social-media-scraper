@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ChannelFriendship } from '../../entity/channel-friendship.entity';
 import { ChannelReel } from '../../entity/channel-reel.entity';
@@ -16,14 +16,14 @@ export default class ChannelMapperService {
     private readonly baseUrl = 'https://instagram.com'
 
     constructor(
-        private readonly dataSource: DataSource,
-        @InjectRepository(Channel) private readonly channelRepository: Repository<Channel>,
-        @InjectRepository(ChannelFriendship) private readonly channelFriendRepository: Repository<ChannelFriendship>,
-        @InjectRepository(ChannelReel) private readonly channelReelRepository: Repository<ChannelReel>,
-        @InjectRepository(CrawlingType) private readonly crawlingTypeRepository: Repository<CrawlingType>,
-        @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
-        @InjectRepository(ChannelPost) private readonly channelPostRepository: Repository<ChannelPost>,
-        @InjectRepository(ChannelCrawlingHistory) private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
+        @InjectDataSource('instagram-scraper') private readonly dataSource: DataSource,
+        @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
+        @InjectRepository(ChannelFriendship, 'instagram-scraper') private readonly channelFriendRepository: Repository<ChannelFriendship>,
+        @InjectRepository(ChannelReel, 'instagram-scraper') private readonly channelReelRepository: Repository<ChannelReel>,
+        @InjectRepository(CrawlingType, 'instagram-scraper') private readonly crawlingTypeRepository: Repository<CrawlingType>,
+        @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
+        @InjectRepository(ChannelPost, 'instagram-scraper') private readonly channelPostRepository: Repository<ChannelPost>,
+        @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
     ) {
     }
     async findAllChannelsByRootFriendshipUsername(username: string): Promise<Channel[]> {

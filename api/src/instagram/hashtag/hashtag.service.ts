@@ -10,7 +10,7 @@ import { GetHashtagParamsDto } from './hashtag.controller';
 export class HashtagService {
 
   constructor(
-    @InjectRepository(Hashtag) private readonly hashtagRepository: Repository<Hashtag>,
+    @InjectRepository(Hashtag, 'instagram-scraper') private readonly hashtagRepository: Repository<Hashtag>,
   ) {}
 
   create(createHashtagDto: CreateHashtagDto) {

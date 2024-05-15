@@ -16,7 +16,6 @@ create table `keyword`(
 create table `channel`(
 	`username` varchar(200) primary key,
     `category` VARCHAR(200) DEFAULT NULL,
-	-- priority varchar(200) default 'MEDIUM',
     bio_link_url varchar(1000),
     biography varchar(2000),
 	external_url varchar(1000),
@@ -144,19 +143,7 @@ create table `channel_reel_hashtag`(
     foreign key (hashtag_id) references `hashtag`(id)
 );
 
-create table `proxy`(
-	id bigint auto_increment primary key,
-    ip varchar(200),
-    port varchar(200),
-    username varchar(200),
-    password varchar(200),
-    country_code varchar(200),
-    status enum('live', 'die', 'out_of_date'),
-    import_date date,
-    expiration_date date,
-    last_checked datetime,
-    last_used datetime
-);
+
 
 create table `instagram_account`(
 	id bigint auto_increment primary key,

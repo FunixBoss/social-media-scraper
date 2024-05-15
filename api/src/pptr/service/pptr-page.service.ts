@@ -23,7 +23,7 @@ export class PptrPageService {
         cookiePath?: string,
         proxy?: ProxyDTO
     } = { number: 1 }): Promise<void> {
-        console.log(`create Pages (in context incognito ${context.isIncognito()}) - create ${opts.number} pages`);
+        console.log(`create Pages - create ${opts.number} pages`);
         let promises: Promise<any>[] = []
         for (let i = 0; i < opts.number; i++) {
             promises.push(this.setupPage(context, { cookiePath: opts.cookiePath, url: opts.url, proxy: opts.proxy }))
@@ -59,8 +59,7 @@ export class PptrPageService {
             await opts.page.authenticate({ username, password })
         }
         if (opts.url) {
-            await opts.page.goto(opts.url, { waitUntil: "networkidle2" })
-            console.log(`context (isIncognito: ${context.isIncognito()}): arrived ${opts.url}`);
+            await opts.page.goto(opts.url, { waitUntil: "load" })
         }
         return opts.page;
     }
