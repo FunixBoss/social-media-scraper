@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
@@ -12,6 +12,8 @@ import { ChannelDownloadHistoryDTO } from '../dto/channel-download-history.dto';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { format } from 'date-fns';
+import BatchHelper from 'src/helper/BatchHelper';
+import ChannelHelper from './channel-helper.service';
 
 @Injectable()
 export class ChannelDownloadService {
@@ -20,7 +22,8 @@ export class ChannelDownloadService {
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly channelService: ChannelService,
+        private readonly channelHelper: ChannelHelper,
+        @Inject(forwardRef(() => ChannelService)) private readonly channelService: ChannelService,
         @InjectRepository(ChannelDownloadHistory, 'instagram-scraper') private readonly channelDownloadRepository: Repository<ChannelDownloadHistory>,
     ) {
         this.DOWNLOAD_PATH = this.configService.get<string>("DOWNLOAD_PATH")
@@ -40,29 +43,35 @@ export class ChannelDownloadService {
         if (!(await folderExists(downloadHistory.download_directory))) throw new Error(`${downloadHistory.download_directory} is not found`)
     }
 
-    async download(username: string, type: string, from_order: number, to_order: number): Promise<void> {
-        if (!(await this.channelService.isExists(username))) throw new EntityNotExists('Channel', username);
+    async download(username: string, options: {
+        type: 'posts' | 'reels',
+        all: boolean,
+        from_order: number,
+        to_order: number
+    } = { type: 'posts', all: false, from_order: 1, to_order: 50 }): Promise<void> {
+
+        if (!(await this.channelHelper.isExists(username))) throw new EntityNotExists('Channel', username);
         const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-        const BASE_NAME = `${username}-${type}-${from_order}_${to_order}-${currentDate}`
+        const BASE_NAME = `${username}-${options.type}-${options.from_order}_${options.to_order}-${currentDate}`
         let downloadPath: string = `${this.DOWNLOAD_PATH}/${BASE_NAME}`;
 
-        if (type == "posts") await this.downloadPosts(username, downloadPath, from_order, to_order);
-        else if (type == "reels") await this.downloadReels(username, downloadPath, from_order, to_order);
+        if (options.type == "posts") await this.downloadPosts(username, downloadPath, options.from_order, options.to_order);
+        else if (options.type == "reels") await this.downloadReels(username, downloadPath, options.from_order, options.to_order);
 
         let channelDownload: ChannelDownloadHistory = {
             channel_username: username,
             date: new Date(),
             file_name: `${BASE_NAME}`,
-            from_order,
-            to_order,
+            from_order: options.from_order,
+            to_order: options.to_order,
             download_directory: downloadPath,
-            download_type: type,
+            download_type: options.type,
         }
         await this.channelDownloadRepository.save(channelDownload)
-        this.logger.log(`Downloaded all ${type} successfully - Folder: ${downloadPath}`);
+        this.logger.log(`Downloaded all ${options.type} successfully - Folder: ${downloadPath}`);
     }
 
-    async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
+    private async downloadReels(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
         const reels: ChannelReelDTO[] = await this.channelService.fetchReels(username);
         const filteredReels: ChannelReelDTO[] = reels.filter(reel =>
             reel.channel_reel_numerical_order >= from_order && reel.channel_reel_numerical_order <= to_order
@@ -74,7 +83,7 @@ export class ChannelDownloadService {
         }
 
         await createAndAccessFolder(downloadPath);
-        const batches = this.createBatches(filteredReels, 10);
+        const batches = BatchHelper.createBatches(filteredReels, { batchSize: 10 });
 
         for (const batch of batches) {
             const downloadPromises = batch.map(reel => this.downloadReel(reel, downloadPath));
@@ -83,7 +92,7 @@ export class ChannelDownloadService {
         }
     }
 
-   
+
     private async downloadReel(reel: ChannelReelDTO, downloadPath: string): Promise<void> {
         const videoName = `${reel.channel_reel_numerical_order}-${reel.code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
@@ -116,7 +125,7 @@ export class ChannelDownloadService {
         }
     }
 
-    async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
+    private async downloadPosts(username: string, downloadPath: string, from_order: number, to_order: number): Promise<void> {
         const posts: ChannelPostDTO[] = await this.channelService.fetchPosts(username);
         to_order = Math.min(to_order, posts.length);
 
@@ -130,7 +139,7 @@ export class ChannelDownloadService {
         }
 
         await createAndAccessFolder(downloadPath);
-        const batches = this.createBatches(filteredPosts, 10);
+        const batches = BatchHelper.createBatches(filteredPosts, { batchSize: 10 });
 
         for (const batch of batches) {
             const downloadPromises = batch.map(post => this.downloadPost(post, downloadPath));
@@ -140,7 +149,7 @@ export class ChannelDownloadService {
         this.logger.log('All batches completed');
     }
 
-    async downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<void[]> {
+    private async downloadPost(post: ChannelPostDTO, downloadPath: string): Promise<void[]> {
         const tasks = [];
         if (post.product_type === "feed" || post.product_type === "carousel_container") {
             tasks.push(this.downloadImages(post, downloadPath));
@@ -150,7 +159,7 @@ export class ChannelDownloadService {
         return Promise.all(tasks);
     }
 
-    async downloadImages(post: ChannelPostDTO, downloadPath: string): Promise<void> {
+    private async downloadImages(post: ChannelPostDTO, downloadPath: string): Promise<void> {
         if (!post.image_urls || post.image_urls.length === 0) return;
 
         const imagePromises = post.image_urls.map(async (url, index) => {
@@ -168,7 +177,7 @@ export class ChannelDownloadService {
         await Promise.all(imagePromises);
     }
 
-    async downloadVideo(post: ChannelPostDTO, downloadPath: string): Promise<void> {
+    private async downloadVideo(post: ChannelPostDTO, downloadPath: string): Promise<void> {
         const videoName = `${post.channel_post_numerical_order}-${post.code}.mp4`;
         const filePath = `${downloadPath}/${videoName}`;
         try {
@@ -189,14 +198,6 @@ export class ChannelDownloadService {
         } catch (error) {
             this.logger.warn(`Error downloading video at ${filePath}`, error);
         }
-    }
-
-    private createBatches(data: any[], batchSize: number): any[][] {
-        const batches: any[][] = [];
-        for (let i = 0; i < data.length; i += batchSize) {
-            batches.push(data.slice(i, i + batchSize));
-        }
-        return batches;
     }
 
 }

@@ -20,6 +20,8 @@ import { ChannelDownloadService } from './service/channel-download.service';
 import { ChannelDownloadHistory } from '../entity/channel-download-history.entity';
 import ChannelCrawlService from './service/channel-crawl.service';
 import ChannelMapperService from './service/channel-mapper.service';
+import ChannelScraperService from './service/channel-scraper.service';
+import ChannelHelper from './service/channel-helper.service';
 
 @Module({
   imports: [
@@ -37,14 +39,18 @@ import ChannelMapperService from './service/channel-mapper.service';
     ChannelExportService,
     ChannelDownloadService,
     ChannelCrawlService,
-    ChannelMapperService
+    ChannelMapperService,
+    ChannelScraperService,
+    ChannelHelper
   ],
   exports: [
     ChannelService,
     ChannelExportService,
     ChannelDownloadService,
     ChannelCrawlService,
-    ChannelMapperService
+    ChannelMapperService,
+    ChannelScraperService,
+    ChannelHelper
   ]
 })
 export class ChannelModule { }

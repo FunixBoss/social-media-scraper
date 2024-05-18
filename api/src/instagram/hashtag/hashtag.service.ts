@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateHashtagDto } from './dto/create-hashtag.dto';
+import { CreateHashtagDTO } from './dto/create-hashtag.dto';
 import FindAllHashtagDTO from './dto/findall-hashtag.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Hashtag } from '../entity/hashtag.entity';
 import { Repository } from 'typeorm';
-import { GetHashtagParamsDto } from './hashtag.controller';
+import { GetHashtagParamsDTO } from './hashtag.controller';
 
 @Injectable()
 export class HashtagService {
@@ -13,7 +13,7 @@ export class HashtagService {
     @InjectRepository(Hashtag, 'instagram-scraper') private readonly hashtagRepository: Repository<Hashtag>,
   ) {}
 
-  create(createHashtagDto: CreateHashtagDto) {
+  create(createHashtagDTO: CreateHashtagDTO) {
     return 'This action adds a new hashtag';
   }
 
@@ -33,7 +33,7 @@ export class HashtagService {
     });
   }
 
-  async findAll(queries: GetHashtagParamsDto): Promise<FindAllHashtagDTO[]> {
+  async findAll(queries: GetHashtagParamsDTO): Promise<FindAllHashtagDTO[]> {
     let hashtags: Hashtag[] = []
     if(queries.keyword) {
       hashtags = await this.hashtagRepository.find({

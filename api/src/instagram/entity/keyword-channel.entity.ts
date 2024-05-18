@@ -13,7 +13,7 @@ export class KeywordChannel {
     @Column({ length: 200, nullable: true })
     status: string;
 
-    @ManyToOne(() => Keyword, keyword => keyword.channels)
+    @ManyToOne(() => Keyword, keyword => keyword.keyword_channels)
     @JoinColumn({ name: 'keyword_name' })
     keyword?: Keyword;
 

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PuppeteerOptionsFactory } from "nestjs-puppeteer";
 import { PuppeteerNodeLaunchOptions } from "puppeteer";
+import { ProxyIpv4 } from "src/proxy/entity/proxy-ipv4.entity";
 
 export const minimal_args = [
     '--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
@@ -44,9 +45,9 @@ export const minimal_args = [
 export class PptrBrowserConfig implements PuppeteerOptionsFactory {
 
     constructor(
-        private readonly proxy: string[],
         private readonly profilePathName: string,
         private readonly configService: ConfigService,
+        private readonly proxy?: ProxyIpv4,
     ) { }
 
     createPuppeteerOptions(): PuppeteerNodeLaunchOptions {
@@ -57,7 +58,7 @@ export class PptrBrowserConfig implements PuppeteerOptionsFactory {
                 '--enable-automation',
                 `--load-extension=${AUTOCAPTCHAPRO}`,
                 `--disable-extensions-except=${AUTOCAPTCHAPRO}`,
-                this.proxy ? `--proxy-server=http://${this.proxy[0]}:${this.proxy[1]}` : '',
+                this.proxy ? `--proxy-server=http://${this.proxy.ip}:${this.proxy.port}` : '',
                 ...minimal_args
             ],
             headless: this.configService.get<string>("PUPPETEER_HEADLESS") == "shell"

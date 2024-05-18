@@ -1,11 +1,11 @@
 import { IsDateString, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
-import { ProxyIpv4 } from "../types/proxy-ipv4";
+import { ProxyIpv4Std } from "./proxy-ipv4-std";
 
-export class CreateProxyDto {
+export class CreateProxyDTO {
     @IsNotEmpty()
     @IsString()
     @MaxLength(200)
-    proxy: ProxyIpv4;
+    proxy: ProxyIpv4Std;
 
     @IsOptional()
     @IsDateString()

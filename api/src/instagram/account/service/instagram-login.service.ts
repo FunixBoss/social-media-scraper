@@ -8,9 +8,9 @@ import { PptrPageService } from "src/pptr/service/pptr-page.service";
 import { PptrBrowserContextService } from "src/pptr/service/pptr-browser-context.service";
 import { INS_URL } from "src/pptr/config/social-media.config";
 import { sleep } from "src/pptr/utils/Utils";
-import { Proxy } from "src/proxy/entity/proxy.entity";
-import { ProxyService } from "src/proxy/proxy.service";
-import ProxyDTO from "src/proxy/dto/proxy.dto";
+import { ProxyIpv4 } from "src/proxy/entity/proxy-ipv4.entity";
+import { ProxyIpv4Service } from "src/proxy/proxy-ipv4/service/proxy-ipv4.service";
+import ProxyIpv4DTO from "src/proxy/proxy-ipv4/dto/proxy.dto";
 
 export type TwoFACode = {
     code: string,
@@ -24,13 +24,13 @@ export default class InstagramLoginService {
         @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
         private readonly pageService: PptrPageService,
         private readonly contextService: PptrBrowserContextService,
-        private readonly proxyService: ProxyService
+        private readonly proxyService: ProxyIpv4Service
     ) {
 
     }
 
     async login(credentials: { username: string, password: string, twoFA?: string }): Promise<boolean> {
-        const proxy: ProxyDTO = await this.proxyService.getRandom();
+        const proxy: ProxyIpv4DTO = await this.proxyService.getRandom();
         let context = await this.contextService.createBrowserContext(this.browser, { proxy });
         const page: Page = await this.pageService.setupPage(context, {
             page: (await context.pages()).at(0),
@@ -71,7 +71,7 @@ export default class InstagramLoginService {
         return true;
     }
 
-    async get2FaCode(twoFa: string, px?: Proxy): Promise<TwoFACode> {
+    async get2FaCode(twoFa: string, px?: ProxyIpv4): Promise<TwoFACode> {
         let proxy: AxiosProxyConfig;
         if (px) {
             proxy = {

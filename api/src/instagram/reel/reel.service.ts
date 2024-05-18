@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateReelDto } from './dto/create-reel.dto';
-import { UpdateReelDto } from './dto/update-reel.dto';
+import { CreateReelDTO } from './dto/create-reel.dto';
+import { UpdateReelDTO } from './dto/update-reel.dto';
 
 @Injectable()
 export class ReelService {
-  create(createReelDto: CreateReelDto) {
+  create(createReelDTO: CreateReelDTO) {
     return 'This action adds a new reel';
   }
 
@@ -16,7 +16,7 @@ export class ReelService {
     return `This action returns a #${id} reel`;
   }
 
-  update(id: number, updateReelDto: UpdateReelDto) {
+  update(id: number, updateReelDTO: UpdateReelDTO) {
     return `This action updates a #${id} reel`;
   }
 

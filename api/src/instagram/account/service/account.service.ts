@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAccountDto } from '../dto/create-account.dto';
-import { UpdateAccountDto } from '../dto/update-account.dto';
+import { CreateAccountDTO } from '../dto/create-account.dto';
+import { UpdateAccountDTO } from '../dto/update-account.dto';
 
 @Injectable()
 export class InstagramAccountService {
-  create(createAccountDto: CreateAccountDto) {
+  create(createAccountDTO: CreateAccountDTO) {
     return 'This action adds a new account';
   }
 
@@ -16,7 +16,7 @@ export class InstagramAccountService {
     return `This action returns a #${id} account`;
   }
 
-  update(id: number, updateAccountDto: UpdateAccountDto) {
+  update(id: number, updateAccountDTO: UpdateAccountDTO) {
     return `This action updates a #${id} account`;
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Channel } from '../../entity/channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,16 +13,18 @@ import ChannelPostDTO from '../dto/channel-post.dto';
 import ChannelReelDTO from '../dto/channel-reel.dto';
 import FindOneChannelDTO from '../dto/findone-channel.dto';
 import ChannelMapperService from './channel-mapper.service';
+import ChannelHelper from './channel-helper.service';
 @Injectable()
 export class ChannelExportService {
   private DOWNLOAD_PATH: string;
   private readonly logger = new Logger(ChannelExportService.name);
   constructor(
     private readonly mapperService: ChannelMapperService,
-    private readonly channelService: ChannelService,
+    private readonly channelHelper: ChannelHelper,
+    @Inject(forwardRef(() => ChannelService)) private readonly channelService: ChannelService,
     @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
-  ) {}
-  
+  ) { }
+
   async exportChannels(exportType: string | "json" | "excel"): Promise<void> {
     if (exportType == 'excel') this.exportChannelsExcel();
     if (exportType == 'json') this.exportChannelsJson();
@@ -66,10 +68,10 @@ export class ChannelExportService {
   }
 
 
-  
+
   async exportChannel(username: string, exportType: string | "json" | "excel"): Promise<void> {
-    if (!(await this.channelService.isExists(username))) throw new EntityNotExists("Channel", username);
-    const crawledTypes: TCrawlingType[] = await this.channelService.getCrawledHistory(username)
+    if (!(await this.channelHelper.isExists(username))) throw new EntityNotExists("Channel", username);
+    const crawledTypes: TCrawlingType[] = await this.channelHelper.getCrawledHistory(username)
     if (!crawledTypes.includes("CHANNEL_PROFILE")) throw new Error("Please crawl as least the channel profile");
 
     if (exportType == 'excel') this.exportChannelExcel(username, crawledTypes);
@@ -91,10 +93,10 @@ export class ChannelExportService {
       reels = await this.channelService.fetchReels(username);
     const channelFull: FindOneChannelDTO = await this.mapperService.mapToFindOneChannelDTOfromOrigin(channel, friendships, posts, reels);
 
-    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-    const fileName = `${username}-${currentDate}.json`
-    writeFileSync(`${this.DOWNLOAD_PATH}/${fileName}`, JSON.stringify(channelFull), 'utf-8')
-    this.logger.log(`Json file ${fileName} was written successfully.`);
+    const fileName = `${username}.json`
+    const filePath = `${this.DOWNLOAD_PATH}/${username}/${fileName}`
+    writeFileSync(filePath, JSON.stringify(channelFull), 'utf-8')
+    this.logger.log(`Json file ${filePath} was written successfully.`);
   }
 
   private async exportChannelExcel(username: string, crawledTypes: TCrawlingType[]): Promise<void> {
@@ -103,14 +105,14 @@ export class ChannelExportService {
       createAndWriteProfileWorkSheet(workbook, await this.channelService.findOne(username));
     if (crawledTypes.includes("CHANNEL_FRIENDSHIP"))
       createAndWriteFriendshipsWorkSheet(workbook, await this.channelService.fetchFriendships(username));
-      if (crawledTypes.includes("CHANNEL_POSTS"))
-        createAndWritePostsWorkSheet(workbook, await this.channelService.fetchPosts(username));
+    if (crawledTypes.includes("CHANNEL_POSTS"))
+      createAndWritePostsWorkSheet(workbook, await this.channelService.fetchPosts(username));
     if (crawledTypes.includes("CHANNEL_REELS"))
       createAndWriteReelsWorkSheet(workbook, await this.channelService.fetchReels(username));
 
-    const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-    const fileName = `${username}-${currentDate}.xlsx`
-    await workbook.xlsx.writeFile(`${this.DOWNLOAD_PATH}/${fileName}`);
+    const fileName = `${username}.xlsx`
+    const filePath = `${this.DOWNLOAD_PATH}/username/${fileName}`
+    await workbook.xlsx.writeFile(filePath);
     this.logger.log(`Excel file ${fileName} was written successfully.`);
   }
 }

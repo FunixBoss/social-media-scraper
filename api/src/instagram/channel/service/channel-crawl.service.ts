@@ -10,23 +10,27 @@ import { InsPostsFull, mapInsPosts } from "src/pptr/types/ins/InsPosts";
 import { InsProfileFull, mapInsProfile } from "src/pptr/types/ins/InsProfile";
 import { InsReelsFull, mapInsReels } from "src/pptr/types/ins/InsReels";
 import { sleep } from "src/pptr/utils/Utils";
-import { crawlConfig } from "../config/crawl-config";
 import { scrollPageToBottom, scrollPageToTop } from "../utils/scroll";
 import { INS_URL } from "src/pptr/config/social-media.config";
 import { InjectBrowser, InjectPage } from "nestjs-puppeteer";
 import { PptrPageService } from "src/pptr/service/pptr-page.service";
+import BatchHelper from "src/helper/BatchHelper";
+import { ConfigService } from "@nestjs/config";
+import { ChannelCrawlConfig } from "src/config/crawl-settings.type";
 
 @Injectable()
 export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
     private readonly logger = new Logger(ChannelCrawlService.name);
-
+    private readonly crawlConfig: ChannelCrawlConfig
     constructor(
         @InjectBrowser('social-media-scraper') private readonly browser: Browser,
         @InjectBrowser('instagram-login') private readonly browser2: Browser,
         @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
-        private readonly pageService: PptrPageService
+        private readonly pageService: PptrPageService,
+        private readonly configService: ConfigService,
     ) {
+        this.crawlConfig = configService.get<ChannelCrawlConfig>('channel')
         this.setUpDefaultPageInterceptors()
     }
 
@@ -63,15 +67,12 @@ export default class ChannelCrawlService {
         )
     }
 
-    async crawlProfiles(usernames: string[]): Promise<Channel[]> {
-        const maxCrawl = usernames.length;
+    async crawlProfiles(usernames: string[]): Promise<Channel[]> { 
+        const usernameLen = usernames.length;
         let numberOfCrawled = 0;
-        const { batchSize, timeBetweenBatch } = crawlConfig.friendships;
+        const { batchSize, timeBetweenBatch } = this.crawlConfig.friendships;
 
-        const usernameBatches: string[][] = [];
-        for (let i = 0; i < usernames.length; i += batchSize) {
-            usernameBatches.push(usernames.slice(i, i + batchSize));
-        }
+        const usernameBatches: string[][] = BatchHelper.createBatches(usernames, { batchSize });
         const context: BrowserContext = this.browser2.defaultBrowserContext()
         await this.pageService.createPages(context, { number: batchSize });
         const pages: Page[] = await context.pages()
@@ -93,7 +94,7 @@ export default class ChannelCrawlService {
                                 if (!channelsMap.has(username)) {
                                     channelsMap.set(username, mapInsProfile(dataObj.data as InsProfileFull))
                                 }
-                                this.logger.log(`crawled: ${++numberOfCrawled}/${maxCrawl} - username: ${username} & wait ${timeBetweenBatch}s for next crawl`);
+                                this.logger.log(`Crawled profile successfully (${++numberOfCrawled}/${usernameLen}): ${username} ${numberOfCrawled == usernameLen ? 'wait ' + timeBetweenBatch + 's for next crawl' : ''} `);
                             }
                         } catch (error) {
                             console.log(error);
@@ -104,11 +105,13 @@ export default class ChannelCrawlService {
                     await page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: 10000 });
                     await sleep(1)
                 } catch (error) {
-                    this.logger.warn(`crawled: username: ${username} ERROR - SKIP`);
+                    this.logger.warn(`Crawled: username: ${username} ERROR - SKIP`);
+                } finally {
+                    interceptManager.clear()
                 }
                 await sleep(timeBetweenBatch)
             });
-
+ 
             // Wait for all pages in the batch to complete their operations
             await Promise.all(promises).then(() => {
                 this.logger.log('All pages in this batch have completed their navigations.');
@@ -158,12 +161,11 @@ export default class ChannelCrawlService {
         });
 
         try {
-            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: crawlConfig.profile.timeout });
+            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: this.crawlConfig.profile.timeout });
             await Promise.race([waitForScanComplete]);
             if (!scanComplete) {
                 throw new Error('Scan did not complete within the allowed time');
             }
-
             return channel;
         } catch (error) {
             throw error;
@@ -190,11 +192,11 @@ export default class ChannelCrawlService {
                 } catch (error) {
                     console.log(error);
                 }
-            }
+            } 
         });
         try {
-            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'networkidle2', timeout: crawlConfig.profile.timeout })
-            await sleep(1.5)
+            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load' })
+            await sleep(3)
             console.log(friendshipUsernames.join(","));
             return friendshipUsernames
         } catch (error) {
@@ -202,7 +204,6 @@ export default class ChannelCrawlService {
         } finally {
             await this.interceptManager.clear()
         }
-
     }
 
     async crawlPosts(username: string): Promise<ChannelPost[]> {
@@ -232,7 +233,7 @@ export default class ChannelCrawlService {
             }
         })
         try {
-            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: crawlConfig.profile.timeout })
+            await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load', timeout: this.crawlConfig.profile.timeout })
             while (!scanComplete) {
                 await scrollPageToTop(this.page, { size: 250, delay: 10, stepsLimit: 3 })
                 await scrollPageToBottom(this.page)
@@ -280,7 +281,7 @@ export default class ChannelCrawlService {
             },
         })
         try {
-            await this.page.goto(`${INS_URL}/${username}/reels`, { waitUntil: 'load', timeout: crawlConfig.profile.timeout })
+            await this.page.goto(`${INS_URL}/${username}/reels`, { waitUntil: 'load', timeout: this.crawlConfig.profile.timeout })
             while (!scanComplete) {
                 await scrollPageToTop(this.page, { size: 250, delay: 10, stepsLimit: 3 })
                 await scrollPageToBottom(this.page)

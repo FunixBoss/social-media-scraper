@@ -1,4 +1,4 @@
-export type ProxyIpv4 = {
+export type ProxyIpv4Std = {
     ip: string;
     port: number;
     username: string;

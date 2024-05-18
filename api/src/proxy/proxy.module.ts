@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
-import { ProxyService } from './proxy.service';
-import { ProxyController } from './proxy.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Proxy } from './entity/proxy.entity';
+import { ProxyIpv4Module } from './proxy-ipv4/proxy-ipv4.module';
+import { RotatingProxyIpv4Module } from './rotating-proxy-ipv4/rotating-proxy-ipv4.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Proxy], 'social-media-scraper-proxy'),
+    TypeOrmModule,
+    ProxyIpv4Module,
+    RotatingProxyIpv4Module
   ],
-  controllers: [ProxyController],
-  providers: [ProxyService],
   exports: [
-    ProxyService
+    ProxyIpv4Module,
+    RotatingProxyIpv4Module
   ]
 }) 
 export class ProxyModule { }

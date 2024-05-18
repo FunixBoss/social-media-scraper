@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Browser, BrowserContext, BrowserContextOptions, Page } from "puppeteer";
 import { PptrPageService } from "./pptr-page.service";
-import ProxyDTO from "src/proxy/dto/proxy.dto";
+import ProxyDTO from "src/proxy/proxy-ipv4/dto/proxy.dto";
 
 @Injectable()
 export class PptrBrowserContextService {
@@ -24,7 +24,7 @@ export class PptrBrowserContextService {
                 cookiePath: options.cookiePaths[i],
                 url: options.urls[i],
                 proxy: options.proxy
-            }))
+            })) 
         }
         await Promise.all(promises)
 

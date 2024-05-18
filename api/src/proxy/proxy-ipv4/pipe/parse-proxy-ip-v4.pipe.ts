@@ -1,14 +1,12 @@
 import { PipeTransform, Injectable, HttpException } from '@nestjs/common';
-import { CreateProxyDto } from '../dto/create-proxy.dto';
+import { CreateProxyDTO } from '../dto/create-proxy.dto';
 import { moment } from 'src/main';
 
 @Injectable()
 export class ParseProxyIpv4 implements PipeTransform {
     constructor() { }
 
-    async transform(value: any): Promise<CreateProxyDto> {
-        console.log(value);
-
+    async transform(value: any): Promise<CreateProxyDTO> {
         try {
             const proxyStr: string[] = value.proxy.split(":").map(p => p.trim());
             if (proxyStr.length != 4) throw new Error();

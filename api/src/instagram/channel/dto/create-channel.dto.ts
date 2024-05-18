@@ -1,1 +1,1 @@
-export class CreateChannelDto {}
+export class CreateChannelDTO {}

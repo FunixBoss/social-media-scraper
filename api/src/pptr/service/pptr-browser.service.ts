@@ -4,7 +4,7 @@ import { PptrBrowserContextService } from "./pptr-browser-context.service";
 import { InjectBrowser } from "nestjs-puppeteer";
 import { Browser } from "puppeteer";
 import { INS_URL } from "../config/social-media.config";
-import { ProxyService } from "src/proxy/proxy.service";
+import { ProxyIpv4Service } from "src/proxy/proxy-ipv4/service/proxy-ipv4.service";
 
 @Injectable()
 export class PptrBrowserService {
@@ -15,7 +15,7 @@ export class PptrBrowserService {
         @InjectBrowser('instagram-login') private readonly instaBrowser: Browser,
         private contextService: PptrBrowserContextService,
         private pageService: PptrPageService,
-        private proxyService: ProxyService
+        private proxyService: ProxyIpv4Service
     ) { 
         this.setupPptr(); 
     }

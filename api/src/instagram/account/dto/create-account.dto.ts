@@ -1,4 +1,4 @@
-export class CreateAccountDto {
+export class CreateAccountDTO {
     username?: string;
     password?: string;
     twoFactorAuthentication?: string;

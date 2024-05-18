@@ -79,7 +79,7 @@ export class InstaFetcher {
 			`/users/web_profile_info/?username=${username}`,
 			config.iPhone,
 			{
-				timeout: 5000
+				timeout: 10000
 			}
 		);
 		const graphql: Graphql = res?.data;
@@ -90,7 +90,6 @@ export class InstaFetcher {
 		const post = shortcodeFormatter(url);
 
 		const metadata = await this.fetchPostByMediaId(post.media_id)
-
 		const item = metadata.items[0]
 		return {
 			username: item.user.username,

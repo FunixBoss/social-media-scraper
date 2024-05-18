@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateKeywordDto } from './create-keyword.dto';
+import { CreateKeywordDTO } from './create-keyword.dto';
 
-export class UpdateKeywordDto extends PartialType(CreateKeywordDto) {}
+export class UpdateKeywordDTO extends PartialType(CreateKeywordDTO) {}

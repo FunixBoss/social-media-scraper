@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateHashtagDto } from './create-hashtag.dto';
+import { CreateHashtagDTO } from './create-hashtag.dto';
 
-export class UpdateHashtagDto extends PartialType(CreateHashtagDto) {}
+export class UpdateHashtagDTO extends PartialType(CreateHashtagDTO) {}

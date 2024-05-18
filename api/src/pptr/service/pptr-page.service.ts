@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { BrowserContext, Page, Protocol } from "puppeteer";
 import { readFileSync } from 'fs';
 import BypassInstagramRestrictionService from "./bypass-instagram-restriction.service";
-import ProxyDTO from "src/proxy/dto/proxy.dto";
+import ProxyDTO from "src/proxy/proxy-ipv4/dto/proxy.dto";
 
 @Injectable()
 export class PptrPageService {
@@ -59,7 +59,7 @@ export class PptrPageService {
             await opts.page.authenticate({ username, password })
         }
         if (opts.url) {
-            await opts.page.goto(opts.url, { waitUntil: "load" })
+            await opts.page.goto(opts.url, { waitUntil: 'load' })
         }
         return opts.page;
     }

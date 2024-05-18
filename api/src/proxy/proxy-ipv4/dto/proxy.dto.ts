@@ -1,8 +1,8 @@
-import { Proxy } from 'src/proxy/entity/proxy.entity';
+import { ProxyIpv4 } from 'src/proxy/entity/proxy-ipv4.entity';
 import { moment } from 'src/main';
 
-export default class ProxyDTO {
-    constructor(proxy: Proxy) {
+export default class ProxyIpv4DTO {
+    constructor(proxy: ProxyIpv4) {
         this.id = proxy.id
         this.ip = proxy.ip
         this.port = proxy.port
@@ -18,7 +18,7 @@ export default class ProxyDTO {
 
     id?: number;
     ip?: string;
-    port?: string;
+    port?: number;
     username?: string;
     password?: string;
     country_code?: string;

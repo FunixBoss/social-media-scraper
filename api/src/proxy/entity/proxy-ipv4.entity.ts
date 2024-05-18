@@ -1,15 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity('proxy')
-export class Proxy {
+@Entity('proxy-ipv4')
+export class ProxyIpv4 {
     @PrimaryGeneratedColumn('increment', { name: 'id' })
     id?: number;
 
     @Column({ type: 'varchar', length: 200 })
     ip?: string;
 
-    @Column({ type: 'varchar', length: 200 })
-    port?: string;
+    @Column({ type: 'int' })
+    port?: number;
 
     @Column({ type: 'varchar', length: 200, nullable: true })
     username?: string;
@@ -22,10 +22,10 @@ export class Proxy {
 
     @Column({
         type: 'enum',
-        enum: ['live', 'die', 'out_of_date'],
+        enum: ['live', 'die'],
         default: 'live'
     })
-    status?: 'live' | 'die' | 'out_of_date';
+    status?: 'live' | 'die';
 
     @Column({ type: 'date' })
     import_date?: Date;

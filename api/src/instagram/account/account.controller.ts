@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { CreateAccountDTO } from './dto/create-account.dto';
+import { UpdateAccountDTO } from './dto/update-account.dto';
 import { InstagramAccountService } from './service/account.service';
 
 @Controller('account')
@@ -8,8 +8,8 @@ export class AccountController {
   constructor(private readonly accountService: InstagramAccountService) {}
 
   @Post()
-  create(@Body() createAccountDto: CreateAccountDto) {
-    return this.accountService.create(createAccountDto);
+  create(@Body() createAccountDTO: CreateAccountDTO) {
+    return this.accountService.create(createAccountDTO);
   }
 
   @Get()
@@ -23,8 +23,8 @@ export class AccountController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
-    return this.accountService.update(+id, updateAccountDto);
+  update(@Param('id') id: string, @Body() updateAccountDTO: UpdateAccountDTO) {
+    return this.accountService.update(+id, updateAccountDTO);
   }
 
   @Delete(':id')
