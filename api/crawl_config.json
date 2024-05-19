@@ -1,7 +1,7 @@
 {
     "channel": {
         "profile": {
-            "min_follower": 50000,
+            "min_follower": 10000,
             "timeout": 10000
         },
         "friendships": {

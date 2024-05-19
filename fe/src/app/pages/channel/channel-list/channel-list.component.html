@@ -13,9 +13,9 @@
                 (userRowSelect)="onRowSelect($event)">
             </ng2-smart-table>
         </nb-card-body>
-        <nb-card-footer>
-            <ng-container *ngIf="selectedChannels.length > 0">
-                <ngx-products-list-multi 
+        <nb-card-footer *ngIf="selectedChannels.length > 0" style="position: sticky; bottom: 0; background-color: white; z-index: 1000; box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);">
+            <ng-container >
+                <ngx-channels-list-multi 
                     [selectedChannels]="selectedChannels"
                     (isDeleted)="onDelete($event)"
                     (isUpdatedNewStatus)="onUpdateNewStatus($event)"
@@ -23,7 +23,7 @@
                     (isUpdatedActiveStatus)="onUpdateActiveStatus($event)"
                     (isAppliedSale)="onAppliedSale($event)"
                     (isUpdatedStatuses)="onUpdateStatuses($event)">
-                </ngx-products-list-multi>
+                </ngx-channels-list-multi>
             </ng-container>
         </nb-card-footer>
     </nb-card>

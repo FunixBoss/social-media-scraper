@@ -24,13 +24,9 @@ export class Hashtag {
     @Column({ length: 50, default: 'MEDIUM' })
     priority?: string;
 
-    // @ManyToOne(() => ChannelReel, channelReel => channelReel.hashtags, {
-    //     cascade: false
-    // })
-    // channelReels?: ChannelReel[];
-
     @ManyToOne(() => Keyword, keyword => keyword.hashtags, {
-        eager: true
+        eager: true,
+        onDelete: "CASCADE"
     })
     @JoinColumn({ name: 'keyword_name' })
     keyword?: Keyword;

@@ -1,10 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectPage } from "nestjs-puppeteer";
-import { Page } from "puppeteer";
+import { ElementHandle, Page } from "puppeteer";
 import { RequestInterceptionManager } from "puppeteer-intercept-and-modify-requests";
 import { Channel } from "src/instagram/entity/channel.entity";
 import { Hashtag } from "src/instagram/entity/hashtag.entity";
 import { Keyword } from "src/instagram/entity/keyword.entity";
+import { INS_URL } from "src/pptr/config/social-media.config";
 import { InsAPIWrapper } from "src/pptr/types/ins/InsAPIWrapper";
 import { InsSearching, mapInsHashtag, mapInsSearchChannel } from "src/pptr/types/ins/InsSearch";
 import { sleep } from "src/pptr/utils/Utils";
@@ -48,11 +49,23 @@ export default class KeywordCrawlService {
                 }
             }
         })
-        await this.page.goto('https://instagram.com/', { waitUntil: 'networkidle2' });
-        await this.page.evaluate(`document.querySelectorAll('span[aria-describedby^=":r"] a')[1].click()`);
-        await this.page.type('input[aria-label^="Search"]', `#${keyword.name}`);
-        await sleep(3);
-        return hashtags;
+
+        try {
+            if (this.page.url() != INS_URL) await this.page.goto(INS_URL, { waitUntil: 'load' });
+            else await this.page.reload({ waitUntil: "load" })
+            const searchButton: ElementHandle<Element> = await this.page.waitForSelector("[aria-label='Search']", { timeout: 15000 });
+            if (searchButton) {
+                searchButton.evaluate((e) => (e.parentNode as HTMLElement).click())
+                await this.page.type('input[aria-label^="Search"]', `#${keyword.name}`);
+                await sleep(3);
+                return hashtags;
+            } else {
+                throw new Error("Search button not found")
+            }
+        } catch (error) {
+            this.logger.log(`Crawl hashtags failed, keyword: ${keyword.name}, Error: ${error["name"]} - ${error["message"]}`);
+            return []
+        }
     }
 
     async crawlUsernames(keyword: Keyword): Promise<string[]> {
@@ -72,10 +85,21 @@ export default class KeywordCrawlService {
                 }
             }
         })
-        await this.page.goto('https://instagram.com/', { waitUntil: 'networkidle2' });
-        await this.page.evaluate(`document.querySelectorAll('span[aria-describedby^=":r"] a')[1].click()`);
-        await this.page.type('input[aria-label^="Search"]', `${keyword.name}`);
-        await sleep(3);
-        return channels.map(ch => ch.username);
+
+        try {
+            if (this.page.url() != `${INS_URL}/explore`) await this.page.goto(`${INS_URL}/explore`, { waitUntil: 'load' });
+            else await this.page.reload({ waitUntil: "load" })
+            const searchButton: ElementHandle<Element> = await this.page.waitForSelector("[aria-label='Search']", { timeout: 15000 });
+            if (searchButton) {
+                searchButton.evaluate((e) => (e.parentNode as HTMLElement).click())
+                await this.page.type('input[aria-label^="Search"]', `${keyword.name}`);
+                await sleep(3);
+            return channels.map(ch => ch.username);
+            } else {
+                throw new Error("Search button not found")
+            }
+        } catch (error) {
+            this.logger.log(`Crawl usernames failed, keyword: ${keyword.name}, Error: ${error["name"]} - ${error["message"]}`);
+        }
     }
 }

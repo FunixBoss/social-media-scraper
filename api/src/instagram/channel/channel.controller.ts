@@ -1,5 +1,5 @@
 import { ChannelDownloadHistoryDTO } from './dto/channel-download-history.dto';
-import { Controller, Get, Param, Post, Query, Res, UsePipes } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Res } from '@nestjs/common';
 import { ChannelService } from './service/channel.service';
 import type { Response } from 'express';
 import FindAllChannelDTO from './dto/findall-channel.dto';
@@ -26,7 +26,7 @@ export class ChannelController {
     private readonly channelExportService: ChannelExportService,
     private readonly channelDownloadService: ChannelDownloadService,
   ) { }
-  
+
   //#region Download
   @Get('download/:username/findall')
   async findAllDownloads(@Param() params: GetUsernameParamsDTO): Promise<ChannelDownloadHistoryDTO[]> {
@@ -40,7 +40,7 @@ export class ChannelController {
   }
 
   @Get('download/:username')
-  async download(@Param() params: GetUsernameParamsDTO, @Query() queries: GetDownloadTypeDTO): Promise<{ message: string }>{
+  async download(@Param() params: GetUsernameParamsDTO, @Query() queries: GetDownloadTypeDTO): Promise<{ message: string }> {
     this.channelDownloadService.download(params.username, queries);
     return { message: "Downloading" };
   }
@@ -65,19 +65,18 @@ export class ChannelController {
 
   //#region Fetch
   @Get('')
-  async fetchAll(@Query() queries: GetChannelsQueryDTO): Promise<FindAllChannelDTO[]> {
+  async fetchAll(@Query() queries?: GetChannelsQueryDTO): Promise<FindAllChannelDTO[]> {
     return await this.channelService.findAll(queries);
-  }
+  } 
 
-  @Post(':username')
-  async fetchUser(@Param() params: GetUsernameParamsDTO, @Query() queries: GetUserScrapeInfosDTO): Promise<FindOneChannelDTO> {
-    return await this.channelService.fetchUser(params.username, true, queries);
+  @Post('crawl-multi')
+  async fetchUsers(@Query('usernames', ParseCommaSeparatedQuery) usernames: string[], @Body() body: GetUserScrapeInfosDTO): Promise<FindOneChannelDTO[]> {
+    return await this.channelService.fetchUsers(usernames, body);
   }
-
-  @Get('scrape/profile')
-  @UsePipes(ParseCommaSeparatedQuery)
-  getUsersByUsernames(@Query('usernames') usernames: string[]): Promise<FindAllChannelDTO[]> {
-    return this.channelService.fetchUserProfiles(usernames);
+ 
+  @Post(':username/fetch')
+  async fetchUser(@Param() params: GetUsernameParamsDTO, @Body() body: GetUserScrapeInfosDTO): Promise<FindOneChannelDTO> {
+    return await this.channelService.fetchUser(params.username, true, body);
   }
 
   @Get(":username/exists")
@@ -110,4 +109,15 @@ export class ChannelController {
     return await this.channelService.fetchReels(params.username);
   }
   //#endregion
+
+  @Delete('/delete/:username')
+  async delete(@Param() params: GetUsernameParamsDTO): Promise<void> {
+    return await this.channelService.delete(params.username);
+  }
+
+  @Delete('/delete-multi')
+  async deleteMulti(@Query('usernames', ParseCommaSeparatedQuery) usernames: string[]): Promise<void> {
+    return await this.channelService.deleteMulti(usernames);
+  }
 } 
+ 

@@ -11,15 +11,14 @@ export class Keyword {
     priority?: string;
 
     @OneToMany(() => KeywordChannel, keywordChannel => keywordChannel.keyword, {
-        cascade: ['insert', 'remove'],
+        cascade: true,
         onDelete: 'CASCADE'
     })
     keyword_channels?: KeywordChannel[];
 
     @OneToMany(() => Hashtag, hashtag => hashtag.keyword, {
-        cascade: ['insert'],
+        cascade: true,
         onDelete: 'CASCADE'
     })
     hashtags?: Hashtag[];
-
 }

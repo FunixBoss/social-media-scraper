@@ -17,10 +17,13 @@ import KeywordCrawlService from './keyword-crawl.service';
 import { sleep } from 'src/pptr/utils/Utils';
 import ChannelHelper from 'src/instagram/channel/service/channel-helper.service';
 import ChannelScraperService from 'src/instagram/channel/service/channel-scraper.service';
- 
+import { ChannelCrawlConfig } from 'src/config/crawl-settings.type';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class KeywordService {
   private readonly logger = new Logger(KeywordService.name);
+  private readonly crawlConfig: ChannelCrawlConfig
 
   constructor(
     private readonly channelHelper: ChannelHelper,
@@ -33,7 +36,9 @@ export class KeywordService {
     @InjectRepository(Hashtag, 'instagram-scraper') private readonly hashtagRepository: Repository<Hashtag>,
     @InjectRepository(KeywordChannel, 'instagram-scraper') private readonly keywordChannelRepository: Repository<KeywordChannel>,
     @InjectDataSource('instagram-scraper') private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
   ) {
+    this.crawlConfig = configService.get<ChannelCrawlConfig>('channel')
   }
 
   private async isExists(keyword: string): Promise<boolean> {
@@ -49,7 +54,7 @@ export class KeywordService {
   async findAll(): Promise<FindAllKeywordDTO[]> {
     const keywords: Keyword[] = await this.keywordRepository.find({
       relations: [
-        "channels", "channels.channel",
+        "keyword_channels", "keyword_channels.channel",
         "hashtags"
       ]
     })
@@ -73,7 +78,7 @@ export class KeywordService {
     if (!(await this.isExists(keywordName))) throw new EntityNotExists('Keyword', keywordName);
     const keyword = await this.keywordRepository.findOne({
       where: { name: keywordName },
-      relations: ['channels', 'channels.channel']
+      relations: ['keyword_channels', 'keyword_channels.channel']
     });
     return this.channelMapper.mapToFindAllChannelDTOs(keyword.keyword_channels.map(keywordChannel => keywordChannel.channel));
   }
@@ -102,7 +107,9 @@ export class KeywordService {
     hashtags.forEach(hashtag => hashtag.keyword = { name: keyword.name });
     const channelUsernames: string[] = await this.keywordCrawlService.crawlUsernames(keyword);
 
-    const channels: Channel[] = await this.channelScraper.scrapeProfiles(channelUsernames)
+    const channels: Channel[] = (await this.channelScraper.scrapeProfiles(channelUsernames))
+      .filter(ch => ch.follower_count >= this.crawlConfig.profile.min_follower)
+    this.logger.log(`Filtered channels follower under ${this.crawlConfig.profile.min_follower}`)
     const channelsLen: number = channels.length
 
     let kwChannels: KeywordChannel[] = []
@@ -128,17 +135,12 @@ export class KeywordService {
     if (options.log) this.logger.log(`Crawl keyword successfully, keyword: ${keyword.name} - Hashtags: ${hashtags.length}, Channels: ${channels.length}`)
     return this.keywordMapperService.mapToFindOneKeywordDTO(keyword.name);
   }
-
+ 
   async remove(keyword: string): Promise<void> {
     if (!(await this.isExists(keyword))) throw new EntityNotExists('Keyword', keyword);
     await this.dataSource.transaction(async (transactionalEntityManager) => {
-      await this.hashtagRepository.delete({
-        keyword: {
-          name: keyword
-        }
-      });
-      await this.keywordRepository.delete({ name: keyword });
-    })
+      await transactionalEntityManager.delete(Keyword, { name: keyword });
+    });
   }
   //#endregion
 }

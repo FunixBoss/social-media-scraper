@@ -16,11 +16,10 @@ import { ChannelExportService } from './channel-export.service';
 import { ChannelDownloadService } from './channel-download.service';
 import { GetChannelsQueryDTO } from '../dto/get-channels-query.dto';
 import ChannelHelper from './channel-helper.service';
-import { CrawlInfo, DownloadType, GetUserScrapeInfosDTO } from '../dto/get-user-scrape-info.dto';
-import { GetExportTypeDTO } from '../dto/get-export-type.dto';
+import { CrawlInfo, DownloadType, ExportType, GetUserScrapeInfosDTO } from '../dto/get-user-scrape-info.dto';
 import { sleep } from 'src/pptr/utils/Utils';
 import ChannelScraperService from './channel-scraper.service';
-
+import * as _ from 'lodash';
 @Injectable()
 export class ChannelService {
   private readonly logger = new Logger(ChannelService.name);
@@ -46,42 +45,34 @@ export class ChannelService {
 
   async findAll(queries?: GetChannelsQueryDTO): Promise<FindAllChannelDTO[]> {
     let channels: Channel[] = []
-    if (!queries) {
+    if (_.isEmpty(queries)) {
       channels = await this.channelRepository.find()
       return this.mapperService.mapToFindAllChannelDTOs(channels);
     }
     return []
   }
 
-  async fetchUsers(usernames: string[], options: {
-    crawl?: {
-      profile?: boolean,
-      friendships?: boolean,
-      posts?: boolean,
-      reels?: boolean
-    },
-    export?: boolean,
-    download?: boolean
-  } = { crawl: { profile: true } }): Promise<FindOneChannelDTO[]> {
-    const usernameLen = usernames.length;
+
+  async fetchUsers(usernames: string[], options: GetUserScrapeInfosDTO = { crawl: { profile: true } }): Promise<FindOneChannelDTO[]> {
     let channels: FindOneChannelDTO[] = []
+    const totalUser = usernames.length;
     for (const [index, username] of usernames.entries()) {
       try {
-        let channel = await this.fetchUser(username, false)
-        channels.push(channel)
-        this.logger.log(`Fetch user successfully (${index+1}/${usernameLen}): ${username} `)
+        await this.fetchUser(username, false, options)
+        this.logger.log(`Fetch user successfully (${index + 1}/${totalUser}): ${username}`)
         await sleep(3)
       } catch (error) {
-        this.logger.warn(`Fetch user failed (${index+1}/${usernameLen}): ${username} `)
+        this.logger.log(`Fetch user failed (${index + 1}/${totalUser}): ${username}, Error: ${error["name"]} - ${error["message"]}`)
       }
     }
+    this.logger.log(`Fetch all user successfully (${totalUser}/${totalUser}): ${usernames.join(", ")}`)
     return channels;
   }
 
   async fetchUser(username: string, log: boolean = true, options: GetUserScrapeInfosDTO = { crawl: { profile: true } }): Promise<FindOneChannelDTO> {
     const channel: FindOneChannelDTO = await this.handleCrawlOptions(username, options.crawl)
-    this.handleExportOptions(username, options.export)
-    this.handleDownloadOptions(username, options.download)
+    if (options.download) await this.handleExportOptions(username, options.export)
+    if (options.export) await this.handleDownloadOptions(username, options.download)
     if (log) this.logger.log(`Fetch User ${username} Successfully`)
     return channel;
   }
@@ -105,14 +96,12 @@ export class ChannelService {
     }
   }
 
-  private async handleExportOptions(username: string, exportOptions?: GetExportTypeDTO) {
-    if (!exportOptions) return;
-    this.exportService.exportChannel(username, exportOptions.type)
+  private async handleExportOptions(username: string, options: ExportType) {
+    if (options.json) this.exportService.exportChannel(username, "json");
+    if (options.excel) this.exportService.exportChannel(username, "excel");
   }
 
-  private async handleDownloadOptions(username: string, download?: DownloadType) {
-    if (!download) return;
-
+  private async handleDownloadOptions(username: string, download: DownloadType) {
     if (download.posts) {
       const { all, from_order, to_order } = download.posts;
       await this.downloadService.download(username, { type: 'posts', all, from_order, to_order })
@@ -199,7 +188,7 @@ export class ChannelService {
       return this.mapperService.mapToChannelPostDTOs(
         await this.channelPostRepository.findBy({ channel: { username } })
       )
-    }
+    } 
 
     let posts: ChannelPost[] = await this.crawlService.crawlPosts(username);
     await this.dataSource.transaction(async (transactionalEntityManager) => {
@@ -225,5 +214,29 @@ export class ChannelService {
     this.logger.log(`Fetch Reels Of User: ${username} Successfully`)
     return this.mapperService.mapToChannelReelDTOs(reels);
   }
+
+  async delete(username: string): Promise<void> {
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+      await transactionalEntityManager.remove(Channel, { username });
+    })
+    this.logger.log(`Delete channel successfully: ${username}`)
+  }
+
+  async deleteMulti(usernames: string[]): Promise<void> {
+    await this.dataSource.transaction(async (transactionalEntityManager) => {
+        // Create Channel instances with the specified usernames
+        const channelsToDelete = usernames.map(username => {
+            const channel = new Channel();
+            channel.username = username;
+            return channel;
+        });
+
+        // Remove the created channel instances
+        await transactionalEntityManager.remove(Channel, channelsToDelete);
+    });
+
+    this.logger.log(`Delete channels successfully: ${usernames.join(", ")}`);
+}
+
 }
 

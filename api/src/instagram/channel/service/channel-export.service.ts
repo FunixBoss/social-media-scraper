@@ -14,17 +14,22 @@ import ChannelReelDTO from '../dto/channel-reel.dto';
 import FindOneChannelDTO from '../dto/findone-channel.dto';
 import ChannelMapperService from './channel-mapper.service';
 import ChannelHelper from './channel-helper.service';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class ChannelExportService {
-  private DOWNLOAD_PATH: string;
+  private readonly DOWNLOAD_PATH: string;
   private readonly logger = new Logger(ChannelExportService.name);
   constructor(
     private readonly mapperService: ChannelMapperService,
     private readonly channelHelper: ChannelHelper,
+    private readonly configService: ConfigService,
     @Inject(forwardRef(() => ChannelService)) private readonly channelService: ChannelService,
     @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
-  ) { }
+  ) {
+    this.DOWNLOAD_PATH = this.configService.get<string>("DOWNLOAD_PATH")
+  }
 
+  //#region multi channels
   async exportChannels(exportType: string | "json" | "excel"): Promise<void> {
     if (exportType == 'excel') this.exportChannelsExcel();
     if (exportType == 'json') this.exportChannelsJson();
@@ -66,9 +71,10 @@ export class ChannelExportService {
     writeFileSync(`${this.DOWNLOAD_PATH}/${fileName}`, JSON.stringify(await this.channelRepository.find()), 'utf-8')
     this.logger.log(`Json file ${fileName} was written successfully.`);
   }
+  //#endregion
 
 
-
+  //#region a channel
   async exportChannel(username: string, exportType: string | "json" | "excel"): Promise<void> {
     if (!(await this.channelHelper.isExists(username))) throw new EntityNotExists("Channel", username);
     const crawledTypes: TCrawlingType[] = await this.channelHelper.getCrawledHistory(username)
@@ -111,7 +117,7 @@ export class ChannelExportService {
       createAndWriteReelsWorkSheet(workbook, await this.channelService.fetchReels(username));
 
     const fileName = `${username}.xlsx`
-    const filePath = `${this.DOWNLOAD_PATH}/username/${fileName}`
+    const filePath = `${this.DOWNLOAD_PATH}/${username}/${fileName}`
     await workbook.xlsx.writeFile(filePath);
     this.logger.log(`Excel file ${fileName} was written successfully.`);
   }

@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ToastState, UtilsService } from "../../../../@core/services/utils.service";
 import { CustomValidator } from "../../../../@core/validators/custom-validator";
 import { CreateKeywordDto } from "../../../../@core/models/keyword/create-keyword.dto";
@@ -14,8 +14,7 @@ import { of } from "rxjs";
 })
 export class KeywordAddComponent {
 
-  addKeywordFormGroup: FormGroup;
-  priories: String[] = ["HIGH", "MEDIUM", "LOW"]
+  addKeywordsFormGroup: FormGroup;
   createLoading = false;
 
   constructor(
@@ -23,25 +22,39 @@ export class KeywordAddComponent {
     private formBuilder: FormBuilder,
     private utilsService: UtilsService,
   ) {
-    this.addKeywordFormGroup = this.formBuilder.group({
-      name: ['', [CustomValidator.notBlank, Validators.maxLength(100)]],
-      priority: ['', [CustomValidator.notBlank]],
+    this.addKeywordsFormGroup = this.formBuilder.group({
+      names: this.formBuilder.array([
+        this.formBuilder.control('', [CustomValidator.notBlank, Validators.maxLength(200)])
+      ]),
     })
   }
 
+  get names(): FormArray {
+    return this.addKeywordsFormGroup.get('names') as FormArray;
+  }
+
+  addNameField() {
+    this.names.push(this.formBuilder.control('', [CustomValidator.notBlank, Validators.maxLength(200)]));
+  }
+
+  removeNameField(index: number) {
+    this.names.removeAt(index);
+  }
+
   createKeyword() {
-    if (this.addKeywordFormGroup.invalid) {
-      this.addKeywordFormGroup.markAllAsTouched();
+    console.log(this.addKeywordsFormGroup.errors);
+    
+    if (this.addKeywordsFormGroup.invalid) {
+      this.addKeywordsFormGroup.markAllAsTouched();
       this.utilsService.updateToastState(new ToastState('Add Keyword Failed!', "danger"))
       return;
     }
 
     this.createLoading = true
-    let keyword: CreateKeywordDto = {
-      name: this.addKeywordFormGroup.get('name').value,
-      priority: this.addKeywordFormGroup.get('priority').value,
-    }
-    this.keywordService.insert(keyword)
+    let keywords: string[] = this.names.value;
+    console.log(keywords);
+    
+    this.keywordService.createMulti(keywords)
       .pipe(
         catchError(error => {
           // Log the error or handle it as needed
@@ -55,13 +68,13 @@ export class KeywordAddComponent {
         if (data) {
           this.createLoading = false
           this.keywordService.notifyKeywordChange();
-          this.utilsService.updateToastState(new ToastState('Add Keyword Successfully!', "success"))
+          this.utilsService.updateToastState(new ToastState('Add Keywords Successfully!', "success"))
           this.reset()
         }
       })
   }
 
   reset() {
-    this.addKeywordFormGroup.reset();
+    this.addKeywordsFormGroup.reset();
   }
 }

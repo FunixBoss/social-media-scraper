@@ -39,9 +39,16 @@ export class KeywordService {
     return this.httpClient.get<ApiResponse<FindAllKeywordDTO[]>>(url)
   }
 
-  insert(keyword: CreateKeywordDto): Observable<ApiResponse<FindOneChannelDTO>> {
+  create(keyword: string): Observable<ApiResponse<FindOneChannelDTO>> {
     const url: string = `${this.baseUrlService.baseURL}/keyword`
     return this.httpClient.post<ApiResponse<FindOneChannelDTO>>(url, keyword);
+  }
+
+  createMulti(keyword: string[]): Observable<ApiResponse<FindOneChannelDTO[]>> {
+    const url: string = `${this.baseUrlService.baseURL}/keyword/create-multi`
+    return this.httpClient.post<ApiResponse<FindOneChannelDTO[]>>(url, {
+      name: keyword.join(",")
+    });
   }
 
   delete(keyword: string): Observable<ApiResponse<void>> {

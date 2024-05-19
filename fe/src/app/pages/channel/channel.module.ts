@@ -25,6 +25,7 @@ import { CustomChannelDownloadActionComponent } from './channel-download/custom/
 import { CustomChannelDownloadFilterActionsComponent } from './channel-download/custom/custom-channel-download-filter-actions.component';
 import { CustomChannelDownloadPriorityComponent } from './channel-download/custom/custom-channel-download-priority.component';
 import { CustomChannelFollowerComponent } from './channel-list/custom/custom-channel-follower.component';
+import { ScrapeOptionsFormComponent } from './shared/scrape-options-form/scrape-options-form.component';
 
 @NgModule({
   imports: [
@@ -77,33 +78,10 @@ import { CustomChannelFollowerComponent } from './channel-list/custom/custom-cha
     ChannelDownloadAddComponent,
     CustomChannelDownloadActionComponent,
     CustomChannelDownloadFilterActionsComponent,
-    CustomChannelDownloadPriorityComponent
-    // ImagesCarouselComponent,,
-    // CustomProductActionComponent,
-    // CustomProductFilterActionsComponent,
-    // CustomProductStatusComponent,
-    // CustomProductStatusFilterComponent,
-    // ProductListMultiComponent,
+    CustomChannelDownloadPriorityComponent,
 
-    // CustomCatalogImageComponent,
-    // ProductCatalogAddComponent,
-    // ProductCatalogEditComponent,
-
-    // CustomCouponActionComponent,
-    // CustomCouponFilterActionsComponent,
-    // ProductCouponAddComponent,
-    // ProductCouponEditComponent,
-
-    // CustomSaleActionComponent,
-    // CustomSaleFilterActionsComponent,
-    // CustomSaleActiveActionComponent,
-    // ProductSaleAddComponent,
-    // ProductSaleEditComponent,
-    // ProductSaleMultiComponent,
-
-    // ProductDetailBasicComponent,
-    // ProductDetailCommentsComponent,
-    // ProductDetailCareGuideComponent,
+    ChannelListMultiComponent,
+    ScrapeOptionsFormComponent
   ],
 })
 export class ChannelsModule { }

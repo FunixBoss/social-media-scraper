@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, HttpException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EntityNotExists } from 'src/exception/entity-not-exists.exception';
@@ -11,7 +11,6 @@ import { ChannelDownloadHistory } from '../../entity/channel-download-history.en
 import { ChannelDownloadHistoryDTO } from '../dto/channel-download-history.dto';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
-import { format } from 'date-fns';
 import BatchHelper from 'src/helper/BatchHelper';
 import ChannelHelper from './channel-helper.service';
 
@@ -49,14 +48,25 @@ export class ChannelDownloadService {
         from_order: number,
         to_order: number
     } = { type: 'posts', all: false, from_order: 1, to_order: 50 }): Promise<void> {
-
         if (!(await this.channelHelper.isExists(username))) throw new EntityNotExists('Channel', username);
-        const currentDate = format(new Date(), 'dd_MM_yyyy_hh_mm_ss');
-        const BASE_NAME = `${username}-${options.type}-${options.from_order}_${options.to_order}-${currentDate}`
+        const BASE_NAME = `${username}/${options.type}`
         let downloadPath: string = `${this.DOWNLOAD_PATH}/${BASE_NAME}`;
 
-        if (options.type == "posts") await this.downloadPosts(username, downloadPath, options.from_order, options.to_order);
-        else if (options.type == "reels") await this.downloadReels(username, downloadPath, options.from_order, options.to_order);
+        if (options.type == "posts") {
+            if (!await this.channelHelper.isCrawledContent(username, "CHANNEL_POSTS")) throw new HttpException("Did not fetch posts yet", 400);
+            if(options.all) {
+                options.from_order = 1;
+                options.to_order = await this.channelHelper.totalPosts(username)
+            }
+            await this.downloadPosts(username, downloadPath, options.from_order, options.to_order);
+        } else if (options.type == "reels") {
+            if (!await this.channelHelper.isCrawledContent(username, "CHANNEL_POSTS")) throw new HttpException("Did not fetch reels yet", 400);
+            if(options.all) {
+                options.from_order = 1;
+                options.to_order = await this.channelHelper.totalReels(username)
+            }
+            await this.downloadReels(username, downloadPath, options.from_order, options.to_order)
+        };
 
         let channelDownload: ChannelDownloadHistory = {
             channel_username: username,

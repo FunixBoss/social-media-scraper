@@ -54,11 +54,11 @@ export class KeywordListComponent implements OnInit {
         type: "custom",
         renderComponent: CustomHashtagLinkComponent
       },
-      priority: {
-        title: "Priority",
-        type: "custom",
-        renderComponent: CustomKeywordPriorityComponent
-      },
+      // priority: {
+      //   title: "Priority",
+      //   type: "custom",
+      //   renderComponent: CustomKeywordPriorityComponent
+      // },
       actions: {
         title: 'Actions',
         type: 'custom',

@@ -8,6 +8,7 @@ import { ChannelService } from "../../../../@core/services/channel/channel.servi
 import { FormBuilder, FormGroup } from "@angular/forms";
 import { CustomValidator } from "../../../../@core/validators/custom-validator";
 import { Observable } from "rxjs";
+import { ScrapeOptionsFormComponent } from "../../shared/scrape-options-form/scrape-options-form.component";
 
 @Component({
     selector: 'ngx-custom-channel-action',
@@ -29,68 +30,56 @@ export class CustomChannelActionComponent implements ViewCell, OnInit {
     renderValue: string;
     @Input() value: string | number;
     @Input() rowData: any;
+
     isCrawling: boolean = false;
 
-    @ViewChild('onCrawlTemplate') crawlWindow: TemplateRef<any>;
+    @ViewChild('onDeleteTemplate') deleteWindow: TemplateRef<any>;
+    deleteWindowRef: NbWindowRef;
+
+    @ViewChild(ScrapeOptionsFormComponent) scrapeOptionsFormComponent: ScrapeOptionsFormComponent;
+    @ViewChild('crawlWindowTemplate') crawlWindow: TemplateRef<any>;
     crawlWindowRef: NbWindowRef;
+
     crawlFormGroup: FormGroup
-    crawlContents: string[] = ["PROFILE", "FRIENDSHIPS", "POSTS", "REELS", "ALL"]
     constructor(
         private windowService: NbWindowService,
         private channelService: ChannelService,
         private utilsService: UtilsService,
-        private formBuilder: FormBuilder,
         private router: Router
     ) { }
 
     ngOnInit(): void {
-        this.crawlFormGroup = this.formBuilder.group({
-            crawl: ['PROFILE', [CustomValidator.notBlank]],
-        })
         this.username = this.rowData.username;
     }
 
-    onCrawl(event: any) {
+    openCrawlWindow() {
         this.crawlWindowRef = this.windowService
-            .open(this.crawlWindow, { title: `Crawl Channel` });
+            .open(this.crawlWindow, { title: `Scrape Channel Options`, });
     }
 
-    crawlChannel() {
-        if (this.crawlFormGroup.invalid) {
-            this.crawlFormGroup.markAllAsTouched();
-            this.utilsService.updateToastState(new ToastState('Crawl Channel Failed!', "danger"));
+    onCrawl() {
+        if (!this.scrapeOptionsFormComponent.validate()) {
+            this.scrapeOptionsFormComponent.scrapeForm.markAllAsTouched()
+            this.utilsService.updateToastState(new ToastState('Validate Failed!', "danger"))
             return;
         }
 
-        const crawlContent: string = this.crawlFormGroup.get("crawl").value;
-        this.utilsService.updateToastState(new ToastState(`Crawling ${crawlContent} of ${this.username}`, "info"));
-        const crawlActions = {
-            'PROFILE': () => this.channelService.crawlProfile(this.username),
-            'FRIENDSHIPS': () => this.channelService.crawlFriendships(this.username),
-            'POSTS': () => this.channelService.crawlPosts(this.username),
-            'REELS': () => this.channelService.crawlReels(this.username),
-            'ALL': () => this.channelService.crawlFull(this.rowData.username)
-        };
-        this.executeCrawl(crawlContent, crawlActions[crawlContent]);
-        this.crawlWindowRef.close();
+        this.channelService.crawlOne(this.username, this.scrapeOptionsFormComponent.scrapeForm.value)
+            .subscribe({
+                next: (data) => {
+                    if (data.statusCode == 200) {
+                        this.utilsService.updateToastState(new ToastState(`Crawl channel successfully: ${this.username}`, "success"));
+                        this.channelService.notifyChannelChange()
+                        this.crawlWindowRef.close()
+                    }
+                },
+                error: (error) => {
+                    console.error('Error downloading the file', error);
+                    this.utilsService.updateToastState(new ToastState(`Crawl channels failed: ${this.username}`, "danger"));
+                }
+            });
     }
 
-    private executeCrawl(crawlContent: string, crawlFunction: () => Observable<any>) {
-        crawlFunction().subscribe(
-            body => {
-                if (body && (body.statusCode === 200 || body.data === null)) {
-                    this.isCrawling = false;
-                    this.channelService.notifyChannelChange();
-                    this.utilsService.updateToastState(new ToastState(`Crawled ${crawlContent} of ${this.username} completely in ${body.handlerTime}ms`, "success"));
-                }   
-            },
-            error => {
-                this.isCrawling = false;
-                console.error(error);
-                this.utilsService.updateToastState(new ToastState(`Error crawling ${crawlContent} of ${this.username}`, "danger"));
-            }
-        );
-    }
     onExportExcel() {
         this.utilsService.updateToastState(new ToastState(`Exporting Excel of ${this.username}`, "info"));
         this.channelService.exportExcel(this.username).subscribe({
@@ -106,5 +95,27 @@ export class CustomChannelActionComponent implements ViewCell, OnInit {
 
     onDownload() {
         this.router.navigate(['/admin/channels/downloads', this.rowData.username])
+    }
+
+    openDeleteWindow() {
+        this.deleteWindowRef = this.windowService
+            .open(this.deleteWindow, { title: `Delete Channel` });
+    }
+
+    onDelete() {
+        this.channelService.delete(this.username)
+            .subscribe({
+                next: (data) => {
+                    if (data.statusCode == 200) {
+                        this.utilsService.updateToastState(new ToastState(`Delete channel ${this.username} successfully`, "success"));
+                        this.channelService.notifyChannelChange()
+                        this.deleteWindowRef.close()
+                    }
+                },
+                error: (error) => {
+                    console.error('Error downloading the file', error);
+                    this.utilsService.updateToastState(new ToastState(`Delete channel ${this.username} failed`, "danger"));
+                }
+            });
     }
 }

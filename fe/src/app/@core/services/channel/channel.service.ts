@@ -19,7 +19,32 @@ export interface FindAllChannelQueryOption {
     keyword?: string;
     friendshipsOf?: string;
 }
-export type CrawlContent = "PROFILE" | "FRIENDSHIPS" | "POSTS" | "REELS" | "ALL";
+
+export type CrawlInfo = {
+    crawl: {
+        profile: boolean,
+        friendships: boolean,
+        posts: boolean,
+        reels: boolean
+    },
+    export: {
+        json: boolean,
+        excel: boolean
+    },
+    download: {
+        posts: {
+            all: boolean,
+            from_order: number,
+            to_order: number
+        },
+        reels: {
+            all: boolean,
+            from_order: number,
+            to_order: number
+        }
+    }
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -61,20 +86,16 @@ export class ChannelService {
         return this.httpClient.get<ApiResponse<FindAllChannelDTO[]>>(url)
     }
 
-    crawlMulti(username: string, crawlingContents: CrawlContent[]) {
-        const crawlingContentsStr = crawlingContents
-            .sort((a: any, b: any) => a - b)
-            .map(content => content.toLocaleLowerCase())
-            .join("-")
-        const url: string = `${this.baseUrlService.baseURL}/channel/${username}?infos=${crawlingContentsStr}`
-        console.log(url);
-
-        return this.httpClient.get<ApiResponse<null> | ApiResponse<FindOneKeywordDTO>>(url)
+    crawlMulti(usernames: string[], crawlContent: CrawlInfo): Observable<ApiResponse<FindOneKeywordDTO[]>> {
+        const url: string = `${this.baseUrlService.baseURL}/channel/crawl-multi`
+        const params = new HttpParams()
+            .set("usernames", usernames.join(","))
+        return this.httpClient.post<ApiResponse<FindOneKeywordDTO[]>>(url, crawlContent, { params })
     }
 
-    crawlFull(username: string): Observable<ApiResponse<null> | ApiResponse<FindOneKeywordDTO>> {
-        const url: string = `${this.baseUrlService.baseURL}/channel/${username}?infos=profile-friendships-posts-reels`
-        return this.httpClient.get<ApiResponse<null> | ApiResponse<FindOneKeywordDTO>>(url)
+    crawlOne(username: string, crawlContent: CrawlInfo): Observable<ApiResponse<null> | ApiResponse<FindOneKeywordDTO>> {
+        const url: string = `${this.baseUrlService.baseURL}/channel/${username}/fetch`
+        return this.httpClient.post<ApiResponse<FindOneKeywordDTO>>(url, crawlContent)
     }
 
     crawlProfile(username: string): Observable<ApiResponse<FindAllChannelDTO>> {
@@ -122,19 +143,6 @@ export class ChannelService {
         return this.httpClient.get<{ message: string }>(url)
     }
 
-
-    private getFilenameFromContentDisposition(contentDisposition: string | null): string {
-        if (!contentDisposition) return 'default-filename.zip';
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-        const matches = filenameRegex.exec(contentDisposition);
-        if (matches != null && matches[1]) {
-            // Matches[1] contains the value after `filename=`
-            let filename = matches[1].replace(/['"]/g, ''); // Strip any surrounding quotes
-            return decodeURIComponent(filename); // Handle percent-encoded UTF-8 characters
-        }
-        return 'default-filename.zip'; // Fallback filename
-    }
-
     findOneFull(username: string): Observable<ApiResponse<FindOneChannelDTO>> {
         const url: string = `${this.baseUrlService.baseURL}/channel/${username}`
         return this.httpClient.get<ApiResponse<FindOneChannelDTO>>(url)
@@ -165,9 +173,16 @@ export class ChannelService {
         return this.httpClient.get<ApiResponse<FindAllHashtagDTO[]>>(url)
     }
 
-    delete(channel: string): Observable<ApiResponse<void>> {
-        const url: string = `${this.baseUrlService.baseURL}/channel/${channel}`
+    delete(username: string): Observable<ApiResponse<void>> {
+        const url: string = `${this.baseUrlService.baseURL}/channel/delete/${username}`
         return this.httpClient.delete<ApiResponse<void>>(url);
+    }
+
+    deleteMulti(usernames: string[]): Observable<ApiResponse<void>> {
+        const url: string = `${this.baseUrlService.baseURL}/channel/delete-multi`
+        const params = new HttpParams()
+            .set("usernames", usernames.map(u => u.trim()).join(","))
+        return this.httpClient.delete<ApiResponse<void>>(url, { params });
     }
 
 }

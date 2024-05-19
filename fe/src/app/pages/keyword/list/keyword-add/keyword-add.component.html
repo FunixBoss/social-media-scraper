@@ -1,29 +1,28 @@
-<nb-card [formGroup]="addKeywordFormGroup" [nbSpinner]="createLoading">
+<nb-card [formGroup]="addKeywordsFormGroup" [nbSpinner]="createLoading">
     <nb-card-header>
         Add Keyword
     </nb-card-header>
     <nb-card-body>
-        <div class="row">
-            <div class="col-12 no-gutters px-0">
-                <input type="text" nbInput fullWidth placeholder="Keyword Name" formControlName="name" class="mb-1">
-                <div class="alert alert-danger mt-0 mb-3"
-                    *ngIf="addKeywordFormGroup.get('name').invalid && (addKeywordFormGroup.get('name').dirty || addKeywordFormGroup.get('name').touched)">
-                    <div *ngIf="addKeywordFormGroup.get('name').errors['notblank']">
-                        Keyword Name is required
+        <div formArrayName="names">
+            <div *ngFor="let control of names.controls; let i = index">
+                <div class="row mt-2 no-gutters">
+                    <div class="col-11">
+                        <input type="text" nbInput fullWidth placeholder="Keyword Name" [formControlName]="i"
+                            class="mb-1">
+                        <div class="alert alert-danger mt-0 mb-3"
+                            *ngIf="control.invalid && (control.dirty || control.touched)">
+                            <div *ngIf="control.errors['notblank']">
+                                Keyword is required
+                            </div>
+                            <div *ngIf="control.errors['maxlength']">
+                                Keyword must not exceed 200 characters
+                            </div>
+                        </div>
                     </div>
-                    <div *ngIf="addKeywordFormGroup.get('name').errors['maxlength']">
-                        Keyword Name must not exceed 100 characters
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 no-gutters px-0 mt-3">
-                <nb-select fullWidth placeholder="Priority" formControlName="priority">
-                    <nb-option *ngFor="let pri of priories"  [value]="pri">{{pri}}</nb-option>
-                </nb-select>
-                <div class="alert alert-danger mt-0 mb-3"
-                    *ngIf="addKeywordFormGroup.get('priority').invalid && (addKeywordFormGroup.get('priority').dirty || addKeywordFormGroup.get('priority').touched)">
-                    <div *ngIf="addKeywordFormGroup.get('priority').errors['notblank']">
-                        Keyword priority is required
+                    <div class="col-1">
+                        <button nbButton status="danger" (click)="removeNameField(i)">
+                            <nb-icon icon="close-outline"></nb-icon>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -32,6 +31,10 @@
     <nb-card-footer>
         <div class="d-flex justify-content-between">
             <button nbButton status="success" (click)="createKeyword()">Create</button>
+            <button nbButton status="success" (click)="addNameField()">
+                <nb-icon icon="plus-square-outline"></nb-icon>
+                Add
+            </button>
         </div>
     </nb-card-footer>
 </nb-card>

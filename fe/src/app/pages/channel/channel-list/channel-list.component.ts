@@ -59,7 +59,8 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         title: 'Follower',
         type: 'custom',
         width: '5%',
-        renderComponent: CustomChannelFollowerComponent
+        renderComponent: CustomChannelFollowerComponent,
+        sortDirection: 'desc'
       },
       total_posts: {
         title: 'Posts',
@@ -79,15 +80,19 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         width: '5%',
         renderComponent: CustomChannelFriendshipLinkComponent,
       },
-      priority: {
-        title: "Priority",
-        type: 'custom',
-        renderComponent: CustomPriorityComponent
-      },
-      crawled: {
-        title: "Crawled",
+      biography: {
+        title: "Biography",
         type: 'string',
       },
+      // priority: {
+      //   title: "Priority",
+      //   type: 'custom',
+      //   renderComponent: CustomPriorityComponent
+      // },
+      // crawled: {
+      //   title: "Crawled",
+      //   type: 'string',
+      // },
       // total_posts: {
       //   title: 'Posts',
       //   type: 'custom',
@@ -119,6 +124,8 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
         renderComponent: CustomChannelActionComponent
       },
     },
+    
+    sortDirection: 'desc',
     pager: {
       display: true,
       perPage: this.numberOfItem
@@ -153,7 +160,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
       .subscribe(body => {
         if (body) {
           const mappedChannels: any[] = body.data.reverse().map(channel => {
-            const { username, profile_pic_url, media_count, full_name, category, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled } = channel;
+            const { username, profile_pic_url, media_count, full_name, category, biography, follower_count, total_posts, total_reels, total_friendships, priority, url, crawled } = channel;
             return {
               username,
               full_name,
@@ -165,6 +172,7 @@ export class ChannelListComponent implements OnInit, AfterViewInit {
               total_friendships,
               priority,
               url,
+              biography,
               profile_pic_url,
               onlyHasMediaCount: media_count && !total_posts,
               crawled: crawled.sort((a: any, b: any) => (a - b)).map(crawl => crawl.replace("CHANNEL_", "")).join("\n")

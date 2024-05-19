@@ -23,6 +23,7 @@ export default class ChannelCrawlService {
     private interceptManager: RequestInterceptionManager
     private readonly logger = new Logger(ChannelCrawlService.name);
     private readonly crawlConfig: ChannelCrawlConfig
+
     constructor(
         @InjectBrowser('social-media-scraper') private readonly browser: Browser,
         @InjectBrowser('instagram-login') private readonly browser2: Browser,
@@ -33,7 +34,6 @@ export default class ChannelCrawlService {
         this.crawlConfig = configService.get<ChannelCrawlConfig>('channel')
         this.setUpDefaultPageInterceptors()
     }
-
 
     private async setUpDefaultPageInterceptors(): Promise<void> {
         this.interceptManager = new RequestInterceptionManager(
@@ -94,7 +94,7 @@ export default class ChannelCrawlService {
                                 if (!channelsMap.has(username)) {
                                     channelsMap.set(username, mapInsProfile(dataObj.data as InsProfileFull))
                                 }
-                                this.logger.log(`Crawled profile successfully (${++numberOfCrawled}/${usernameLen}): ${username} ${numberOfCrawled == usernameLen ? 'wait ' + timeBetweenBatch + 's for next crawl' : ''} `);
+                                this.logger.log(`Crawled profile successfully (${++numberOfCrawled}/${usernameLen}): ${username} ${numberOfCrawled != usernameLen ? 'wait ' + timeBetweenBatch + 's for next crawl' : ''} `);
                             }
                         } catch (error) {
                             console.log(error);

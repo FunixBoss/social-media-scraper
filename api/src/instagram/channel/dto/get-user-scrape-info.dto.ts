@@ -1,7 +1,5 @@
 import { Type } from "class-transformer";
 import { IsBoolean, IsNumber, IsObject, IsOptional, ValidateNested } from "class-validator";
-import { GetExportTypeDTO } from "./get-export-type.dto";
-
 
 export class CrawlInfo {
     @IsOptional()
@@ -35,7 +33,16 @@ export class PostsReelsDownloadType {
     to_order?: number;
 }
 
- 
+export class ExportType {
+    @IsOptional()
+    @IsBoolean()
+    json?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    excel?: boolean;
+}
+
 export class DownloadType {
     @IsOptional()
     @ValidateNested()
@@ -58,8 +65,8 @@ export class GetUserScrapeInfosDTO {
     @IsOptional()
     @IsObject()
     @ValidateNested()
-    @Type(() => GetExportTypeDTO)
-    export?: GetExportTypeDTO;
+    @Type(() => ExportType)
+    export?: ExportType;
 
     @IsOptional()
     @IsObject()

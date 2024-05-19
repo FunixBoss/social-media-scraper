@@ -47,8 +47,8 @@ UNLOCK TABLES;
 LOCK TABLES `rotating-proxy-ipv4` WRITE;
 /*!40000 ALTER TABLE `rotating-proxy-ipv4` DISABLE KEYS */;
 INSERT INTO `rotating-proxy-ipv4` VALUES 
-(1,'s3.cloudvpsviet.vn','8850','cloudvpsviet','1904b17fde3ca591313849f4508c0e2b',NULL,'die','116.103.250.62','2024-05-17 19:27:28'),
-(2,'s3.cloudvpsviet.vn','8091','cloudvpsviet','1904b17fde3ca591313849f4508c0e2b',NULL,'live','27.79.164.11','2024-05-17 19:27:52'),
+(1,'s2.cloudvpsviet.vn','8269','cloudvpsviet','6bbb8e146a1ac022fa3c496792acfc84',NULL,'live','116.103.250.62','2024-05-17 19:27:28'),
+(2,'s2.cloudvpsviet.vn','8585','cloudvpsviet','b43e26c84d4a0cf7150b55719cd83aeb',NULL,'live','27.79.164.11','2024-05-17 19:27:52'),
 (3,'103.179.173.13','10001',NULL,NULL,NULL,'live','116.107.166.186','2024-05-17 22:35:15'),
 (4,'103.179.173.13','10002',NULL,NULL,NULL,'live','27.73.47.61','2024-05-17 22:35:20'),
 (5,'103.179.173.13','10003',NULL,NULL,NULL,'live','171.238.215.226','2024-05-17 22:35:22'),

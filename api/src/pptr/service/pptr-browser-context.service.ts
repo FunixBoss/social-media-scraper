@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Browser, BrowserContext, BrowserContextOptions, Page } from "puppeteer";
+import { Browser, BrowserContext, BrowserContextOptions, } from "puppeteer";
 import { PptrPageService } from "./pptr-page.service";
 import ProxyDTO from "src/proxy/proxy-ipv4/dto/proxy.dto";
 
@@ -18,13 +18,13 @@ export class PptrBrowserContextService {
         if (options.closeFirstPage) await this.pageService.closeFirstPage(context);
 
         let promises: Promise<any>[] = []
-        for (let i = 0; i < options.numberOfPages; i++) { 
+        for (let i = 0; i < options.numberOfPages; i++) {
             promises.push(this.pageService.setupPage(context, {
                 page: (await context.pages()).at(i),
-                cookiePath: options.cookiePaths[i],
-                url: options.urls[i],
+                cookiePath: options.cookiePaths ? options.cookiePaths[i] : undefined,
+                url: options.urls ? options.urls[i] : undefined,
                 proxy: options.proxy
-            })) 
+            }))
         }
         await Promise.all(promises)
 

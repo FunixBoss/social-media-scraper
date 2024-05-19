@@ -4,7 +4,7 @@ import { Channel } from './channel.entity';
 
 @Entity()
 export class KeywordChannel {
-    @PrimaryColumn()
+    @PrimaryColumn({ length: 200 })
     keyword_name: string;
 
     @PrimaryColumn({ length: 200 })
@@ -13,7 +13,9 @@ export class KeywordChannel {
     @Column({ length: 200, nullable: true })
     status: string;
 
-    @ManyToOne(() => Keyword, keyword => keyword.keyword_channels)
+    @ManyToOne(() => Keyword, keyword => keyword.keyword_channels, {
+        onDelete: 'CASCADE',
+    })
     @JoinColumn({ name: 'keyword_name' })
     keyword?: Keyword;
 

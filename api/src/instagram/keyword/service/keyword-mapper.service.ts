@@ -34,7 +34,7 @@ export default class KeywordMapperService {
                 name: kw
             },
             relations: [
-                "channels", "channels.channel",
+                "keyword_channels", "keyword_channels.channel",
                 "hashtags"
             ]
         })

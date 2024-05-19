@@ -28,13 +28,13 @@ export class PptrBrowserService {
             this.contextService.setUpContext(this.defaultBrowser.defaultBrowserContext(), {
                 closeFirstPage: true,
                 numberOfPages: 1,
-                urls: [INS_URL],
+                // urls: [INS_URL],
                 cookiePaths: normalCookiesPaths
             }),
             this.contextService.setUpContext(this.instaBrowser.defaultBrowserContext(), {
                 closeFirstPage: true,
                 numberOfPages: 1,
-                urls: [INS_URL],
+                // urls: [INS_URL],
                 cookiePaths: incognitoCookiesPaths
             })
         ]).then(() => {

@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ChannelCrawlingHistory } from "src/instagram/entity/channel-crawling-history.entity";
+import { ChannelPost } from "src/instagram/entity/channel-post.entity";
+import { ChannelReel } from "src/instagram/entity/channel-reel.entity";
 import { Channel } from "src/instagram/entity/channel.entity";
 import { CrawlingType, TCrawlingType } from "src/instagram/entity/crawling-type.entity";
 import { Repository } from "typeorm";
@@ -10,11 +12,21 @@ export default class ChannelHelper {
 
     constructor(
         @InjectRepository(Channel, 'instagram-scraper') private readonly channelRepository: Repository<Channel>,
+        @InjectRepository(ChannelPost, 'instagram-scraper') private readonly channelPostRepository: Repository<ChannelPost>,
+        @InjectRepository(ChannelReel, 'instagram-scraper') private readonly channelReelRepository: Repository<ChannelReel>,
         @InjectRepository(CrawlingType, 'instagram-scraper') private readonly crawlingTypeRepository: Repository<CrawlingType>,
         @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlRepository: Repository<ChannelCrawlingHistory>,
         @InjectRepository(ChannelCrawlingHistory, 'instagram-scraper') private readonly channelCrawlingHistoryRepository: Repository<ChannelCrawlingHistory>,
     ) {
 
+    }
+
+    async totalPosts(username: string): Promise<number> {
+        return this.channelPostRepository.countBy({ channel: { username } })
+    }
+
+    async totalReels(username: string): Promise<number> {
+        return this.channelReelRepository.countBy({ channel: { username } })
     }
 
     async isCrawledContent(username: string, crawledType: TCrawlingType): Promise<boolean> {

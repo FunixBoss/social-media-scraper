@@ -43,7 +43,7 @@ create table `channel_download_history` (
     status varchar(200),
     download_directory varchar(200),
     date datetime,
-	foreign key(channel_username) references `channel`(username)
+	foreign key(channel_username) references `channel`(username) ON DELETE CASCADE
 );
 
 create table `crawling_type`(
@@ -55,7 +55,7 @@ create table `channel_crawling_history`(
     crawling_type_name varchar(200),
     date datetime,
     primary key(channel_username, crawling_type_name),
-    foreign key(channel_username) references `channel`(username),
+    foreign key(channel_username) references `channel`(username) ON DELETE CASCADE,
     foreign key(crawling_type_name) references `crawling_type`(name)
 );
 
@@ -63,7 +63,7 @@ create table `channel_friendship`(
 	username varchar(200),
     channel_username varchar(200),
     primary key (username, channel_username),
-    foreign key (username) references `channel`(username),
+    foreign key (username) references `channel`(username) ON DELETE CASCADE,
 	foreign key (channel_username) references `channel`(username)
 );
 
@@ -82,7 +82,7 @@ CREATE TABLE `channel_post` (
     comment_count INT,
     product_type VARCHAR(200),
 	channel_username varchar(200),
-	foreign key(channel_username) references `channel`(username)
+	foreign key(channel_username) references `channel`(username) ON DELETE CASCADE
 );
 
 CREATE TABLE `channel_post_image` (
@@ -110,7 +110,7 @@ create table `channel_reel`(
     product_type varchar(200), 
     video_url varchar(1000),
 	channel_username varchar(200),
-	foreign key(channel_username) references `channel`(username)
+	foreign key(channel_username) references `channel`(username) ON DELETE CASCADE
 );
 
 create table `keyword_channel` (
@@ -118,8 +118,8 @@ create table `keyword_channel` (
     channel_username varchar(200),
     status varchar(200),
     primary key (keyword_name, channel_username),
-	foreign key (keyword_name) references `keyword`(name),
-    foreign key (channel_username) references `channel`(username)
+	foreign key (keyword_name) references `keyword`(name) ON DELETE CASCADE,
+    foreign key (channel_username) references `channel`(username) ON DELETE CASCADE
 );
 
 create table `hashtag`(
@@ -132,7 +132,7 @@ create table `hashtag`(
     keyword_name varchar(200),
     priority varchar(200) default 'MEDIUM',
     foreign key (priority) references `priority`(name),
-    foreign key (keyword_name) references `keyword`(name)
+    foreign key (keyword_name) references `keyword`(name) ON DELETE CASCADE
 );
 
 create table `channel_reel_hashtag`(
