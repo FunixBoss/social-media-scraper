@@ -67,13 +67,13 @@ export class ChannelController {
   @Get('')
   async fetchAll(@Query() queries?: GetChannelsQueryDTO): Promise<FindAllChannelDTO[]> {
     return await this.channelService.findAll(queries);
-  } 
+  }
 
   @Post('crawl-multi')
   async fetchUsers(@Query('usernames', ParseCommaSeparatedQuery) usernames: string[], @Body() body: GetUserScrapeInfosDTO): Promise<FindOneChannelDTO[]> {
     return await this.channelService.fetchUsers(usernames, body);
   }
- 
+
   @Post(':username/fetch')
   async fetchUser(@Param() params: GetUsernameParamsDTO, @Body() body: GetUserScrapeInfosDTO): Promise<FindOneChannelDTO> {
     return await this.channelService.fetchUser(params.username, true, body);
@@ -113,11 +113,10 @@ export class ChannelController {
   @Delete('/delete/:username')
   async delete(@Param() params: GetUsernameParamsDTO): Promise<void> {
     return await this.channelService.delete(params.username);
-  }
+  } 
 
   @Delete('/delete-multi')
   async deleteMulti(@Query('usernames', ParseCommaSeparatedQuery) usernames: string[]): Promise<void> {
     return await this.channelService.deleteMulti(usernames);
   }
-} 
- 
+}

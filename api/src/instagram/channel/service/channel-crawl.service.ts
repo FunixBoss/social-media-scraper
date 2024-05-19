@@ -26,7 +26,7 @@ export default class ChannelCrawlService {
 
     constructor(
         @InjectBrowser('social-media-scraper') private readonly browser: Browser,
-        @InjectBrowser('instagram-login') private readonly browser2: Browser,
+        // @InjectBrowser('instagram-login') private readonly browser2: Browser,
         @InjectPage('instagram', 'social-media-scraper') private readonly page: Page,
         private readonly pageService: PptrPageService,
         private readonly configService: ConfigService,
@@ -73,7 +73,7 @@ export default class ChannelCrawlService {
         const { batchSize, timeBetweenBatch } = this.crawlConfig.friendships;
 
         const usernameBatches: string[][] = BatchHelper.createBatches(usernames, { batchSize });
-        const context: BrowserContext = this.browser2.defaultBrowserContext()
+        const context: BrowserContext = this.browser.defaultBrowserContext()
         await this.pageService.createPages(context, { number: batchSize });
         const pages: Page[] = await context.pages()
 

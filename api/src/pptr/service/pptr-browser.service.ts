@@ -12,7 +12,7 @@ export class PptrBrowserService {
 
     constructor(
         @InjectBrowser('social-media-scraper') private readonly defaultBrowser: Browser,
-        @InjectBrowser('instagram-login') private readonly instaBrowser: Browser,
+        // @InjectBrowser('instagram-login') private readonly instaBrowser: Browser,
         private contextService: PptrBrowserContextService,
         private pageService: PptrPageService,
         private proxyService: ProxyIpv4Service
@@ -31,12 +31,12 @@ export class PptrBrowserService {
                 // urls: [INS_URL],
                 cookiePaths: normalCookiesPaths
             }),
-            this.contextService.setUpContext(this.instaBrowser.defaultBrowserContext(), {
-                closeFirstPage: true,
-                numberOfPages: 1,
-                // urls: [INS_URL],
-                cookiePaths: incognitoCookiesPaths
-            })
+            // this.contextService.setUpContext(this.instaBrowser.defaultBrowserContext(), {
+            //     closeFirstPage: true,
+            //     numberOfPages: 1,
+            //     // urls: [INS_URL],
+            //     cookiePaths: incognitoCookiesPaths
+            // })
         ]).then(() => {
             this.logger.log("Set up pptr successfully")
         })

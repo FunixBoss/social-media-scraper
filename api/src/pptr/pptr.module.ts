@@ -50,22 +50,22 @@ const BlockResourcesPlugin = require('puppeteer-extra-plugin-block-resources');
                 return pptrBrowserConfig.createPuppeteerOptions();
             },
         }),
-        PuppeteerModule.forRootAsync({
-            name: 'instagram-login',
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: async (configService: ConfigService) => {
-                await sleep(3) // if many browser open as the same time -> cause ProtocolError
-                // const rPrx: RotatingProxy = {
-                //     host: configService.get<string>("PROXY_ROTATING_HOST"),
-                //     port: 10006
-                // };
-                const profilePathNameList: string[] = configService.get<string>("PROFILE_PATH_NAME_LIST").split(",")
+        // PuppeteerModule.forRootAsync({
+        //     name: 'instagram-login',
+        //     imports: [ConfigModule],
+        //     inject: [ConfigService],
+        //     useFactory: async (configService: ConfigService) => {
+        //         await sleep(3) // if many browser open as the same time -> cause ProtocolError
+        //         // const rPrx: RotatingProxy = {
+        //         //     host: configService.get<string>("PROXY_ROTATING_HOST"),
+        //         //     port: 10006
+        //         // };
+        //         const profilePathNameList: string[] = configService.get<string>("PROFILE_PATH_NAME_LIST").split(",")
 
-                const pptrBrowserConfig = new PptrBrowserConfig(profilePathNameList[1], configService);
-                return pptrBrowserConfig.createPuppeteerOptions();
-            },
-        }),
+        //         const pptrBrowserConfig = new PptrBrowserConfig(profilePathNameList[1], configService);
+        //         return pptrBrowserConfig.createPuppeteerOptions();
+        //     },
+        // }),
         PuppeteerModule.forFeature(['instagram'], 'social-media-scraper'),
     ],
     providers: [
