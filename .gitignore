@@ -1,5 +1,11 @@
-api/node_modules
-api/dist
+node_modules
+dist
+out/
+packages/social-media-downloader/dist
+packages/social-media-downloader/node_modules
+packages/social-media-scraper/dist
+packages/social-media-scraper/node_modules
+packages/social-media-ui/dist
+packages/social-media-ui/node_modules
 
-fe/.angular
-fe/node_modules
+

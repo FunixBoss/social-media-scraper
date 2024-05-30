@@ -1,0 +1,117 @@
+<div class="row mt-3" [formGroup]="scrapeForm">
+    <div class="col-md-4">
+        <p style="font-weight: bold;">Crawl Options</p>
+        <div formGroupName="crawl">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="profile" [disabled]="true">
+                <label class="form-check-label">Profile</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="friendships">
+                <label class="form-check-label">Friendships</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="posts">
+                <label class="form-check-label">Posts</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="reels">
+                <label class="form-check-label">Reels</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <p style="font-weight: bold;">Export Options</p>
+        <div formGroupName="export">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="json">
+                <label class="form-check-label">Export as JSON</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" formControlName="excel">
+                <label class="form-check-label">Export as Excel</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <p style="font-weight: bold;">Download Options</p>
+        <div formGroupName="download">
+            <div formGroupName="posts" class="mb-3">
+                <p style="font-weight: bold;">Posts</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="no_download">
+                    <label class="form-check-label">No Download</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="download_all">
+                    <label class="form-check-label">Download All</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="download_on_range">
+                    <label class="form-check-label">Download on Range</label>
+                </div>
+                <div class="row" *ngIf="postsDownloadGroup.get('option').value === 'download_on_range'">
+                    <div class="col">
+                        <label for="">From</label>
+                        <input type="number" class="form-control" placeholder="From order" formControlName="from_order">
+                        <div class="alert alert-danger mt-0 mb-3"
+                            *ngIf="postsDownloadGroup.get('from_order').invalid && (postsDownloadGroup.get('from_order').dirty || postsDownloadGroup.get('from_order').touched)">
+                            <div *ngIf="postsDownloadGroup.get('from_order').errors['min']">
+                                Minimum value is 1
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="">To</label>
+                        <input type="number" class="form-control" placeholder="To order" formControlName="to_order">
+                        <div class="alert alert-danger mt-0 mb-3"
+                            *ngIf="postsDownloadGroup.get('to_order').invalid && (postsDownloadGroup.get('to_order').dirty || postsDownloadGroup.get('to_order').touched)">
+                            <div *ngIf="postsDownloadGroup.get('to_order').errors['min']">
+                                Minimum value is 1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div formGroupName="reels">
+                <p style="font-weight: bold;">Reels</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="no_download">
+                    <label class="form-check-label">No Download</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="download_all">
+                    <label class="form-check-label">Download All</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" formControlName="option" value="download_on_range">
+                    <label class="form-check-label">Download on Range</label>
+                </div>
+                <div class="row" *ngIf="reelsDownloadGroup.get('option').value === 'download_on_range'">
+                    <div class="col">
+                        <label for="">From</label>
+                        <input type="number" class="form-control" placeholder="From order" formControlName="from_order">
+                        <div class="alert alert-danger mt-0 mb-3"
+                            *ngIf="reelsDownloadGroup.get('from_order').invalid && (reelsDownloadGroup.get('from_order').dirty || reelsDownloadGroup.get('from_order').touched)">
+                            <div *ngIf="reelsDownloadGroup.get('from_order').errors['min']">
+                                Minimum value is 1
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label for="">To</label>
+                        <input type="number" class="form-control" placeholder="To order" formControlName="to_order">
+                        <div class="alert alert-danger mt-0 mb-3"
+                            *ngIf="reelsDownloadGroup.get('to_order').invalid && (reelsDownloadGroup.get('to_order').dirty || reelsDownloadGroup.get('to_order').touched)">
+                            <div *ngIf="reelsDownloadGroup.get('to_order').errors['min']">
+                                Minimum value is 1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
