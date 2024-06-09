@@ -163,33 +163,43 @@ export default class ChannelCrawlService {
 
     async crawlFriendships(username: string): Promise<string[]> {
         let friendshipUsernames: string[] = [];
-        const interceptManager = await this.setUpPageInterceptors(this.page)
-        await interceptManager.intercept({
-            urlPattern: `https://www.instagram.com/api/graphql`,
-            resourceType: 'XHR',
-            modifyResponse: async ({ body }) => {
-                try {
-                    const dataObj: InsAPIWrapper = JSON.parse(body);
-                    if (!dataObj.data) return;
+        let found = false;
+        const TIMEOUT = 10000;
 
-                    if (dataObj.data["xdt_api__v1__discover__chaining"]) {
-                        console.log(`==> Found Response: Friendship Users - ${username}`);
-                        const friendshipUserApis = dataObj.data as InsFriendshipUserFull
-                        friendshipUsernames = friendshipUserApis.xdt_api__v1__discover__chaining.users.map(user => user.username);
-                    }
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-        });
+        const interceptManager = await this.setUpPageInterceptors(this.page)
         try {
+            await interceptManager.intercept({
+                urlPattern: `https://www.instagram.com/graphql/query`,
+                resourceType: 'XHR',
+                modifyResponse: async ({ body }) => {
+                    try {
+                        const dataObj: InsAPIWrapper = JSON.parse(body);
+                        if (!dataObj.data) return;
+                        
+                        if (dataObj.data["xdt_api__v1__discover__chaining"]) {
+                            console.log(`==> Found Response: Friendship Users - ${username}`);
+                            const friendshipUserApis = dataObj.data as InsFriendshipUserFull
+                            friendshipUsernames = friendshipUserApis.xdt_api__v1__discover__chaining.users.map(user => user.username);
+                            found = true;
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            });
             await this.page.goto(`${INS_URL}/${username}`, { waitUntil: 'load' })
-            await sleep(3)
+            const start = Date.now() 
+            while (!found) {
+                if (Date.now() - start > TIMEOUT) {
+                    throw new Error(`Wait For friendships Timeout reached: ${TIMEOUT}ms`);
+                }
+                await sleep(1)
+            }
             console.log(friendshipUsernames.join(","));
             return friendshipUsernames
         } catch (error) {
             throw error;
-        } finally {
+        } finally { 
             await interceptManager.clear()
         }
     }

@@ -24,12 +24,11 @@ export class ChannelDownloadService {
         axios.post(`${SOCIAL_MEDIA_DOWNLOADER_API}/ins/channel/download/${username}`, options)
             .then((response) => {
                 if (response.status == 200) {
-                    console.log(response.data);
-                    this.logger.log(`Downloading`)
+                    this.logger.log(`Downloading`, response.data)
                 }
             })
             .catch(error => {
-                this.logger.warn("Download error")
+                this.logger.warn("Download error", error)
             })
     }
 

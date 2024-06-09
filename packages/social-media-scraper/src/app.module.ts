@@ -34,8 +34,8 @@ import crawl_configuration from './config/crawl_configuration';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      // envFilePath: `.env.${process.env.NODE_ENV}`,
-      envFilePath: `.env`,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
+      // envFilePath: `.env`,
       load: [crawl_configuration]
     }),
     TypeOrmModule.forRootAsync({
